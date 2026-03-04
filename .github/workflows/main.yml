@@ -1,0 +1,48 @@
+name: Update Nifty Options Dashboard
+
+on:
+  schedule:
+    # Runs every 30 minutes on weekdays (IST market hours ≈ 03:45–10:30 UTC)
+    - cron: '*/30 3-11 * * 1-5'
+  workflow_dispatch:   # Allow manual trigger from GitHub Actions tab
+
+permissions:
+  contents: write
+
+jobs:
+  update-dashboard:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Fetch NSE data & generate index.html
+        run: python strategic_nodes.py
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./
+          publish_branch: gh-pages
+          include_files: index.html
+          commit_message: "Auto-update: ${{ github.run_id }}"
+          keep_files: false
+          force_orphan: true
