@@ -2081,6 +2081,7 @@ function drawPayoff() {{
         // ── Crosshair line + dots ──
         if (crosshairX === null) return;
         const nearXPx  = xScale.getPixelForValue(priceRange[crosshairX]);
+        if (isNaN(nearXPx)) return;
         const todayVal = todayPnl[crosshairX];
         const expVal   = expiryPnl[crosshairX];
 
@@ -2123,7 +2124,8 @@ function drawPayoff() {{
     const rect   = canvas.getBoundingClientRect();
     const xScale = payoffChart.scales.x;
     const yScale = payoffChart.scales.yPnl;
-    // Canvas-relative X
+
+    // Chart.js scales use CSS pixels — direct subtraction, no devicePixelRatio
     const canvasX = clientX - rect.left;
 
     if (canvasX < xScale.left || canvasX > xScale.right) {{
@@ -2133,7 +2135,7 @@ function drawPayoff() {{
       return;
     }}
 
-    // Find nearest price index
+    // Find nearest price index by comparing pixel positions
     let minDist = Infinity, bestIdx = 0;
     priceRange.forEach((p, i) => {{
       const dist = Math.abs(xScale.getPixelForValue(p) - canvasX);
