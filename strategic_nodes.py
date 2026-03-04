@@ -924,8 +924,8 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 .score-num{{font-size:11px;font-weight:700;color:var(--cyan);font-family:'DM Mono',monospace;}}
 
 /* ── PAYOFF ── */
-.payoff-wrap{{position:relative;height:240px;padding:16px;background:var(--bg2);border-radius:0 0 11px 11px;}}
-canvas#payoffChart{{width:100%!important;height:208px!important;}}
+.payoff-wrap{{position:relative;height:320px;padding:16px;background:var(--bg2);border-radius:0 0 11px 11px;}}
+canvas#payoffChart{{width:100%!important;height:288px!important;}}
 
 /* ── EMPTY STATE ── */
 .empty{{text-align:center;padding:50px 20px;color:var(--text3);grid-column:1/-1;}}
@@ -1180,12 +1180,19 @@ canvas#payoffChart{{width:100%!important;height:208px!important;}}
 <!-- PAYOFF CHART -->
 <div class="panel" style="margin-bottom:18px;">
   <div class="panel-hdr">
-    <div class="panel-title">📈 Payoff Diagram at Expiry</div>
+    <div class="panel-title">📈 Payoff Diagram
+      <span style="font-size:9px;color:var(--text3);margin-left:8px;font-family:'DM Mono',monospace;">🟢 Today (BSM+Greeks) &nbsp;|&nbsp; 🔵 At Expiry &nbsp;|&nbsp; bars = OI</span>
+    </div>
     <select class="sel" style="width:200px;" id="payoffSel" onchange="drawPayoff()">
       <option value="">— Select Strategy —</option>
     </select>
   </div>
-  <div class="payoff-wrap"><canvas id="payoffChart"></canvas></div>
+  <div class="payoff-wrap" style="height:320px;padding:16px;">
+    <canvas id="payoffChart"></canvas>
+  </div>
+  <div style="text-align:center;padding:10px 16px 14px;font-size:11px;font-family:'DM Mono',monospace;border-top:1px solid var(--border);" id="projBadge">
+    Select a strategy to see projected P&L
+  </div>
 </div>
 
 <div class="footer">NIFTY OPTIONS ANALYZER · NSE INDIA DATA · FOR EDUCATIONAL PURPOSE ONLY · NOT FINANCIAL ADVICE</div>
@@ -1804,58 +1811,381 @@ function selectPayoff(name) {{
   document.getElementById("payoffSel").scrollIntoView({{behavior:"smooth"}});
 }}
 
-// ── Payoff Chart ──────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════
+// RICH PAYOFF CHART — BSM Today line + Expiry line + OI bars
+// ═══════════════════════════════════════════════════════════
+
+// BSM option price at a given spot & time
+function bsmPrice(S, K, T, r, sigma, type) {{
+  if (T <= 0 || sigma <= 0) {{
+    return type === "CE" ? Math.max(0, S - K) : Math.max(0, K - S);
+  }}
+  const d1 = (Math.log(S / K) + (r + 0.5 * sigma * sigma) * T) / (sigma * Math.sqrt(T));
+  const d2 = d1 - sigma * Math.sqrt(T);
+  if (type === "CE") return Math.max(0, S * normCdf(d1) - K * Math.exp(-r * T) * normCdf(d2));
+  return Math.max(0, K * Math.exp(-r * T) * normCdf(-d2) - S * normCdf(-d1));
+}}
+
+// Compute P&L for a strategy at a given spot price and time T
+function stratPnlAtSpot(legs, spotPrice, T) {{
+  let pnl = 0;
+  legs.forEach(l => {{
+    const sigma  = (l.iv || 15) / 100;
+    const theoVal = bsmPrice(spotPrice, l.strike, T, RISK_FREE, sigma, l.type);
+    const legPnl  = l.action === "buy" ? (theoVal - l.premium) : (l.premium - theoVal);
+    pnl += legPnl;
+  }});
+  return Math.round(pnl * LOT_SIZE * 100) / 100;
+}}
+
 function drawPayoff() {{
   const name = document.getElementById("payoffSel").value;
-  const s    = strategies.find(x=>x.name===name);
+  const s    = strategies.find(x => x.name === name);
   if (!s) return;
-  const ctx  = document.getElementById("payoffChart").getContext("2d");
+
+  const d          = ALL_DATA[currentExpiry];
+  const underlying = d?.underlying || 0;
+  const dte        = d?.dte || 1;
+  const T_today    = Math.max(dte / 365, 0.0001);
+  const T_expiry   = 0;
+
+  // Price range: spot ± 1500 in steps of 25
+  const priceRange = [];
+  for (let p = underlying - 1500; p <= underlying + 1500; p += 25) priceRange.push(p);
+
+  // Today P&L (BSM with T_today — includes Theta, Vega, Delta effects)
+  const todayPnl   = priceRange.map(p => stratPnlAtSpot(s.legs, p, T_today));
+  // Expiry P&L (intrinsic only, T=0)
+  const expiryPnl  = priceRange.map(p => stratPnlAtSpot(s.legs, p, T_expiry));
+
+  // OI data for background bars (align to priceRange)
+  const allStrikes = d?.all_strikes || [];
+  const strikeSet  = new Set(priceRange);
+  const oiLabels   = priceRange;
+  const ceOiData   = priceRange.map(p => {{
+    const row = allStrikes.find(r => r.strike === p);
+    return row ? Math.round(row.ce_oi / 1e3) : null;  // in thousands
+  }});
+  const peOiData   = priceRange.map(p => {{
+    const row = allStrikes.find(r => r.strike === p);
+    return row ? Math.round(row.pe_oi / 1e3) : null;
+  }});
+
+  // Net cost of strategy (for % calculation)
+  const netCost = Math.abs(s.netPrem) * LOT_SIZE || 1;
+
+  // Current projected P&L at spot
+  const projPnl     = stratPnlAtSpot(s.legs, underlying, T_today);
+  const projPct     = ((projPnl / netCost) * 100).toFixed(1);
+  const projCol     = projPnl >= 0 ? "#00c896" : "#ff6b6b";
+  const projSign    = projPnl >= 0 ? "+" : "";
+  document.getElementById("projBadge").innerHTML =
+    `Projected P&L: <span style="color:${{projCol}};font-weight:800;">${{projSign}}₹${{Math.round(projPnl).toLocaleString("en-IN")}} (${{projSign}}${{projPct}}%)</span>`;
+
+  const ctx = document.getElementById("payoffChart").getContext("2d");
   if (payoffChart) payoffChart.destroy();
 
-  const underlying = ALL_DATA[currentExpiry]?.underlying || 0;
+  // Crosshair state
+  let crosshairX = null;
 
   payoffChart = new Chart(ctx, {{
-    type: "line",
+    type: "bar",
     data: {{
-      labels: s.priceRange,
-      datasets: [{{
-        label: name+" P&L (₹)",
-        data:  s.payoffs,
-        borderColor: "#00d4ff",
-        borderWidth: 2,
-        pointRadius: 0,
-        fill: {{target:{{value:0}},above:"rgba(0,200,150,.10)",below:"rgba(255,100,100,.10)"}},
-        tension: 0.15,
-      }},{{
-        label: "Zero",
-        data:  s.priceRange.map(()=>0),
-        borderColor: "rgba(255,255,255,.12)",
-        borderWidth: 1,
-        borderDash: [5,4],
-        pointRadius: 0,
-        fill: false,
-      }}]
+      labels: priceRange,
+      datasets: [
+        // ── CE OI bars (green, background, secondary Y) ──
+        {{
+          label:           "CE OI",
+          type:            "bar",
+          data:            ceOiData,
+          backgroundColor: "rgba(0,200,150,0.18)",
+          borderColor:     "rgba(0,200,150,0.35)",
+          borderWidth:     1,
+          yAxisID:         "yOI",
+          order:           3,
+          barPercentage:   0.6,
+        }},
+        // ── PE OI bars (red, background, secondary Y) ──
+        {{
+          label:           "PE OI",
+          type:            "bar",
+          data:            peOiData,
+          backgroundColor: "rgba(255,107,107,0.18)",
+          borderColor:     "rgba(255,107,107,0.35)",
+          borderWidth:     1,
+          yAxisID:         "yOI",
+          order:           3,
+          barPercentage:   0.6,
+        }},
+        // ── Today P&L line (green, BSM with Greeks) ──
+        {{
+          label:       "Today P&L (BSM)",
+          type:        "line",
+          data:        todayPnl,
+          borderColor: "#00c896",
+          borderWidth: 2.5,
+          pointRadius: 0,
+          pointHoverRadius: 5,
+          pointHoverBackgroundColor: "#00c896",
+          fill: {{target: {{value: 0}}, above: "rgba(0,200,150,0.12)", below: "rgba(255,107,107,0.10)"}},
+          tension:  0.3,
+          yAxisID:  "yPnl",
+          order:    1,
+        }},
+        // ── Expiry P&L line (blue, intrinsic) ──
+        {{
+          label:       "Expiry P&L",
+          type:        "line",
+          data:        expiryPnl,
+          borderColor: "#5ba3ff",
+          borderWidth: 2,
+          pointRadius: 0,
+          pointHoverRadius: 5,
+          pointHoverBackgroundColor: "#5ba3ff",
+          borderDash:  [4, 3],
+          fill:        false,
+          tension:     0.1,
+          yAxisID:     "yPnl",
+          order:       2,
+        }},
+        // ── Zero line ──
+        {{
+          label:       "Zero",
+          type:        "line",
+          data:        priceRange.map(() => 0),
+          borderColor: "rgba(255,255,255,0.10)",
+          borderWidth: 1,
+          pointRadius: 0,
+          fill:        false,
+          yAxisID:     "yPnl",
+          order:       4,
+        }},
+      ]
     }},
     options: {{
-      responsive:true, maintainAspectRatio:false,
-      interaction:{{mode:"index",intersect:false}},
-      plugins:{{
-        legend:{{display:false}},
-        tooltip:{{
-          backgroundColor:"#1e2d40",borderColor:"#1e3a50",borderWidth:1,
-          titleColor:"#6a8aaa",bodyColor:"#ddeeff",
-          titleFont:{{family:"DM Mono",size:10}},bodyFont:{{family:"DM Mono",size:12}},
-          callbacks:{{
-            title:ctx=>"Nifty @ ₹"+parseInt(ctx[0].label).toLocaleString("en-IN"),
-            label:ctx=>ctx.datasetIndex===0?" P&L: ₹"+ctx.raw.toLocaleString("en-IN"):""
+      responsive:          true,
+      maintainAspectRatio: false,
+      interaction: {{mode: "index", intersect: false, axis: "x"}},
+      plugins: {{
+        legend: {{
+          display: true,
+          position: "top",
+          labels: {{
+            color:     "#6a8aaa",
+            font:      {{family: "DM Mono", size: 10}},
+            boxWidth:  14,
+            filter:    item => item.text !== "Zero",
           }}
+        }},
+        tooltip: {{
+          enabled:         false,   // use custom tooltip
+          mode:            "index",
+          intersect:       false,
+        }},
+        // Spot price vertical annotation drawn via afterDraw
+      }},
+      scales: {{
+        x: {{
+          ticks: {{
+            color:         "#2d4560",
+            font:          {{family: "DM Mono", size: 9}},
+            maxTicksLimit: 12,
+            callback:      v => v.toLocaleString("en-IN"),
+          }},
+          grid:   {{color: "#0b1520"}},
+          border: {{color: "#1a2535"}},
+        }},
+        yPnl: {{
+          position: "left",
+          ticks: {{
+            color:    "#2d4560",
+            font:     {{family: "DM Mono", size: 9}},
+            callback: v => "₹" + (Math.abs(v) >= 1000 ? (v/1000).toFixed(0)+"K" : v),
+          }},
+          grid:   {{color: "#0b1520"}},
+          border: {{color: "#1a2535"}},
+          title:  {{display:true, text:"Profit / Loss", color:"#3d5a73", font:{{size:9, family:"DM Mono"}}}},
+        }},
+        yOI: {{
+          position: "right",
+          ticks: {{
+            color:    "#2d4560",
+            font:     {{family: "DM Mono", size: 9}},
+            callback: v => v >= 1000 ? (v/1000).toFixed(0)+"L" : v,
+          }},
+          grid: {{drawOnChartArea: false}},
+          border: {{color: "#1a2535"}},
+          title: {{display:true, text:"Open Interest", color:"#3d5a73", font:{{size:9, family:"DM Mono"}}}},
+        }},
+      }},
+    }},
+    plugins: [{{
+      // ── Spot price vertical line & custom crosshair tooltip ──
+      id: "crosshairSpot",
+      afterDraw(chart) {{
+        const xScale   = chart.scales.x;
+        const yScale   = chart.scales.yPnl;
+        const ctx2     = chart.ctx;
+        const spotIdx  = priceRange.findIndex(p => p >= underlying);
+        if (spotIdx < 0) return;
+        const xPx = xScale.getPixelForValue(priceRange[spotIdx]);
+
+        // Draw vertical dashed line at spot
+        ctx2.save();
+        ctx2.setLineDash([6, 4]);
+        ctx2.strokeStyle = "rgba(0,200,150,0.7)";
+        ctx2.lineWidth   = 1.5;
+        ctx2.beginPath();
+        ctx2.moveTo(xPx, yScale.top);
+        ctx2.lineTo(xPx, yScale.bottom);
+        ctx2.stroke();
+        ctx2.restore();
+
+        // Spot label at top
+        ctx2.save();
+        ctx2.fillStyle    = "rgba(0,200,150,0.85)";
+        ctx2.font         = "bold 10px DM Mono, monospace";
+        ctx2.textAlign    = "center";
+        ctx2.fillText("▼ " + underlying.toLocaleString("en-IN"), xPx, yScale.top - 6);
+        ctx2.restore();
+
+        // ── Draw crosshair if active ──
+        if (crosshairX !== null) {{
+          const nearIdx  = crosshairX;
+          const nearXPx  = xScale.getPixelForValue(priceRange[nearIdx]);
+          const price    = priceRange[nearIdx];
+          const pctChg   = (((price - underlying) / underlying) * 100).toFixed(1);
+          const todayVal = todayPnl[nearIdx];
+          const expVal   = expiryPnl[nearIdx];
+          const sign     = pctChg >= 0 ? "+" : "";
+
+          // Crosshair vertical line
+          ctx2.save();
+          ctx2.setLineDash([3, 3]);
+          ctx2.strokeStyle = "rgba(255,255,255,0.2)";
+          ctx2.lineWidth   = 1;
+          ctx2.beginPath();
+          ctx2.moveTo(nearXPx, yScale.top);
+          ctx2.lineTo(nearXPx, yScale.bottom);
+          ctx2.stroke();
+          ctx2.restore();
+
+          // Tooltip box
+          const tW = 210, tH = 96, tX_raw = nearXPx + 12, tY = yScale.top + 10;
+          const tX = (tX_raw + tW > chart.width - 10) ? nearXPx - tW - 12 : tX_raw;
+
+          ctx2.save();
+          // Box shadow
+          ctx2.shadowColor   = "rgba(0,0,0,0.5)";
+          ctx2.shadowBlur    = 12;
+          ctx2.fillStyle     = "rgba(13,26,40,0.96)";
+          ctx2.strokeStyle   = "rgba(0,212,255,0.3)";
+          ctx2.lineWidth     = 1;
+          const r2 = 8;
+          ctx2.beginPath();
+          ctx2.moveTo(tX+r2,tY); ctx2.lineTo(tX+tW-r2,tY);
+          ctx2.quadraticCurveTo(tX+tW,tY,tX+tW,tY+r2);
+          ctx2.lineTo(tX+tW,tY+tH-r2);
+          ctx2.quadraticCurveTo(tX+tW,tY+tH,tX+tW-r2,tY+tH);
+          ctx2.lineTo(tX+r2,tY+tH); ctx2.quadraticCurveTo(tX,tY+tH,tX,tY+tH-r2);
+          ctx2.lineTo(tX,tY+r2); ctx2.quadraticCurveTo(tX,tY,tX+r2,tY);
+          ctx2.closePath();
+          ctx2.fill(); ctx2.stroke();
+          ctx2.shadowBlur = 0;
+
+          // "When price is at" header
+          ctx2.fillStyle  = "rgba(106,138,170,0.9)";
+          ctx2.font       = "10px DM Mono, monospace";
+          ctx2.textAlign  = "left";
+          ctx2.fillText("When price is at", tX+12, tY+18);
+
+          // Price + % change
+          const pCol = parseFloat(pctChg) >= 0 ? "#00c896" : "#ff6b6b";
+          ctx2.fillStyle = "#ddeeff";
+          ctx2.font      = "bold 14px DM Mono, monospace";
+          ctx2.fillText("₹" + price.toLocaleString("en-IN"), tX+12, tY+36);
+          ctx2.fillStyle = pCol;
+          ctx2.font      = "bold 11px DM Mono, monospace";
+          ctx2.fillText(sign + pctChg + "% (" + sign + (price-underlying).toLocaleString("en-IN") + ")", tX+100, tY+36);
+
+          // Divider
+          ctx2.strokeStyle = "rgba(255,255,255,0.08)";
+          ctx2.lineWidth   = 1;
+          ctx2.beginPath(); ctx2.moveTo(tX+12,tY+44); ctx2.lineTo(tX+tW-12,tY+44); ctx2.stroke();
+
+          // Today P&L row
+          const todayCol = todayVal >= 0 ? "#00c896" : "#ff6b6b";
+          const todayPct = ((todayVal / netCost) * 100).toFixed(1);
+          const todaySign = todayVal >= 0 ? "+" : "";
+          ctx2.fillStyle = "rgba(106,138,170,0.8)";
+          ctx2.font      = "9px DM Mono, monospace";
+          ctx2.fillText("Today (BSM)", tX+12, tY+58);
+          ctx2.fillStyle = todayCol;
+          ctx2.font      = "bold 11px DM Mono, monospace";
+          ctx2.fillText(todaySign + "₹" + Math.round(todayVal).toLocaleString("en-IN") + " (" + todaySign + todayPct + "%)", tX+90, tY+58);
+
+          // Expiry P&L row
+          const expCol  = expVal >= 0 ? "#00c896" : "#ff6b6b";
+          const expPct  = ((expVal / netCost) * 100).toFixed(1);
+          const expSign = expVal >= 0 ? "+" : "";
+          ctx2.fillStyle = "rgba(106,138,170,0.8)";
+          ctx2.font      = "9px DM Mono, monospace";
+          ctx2.fillText("At Expiry", tX+12, tY+76);
+          ctx2.fillStyle = expCol;
+          ctx2.font      = "bold 11px DM Mono, monospace";
+          ctx2.fillText(expSign + "₹" + Math.round(expVal).toLocaleString("en-IN") + " (" + expSign + expPct + "%)", tX+90, tY+76);
+
+          // Dot on Today line
+          const todayYPx = yScale.getPixelForValue(todayVal);
+          ctx2.fillStyle   = "#00c896";
+          ctx2.strokeStyle = "#0d1117";
+          ctx2.lineWidth   = 2;
+          ctx2.beginPath();
+          ctx2.arc(nearXPx, todayYPx, 5, 0, Math.PI*2);
+          ctx2.fill(); ctx2.stroke();
+
+          // Dot on Expiry line
+          const expYPx = yScale.getPixelForValue(expVal);
+          ctx2.fillStyle   = "#5ba3ff";
+          ctx2.strokeStyle = "#0d1117";
+          ctx2.beginPath();
+          ctx2.arc(nearXPx, expYPx, 5, 0, Math.PI*2);
+          ctx2.fill(); ctx2.stroke();
+
+          ctx2.restore();
         }}
       }},
-      scales:{{
-        x:{{ticks:{{color:"#2d4560",font:{{family:"DM Mono",size:9}},maxTicksLimit:10}},grid:{{color:"#0b1520"}},border:{{color:"#1a2535"}}}},
-        y:{{ticks:{{color:"#2d4560",font:{{family:"DM Mono",size:9}},callback:v=>"₹"+(v/1000).toFixed(0)+"K"}},grid:{{color:"#0b1520"}},border:{{color:"#1a2535"}}}}
-      }}
-    }}
+
+      // ── Mouse / Touch event handling ──
+      afterEvent(chart, args) {{
+        const event = args.event;
+        if (!["mousemove","touchmove","touchstart"].includes(event.type)) {{
+          if (["mouseleave","touchend"].includes(event.type)) {{
+            crosshairX = null;
+            chart.draw();
+          }}
+          return;
+        }}
+        const xScale = chart.scales.x;
+        const evtX   = event.x;
+        if (evtX < xScale.left || evtX > xScale.right) {{
+          crosshairX = null;
+          chart.draw();
+          return;
+        }}
+        // Find nearest price index
+        let minDist = Infinity, bestIdx = 0;
+        priceRange.forEach((p, i) => {{
+          const px   = xScale.getPixelForValue(p);
+          const dist = Math.abs(px - evtX);
+          if (dist < minDist) {{ minDist = dist; bestIdx = i; }}
+        }});
+        if (crosshairX !== bestIdx) {{
+          crosshairX = bestIdx;
+          chart.draw();
+        }}
+      }},
+    }}],
   }});
 }}
 </script>
