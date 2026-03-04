@@ -1189,17 +1189,23 @@ canvas#payoffChart{{width:100%!important;height:288px!important;}}
   </div>
   <div class="payoff-wrap" style="height:320px;padding:16px;position:relative;">
     <canvas id="payoffChart"></canvas>
-    <div id="payoffTooltip" style="
-      display:none;position:absolute;z-index:99;
-      background:rgba(10,20,34,0.97);
-      border:1px solid rgba(0,212,255,0.25);
-      border-radius:10px;padding:12px 14px;
-      min-width:240px;max-width:270px;
-      box-shadow:0 8px 32px rgba(0,0,0,0.6);
-      pointer-events:none;
-      font-family:'DM Mono',monospace;
-    "></div>
   </div>
+  <!-- Tooltip floats fixed over viewport so it's never clipped -->
+  <div id="payoffTooltip" style="
+    display:none;
+    position:fixed;
+    z-index:9999;
+    background:rgba(8,18,30,0.97);
+    border:1px solid rgba(0,212,255,0.28);
+    border-radius:10px;
+    padding:13px 16px;
+    min-width:250px;max-width:280px;
+    box-shadow:0 8px 36px rgba(0,0,0,0.7),0 0 0 1px rgba(0,212,255,0.08);
+    pointer-events:none;
+    font-family:'DM Mono',monospace;
+    backdrop-filter:blur(8px);
+    transition:opacity 0.1s;
+  "></div>
   <div style="text-align:center;padding:10px 16px 14px;font-size:11px;font-family:'DM Mono',monospace;border-top:1px solid var(--border);" id="projBadge">
     Select a strategy to see projected P&L
   </div>
@@ -2104,7 +2110,11 @@ function drawPayoff() {{
         }}
         if (!["mousemove","touchmove","touchstart"].includes(event.type)) return;
 
-        const evtX = event.x;
+        // chart.js normalises touch to event.x — use it directly
+        const evtX = event.x ?? (event.native?.touches?.[0]?.clientX
+                     ? event.native.touches[0].clientX - chart.canvas.getBoundingClientRect().left
+                     : null);
+        if (evtX === null) return;
         if (evtX < xScale.left || evtX > xScale.right) {{
           crosshairX = null;
           tt.style.display = "none";
@@ -2154,14 +2164,22 @@ function drawPayoff() {{
             <span style="font-size:12px;font-weight:800;color:${{eCol}};font-family:'DM Mono',monospace;">${{eSign}}₹${{Math.round(expVal).toLocaleString("en-IN")}}&nbsp;<span style="font-size:9px;">(${{eSign}}${{ePct}}%)</span></span>
           </div>`;
 
-        // Position tooltip — flip left if near right edge
+        // Position tooltip using fixed coords (viewport-relative)
         const canvasRect = chart.canvas.getBoundingClientRect();
-        const xPxAbs     = xScale.getPixelForValue(price);
-        const ttW        = 260;
-        let   leftPx     = xPxAbs + 14;
-        if (leftPx + ttW > chart.width - 10) leftPx = xPxAbs - ttW - 14;
-        tt.style.left    = leftPx + "px";
-        tt.style.top     = (chart.scales.yPnl.top + 10) + "px";
+        const xPxAbs     = xScale.getPixelForValue(price);  // px from canvas left
+        const ttW        = 265;
+        const ttH        = 130;
+        // Convert canvas-relative x to viewport-relative x
+        let fixedLeft = canvasRect.left + xPxAbs + 18;
+        let fixedTop  = canvasRect.top  + chart.scales.yPnl.top + 10;
+        // Flip left if tooltip would go off screen right
+        if (fixedLeft + ttW > window.innerWidth - 12)
+          fixedLeft = canvasRect.left + xPxAbs - ttW - 18;
+        // Flip up if tooltip would go off screen bottom
+        if (fixedTop + ttH > window.innerHeight - 12)
+          fixedTop = canvasRect.top + chart.scales.yPnl.bottom - ttH - 10;
+        tt.style.left    = fixedLeft + "px";
+        tt.style.top     = fixedTop  + "px";
         tt.style.display = "block";
       }},
     }}],
