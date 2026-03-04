@@ -1010,6 +1010,10 @@ canvas#payoffChart{{width:100%!important;height:288px!important;}}
       <div class="gen-time" style="font-size:11px;color:var(--text2);font-family:'DM Mono',monospace;">{generated_at}</div>
     </div>
     <div style="text-align:right;">
+      <div style="font-size:9px;color:var(--text3);font-family:'DM Mono',monospace;">IST TIME</div>
+      <div style="font-size:14px;font-weight:700;color:var(--cyan);font-family:'DM Mono',monospace;letter-spacing:1px;" id="istClock">--:--:--</div>
+    </div>
+    <div style="text-align:right;">
       <div style="font-size:9px;color:var(--text3);font-family:'DM Mono',monospace;">NEXT REFRESH</div>
       <div style="font-size:11px;color:var(--cyan);font-family:'DM Mono',monospace;" id="countdown">30s</div>
     </div>
@@ -1289,6 +1293,21 @@ window.onload = () => {{
 
 // ── Silent background refresh (no flicker, no reload) ────────
 function startCountdown() {{
+  // ── Live IST clock (updates every second) ──
+  function updateClock() {{
+    const now = new Date();
+    // IST = UTC + 5:30
+    const ist = new Date(now.getTime() + (5.5 * 60 * 60 * 1000));
+    const hh  = String(ist.getUTCHours()).padStart(2, "0");
+    const mm  = String(ist.getUTCMinutes()).padStart(2, "0");
+    const ss  = String(ist.getUTCSeconds()).padStart(2, "0");
+    const el  = document.getElementById("istClock");
+    if (el) el.textContent = hh + ":" + mm + ":" + ss;
+  }}
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  // ── Refresh countdown ──
   let secs = 30;
   const el = document.getElementById("countdown");
   setInterval(() => {{
