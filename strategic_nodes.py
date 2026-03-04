@@ -18,6 +18,25 @@ import numpy as np
 import pandas as pd
 from scipy.stats import norm
 
+
+# ── Custom JSON encoder — handles numpy bool/int/float types ─────
+class _NumpyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.bool_):
+            return bool(obj)
+        if isinstance(obj, np.integer):
+            return int(obj)
+        if isinstance(obj, np.floating):
+            return float(obj)
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return super().default(obj)
+
+def _to_json(obj):
+    """Serialize to JSON safely — handles numpy scalar types."""
+    return json.dumps(obj, cls=_NumpyEncoder, ensure_ascii=False)
+
+
 # ── Timezone (IST) ────────────────────────────────────────────────
 try:
     from zoneinfo import ZoneInfo
@@ -368,7 +387,7 @@ def compute_greeks_for_chain(df, underlying, expiry_str, r=0.065):
 
     for _, row in df.iterrows():
         strike  = row["Strike"]
-        is_atm  = (strike == atm_strike)
+        is_atm  = bool(strike == atm_strike)
 
         # ── IV: use NSE value, fallback to BSM approximation ──
         ce_iv = row.get("CE_IV", 0) or 0
@@ -744,8 +763,8 @@ def build_html(all_expiry_data, expiry_list, generated_at):
             "all_strikes": oc["all_strikes"],
         }
 
-    data_json     = json.dumps(expiry_json,  ensure_ascii=False)
-    expiry_list_j = json.dumps(expiry_list,  ensure_ascii=False)
+    data_json     = _to_json(expiry_json)
+    expiry_list_j = _to_json(expiry_list)
 
     html = f"""<!DOCTYPE html>
 <html lang="en">
