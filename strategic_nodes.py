@@ -2058,7 +2058,7 @@ function drawPayoff() {{
         const yScale = chart.scales.yPnl;
         const ctx2   = chart.ctx;
 
-        // ── Spot vertical line ──
+        // ── Spot vertical line (green) ──
         const spotIdx = priceRange.findIndex(p => p >= underlying);
         if (spotIdx >= 0) {{
           const xPx = xScale.getPixelForValue(spotIdx);
@@ -2075,6 +2075,92 @@ function drawPayoff() {{
           ctx2.font       = "bold 9px DM Mono,monospace";
           ctx2.textAlign  = "center";
           ctx2.fillText("▼ " + underlying.toLocaleString("en-IN"), xPx, yScale.top - 4);
+          ctx2.restore();
+        }}
+
+        // ── Breakeven lines (from expiry P&L zero crossings) ──────
+        // Find where expiryPnl crosses zero → these are the real breakevens
+        const bePoints = [];
+        for (let i = 0; i < expiryPnl.length - 1; i++) {{
+          if ((expiryPnl[i] < 0) !== (expiryPnl[i+1] < 0)) {{
+            // Linear interpolation for exact crossing point
+            const frac  = Math.abs(expiryPnl[i]) / (Math.abs(expiryPnl[i]) + Math.abs(expiryPnl[i+1]));
+            const beIdx = i + frac;                           // fractional index
+            const bePx  = xScale.getPixelForValue(i) + frac * (xScale.getPixelForValue(i+1) - xScale.getPixelForValue(i));
+            const bePrice = priceRange[i] + frac * (priceRange[i+1] - priceRange[i]);
+            bePoints.push({{ bePx, bePrice, beIdx }});
+          }}
+        }}
+
+        bePoints.forEach((be, bi) => {{
+          ctx2.save();
+
+          // Dashed vertical line (gold/orange)
+          ctx2.setLineDash([4, 3]);
+          ctx2.strokeStyle = "rgba(255,209,102,0.7)";
+          ctx2.lineWidth   = 1.5;
+          ctx2.beginPath();
+          ctx2.moveTo(be.bePx, yScale.top);
+          ctx2.lineTo(be.bePx, yScale.bottom);
+          ctx2.stroke();
+          ctx2.setLineDash([]);
+
+          // Label pill at top
+          const label    = "BE " + Math.round(be.bePrice).toLocaleString("en-IN");
+          ctx2.font      = "bold 8px DM Mono,monospace";
+          const tw       = ctx2.measureText(label).width + 10;
+          const tx       = be.bePx - tw / 2;
+          const ty       = yScale.top + 6;
+
+          // Pill background
+          ctx2.fillStyle = "rgba(255,209,102,0.15)";
+          ctx2.strokeStyle = "rgba(255,209,102,0.6)";
+          ctx2.lineWidth = 1;
+          ctx2.beginPath();
+          ctx2.roundRect(tx, ty, tw, 14, 3);
+          ctx2.fill();
+          ctx2.stroke();
+
+          // Pill text
+          ctx2.fillStyle = "rgba(255,209,102,1)";
+          ctx2.textAlign = "center";
+          ctx2.fillText(label, be.bePx, ty + 10);
+
+          // Small dot at zero line
+          const zeroPx = yScale.getPixelForValue(0);
+          ctx2.fillStyle   = "#ffd166";
+          ctx2.strokeStyle = "#060910";
+          ctx2.lineWidth   = 2;
+          ctx2.beginPath();
+          ctx2.arc(be.bePx, zeroPx, 4, 0, Math.PI*2);
+          ctx2.fill(); ctx2.stroke();
+
+          ctx2.restore();
+        }});
+
+        // ── Profit / Loss zone labels ──────────────────────────────
+        // Only draw if we have 2 breakevens (typical spread/strangle shape)
+        if (bePoints.length >= 2) {{
+          const midLossX = (bePoints[0].bePx + bePoints[bePoints.length-1].bePx) / 2;
+          const zeroPx   = yScale.getPixelForValue(0);
+          ctx2.save();
+          ctx2.font      = "bold 9px DM Mono,monospace";
+          ctx2.textAlign = "center";
+          ctx2.fillStyle = "rgba(255,107,107,0.5)";
+          ctx2.fillText("▼ LOSS ZONE", midLossX, zeroPx + 14);
+          ctx2.restore();
+        }}
+        if (bePoints.length >= 1) {{
+          // Left profit zone label
+          const leftX  = (xScale.left + bePoints[0].bePx) / 2;
+          const rightX = (bePoints[bePoints.length-1].bePx + xScale.right) / 2;
+          const topY   = yScale.top + 28;
+          ctx2.save();
+          ctx2.font      = "bold 9px DM Mono,monospace";
+          ctx2.textAlign = "center";
+          ctx2.fillStyle = "rgba(0,200,150,0.5)";
+          ctx2.fillText("▲ PROFIT", leftX, topY);
+          ctx2.fillText("▲ PROFIT", rightX, topY);
           ctx2.restore();
         }}
 
