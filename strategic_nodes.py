@@ -53,8 +53,26 @@ except ImportError:
     def now_ist_str():
         return datetime.now(IST).strftime("%d-%b-%Y %H:%M:%S IST")
 
-# ── Import holidays ───────────────────────────────────────────────
-from nse_holidays import NSE_HOLIDAYS
+# ── NSE Trading Holidays (hardcoded — update each year) ──────────
+NSE_HOLIDAYS = {
+    # ── 2026 ──────────────────────────────────────────────────────
+    "15-Jan-2026": "Municipal Corporation Election - Maharashtra",
+    "26-Jan-2026": "Republic Day",
+    "03-Mar-2026": "Holi",
+    "26-Mar-2026": "Shri Ram Navami",
+    "31-Mar-2026": "Shri Mahavir Jayanti",
+    "03-Apr-2026": "Good Friday",
+    "14-Apr-2026": "Dr. Baba Saheb Ambedkar Jayanti",
+    "01-May-2026": "Maharashtra Day",
+    "28-May-2026": "Bakri Id",
+    "26-Jun-2026": "Muharram",
+    "14-Sep-2026": "Ganesh Chaturthi",
+    "02-Oct-2026": "Mahatma Gandhi Jayanti",
+    "20-Oct-2026": "Dussehra",
+    "10-Nov-2026": "Diwali-Balipratipada",
+    "24-Nov-2026": "Prakash Gurpurb Sri Guru Nanak Dev",
+    "25-Dec-2026": "Christmas",
+}
 
 _HOLIDAY_DATES = set()
 for _ds in NSE_HOLIDAYS:
