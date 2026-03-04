@@ -44,7 +44,6 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./
           publish_branch: gh-pages
-          include_files: index.html
           commit_message: "Auto-update: ${{ github.run_id }}"
           keep_files: false
           force_orphan: true
