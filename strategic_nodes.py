@@ -2061,7 +2061,7 @@ function drawPayoff() {{
         // ── Spot vertical line ──
         const spotIdx = priceRange.findIndex(p => p >= underlying);
         if (spotIdx >= 0) {{
-          const xPx = xScale.getPixelForValue(priceRange[spotIdx]);
+          const xPx = xScale.getPixelForValue(spotIdx);
           ctx2.save();
           ctx2.setLineDash([6,4]);
           ctx2.strokeStyle = "rgba(0,200,150,0.65)";
@@ -2080,7 +2080,8 @@ function drawPayoff() {{
 
         // ── Crosshair line + dots ──
         if (crosshairX === null) return;
-        const nearXPx  = xScale.getPixelForValue(priceRange[crosshairX]);
+        // Use index-based pixel position (matches how Chart.js places points)
+        const nearXPx  = xScale.getPixelForValue(crosshairX);
         if (isNaN(nearXPx)) return;
         const todayVal = todayPnl[crosshairX];
         const expVal   = expiryPnl[crosshairX];
@@ -2135,12 +2136,14 @@ function drawPayoff() {{
       return;
     }}
 
-    // Find nearest price index by comparing pixel positions
-    let minDist = Infinity, bestIdx = 0;
-    priceRange.forEach((p, i) => {{
-      const dist = Math.abs(xScale.getPixelForValue(p) - canvasX);
-      if (dist < minDist) {{ minDist = dist; bestIdx = i; }}
-    }});
+    // Chart.js with label array: getPixelForValue needs the INDEX not the value
+    // We also do a simple linear interpolation as fallback
+    const chartLeft  = xScale.left;
+    const chartRight = xScale.right;
+    const chartW     = chartRight - chartLeft;
+    const ratio      = (canvasX - chartLeft) / chartW;            // 0..1 across chart
+    const rawIdx     = ratio * (priceRange.length - 1);           // float index
+    const bestIdx    = Math.max(0, Math.min(priceRange.length - 1, Math.round(rawIdx)));
 
     if (crosshairX !== bestIdx) {{
       crosshairX = bestIdx;
