@@ -772,7 +772,7 @@ def build_html(all_expiry_data, expiry_list, generated_at):
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nifty Options Analyzer</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root {{
   --bg:         #07090f;
@@ -847,22 +847,40 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 .analyze-btn:active{{transform:translateY(0);}}
 
 /* ── OPTION CHAIN ── */
-.chain-wrap{{overflow:auto;max-height:520px;}}
-.chain-tbl{{width:100%;border-collapse:collapse;font-family:'DM Mono',monospace;font-size:11px;}}
-.chain-tbl thead tr{{background:linear-gradient(90deg,#0d1a26,#0d1117);position:sticky;top:0;z-index:2;}}
-.chain-tbl th{{padding:9px 10px;text-align:right;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);border-bottom:1px solid var(--border);font-weight:700;}}
-.chain-tbl th.ce{{color:var(--green);}} .chain-tbl th.pe{{color:var(--red);}} .chain-tbl th.ctr{{text-align:center;}}
-.chain-tbl td{{padding:7px 10px;text-align:right;border-bottom:1px solid var(--border2);transition:background .15s;}}
-.chain-tbl tr:hover td{{background:#ffffff04;}}
-.atm-row td{{background:#00d4ff07!important;}}
-.atm-row .stk-col{{color:var(--cyan)!important;font-weight:700;}}
-.stk-col{{text-align:center;font-weight:700;color:var(--text);background:#0d1a2677;border-left:1px solid var(--border);border-right:1px solid var(--border);min-width:85px;}}
-.sup-row .stk-col{{border-left:2px solid var(--green)!important;}}
-.res-row .stk-col{{border-left:2px solid var(--red)!important;}}
-.atm-badge{{display:inline-block;background:var(--cyan);color:#000;font-size:8px;font-weight:700;padding:1px 5px;border-radius:3px;margin-left:4px;letter-spacing:.5px;}}
-.oi-bar-w{{display:flex;align-items:center;gap:4px;justify-content:flex-end;}}
-.oi-bar{{height:3px;border-radius:2px;background:var(--green);max-width:50px;min-width:1px;}}
-.oi-bar.pe{{background:var(--red);}}
+.chain-wrap{{overflow:auto;max-height:540px;}}
+/* Side header labels */
+.chain-side-hdr{{display:grid;grid-template-columns:1fr 100px 1fr;padding:7px 0;border-bottom:1px solid var(--border);background:linear-gradient(90deg,#0d1a26,#0d1117);position:sticky;top:0;z-index:3;}}
+.chain-side-hdr .ce-hdr{{text-align:right;padding-right:12px;font-size:9px;font-weight:800;color:var(--green);letter-spacing:1.5px;text-transform:uppercase;}}
+.chain-side-hdr .st-hdr{{text-align:center;font-size:9px;font-weight:800;color:var(--text2);letter-spacing:1px;text-transform:uppercase;}}
+.chain-side-hdr .pe-hdr{{text-align:left;padding-left:12px;font-size:9px;font-weight:800;color:var(--red);letter-spacing:1.5px;text-transform:uppercase;}}
+/* Sub-column labels */
+.chain-col-hdr{{display:grid;grid-template-columns:1fr 100px 1fr;padding:5px 0 4px;border-bottom:1px solid var(--border2);background:#0a1218;position:sticky;top:32px;z-index:2;}}
+.chain-col-hdr .ce-cols{{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;padding:0 10px 0 6px;}}
+.chain-col-hdr .pe-cols{{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;padding:0 6px 0 10px;}}
+.chain-col-hdr span{{font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;font-family:'JetBrains Mono',monospace;text-align:right;}}
+.chain-col-hdr .pe-cols span{{text-align:left;}}
+/* Rows */
+.chain-row{{display:grid;grid-template-columns:1fr 100px 1fr;border-bottom:1px solid var(--border2);transition:background .12s;position:relative;}}
+.chain-row:hover{{background:#ffffff04;}}
+.chain-row.atm-row{{background:#00d4ff07;border-left:2px solid var(--cyan);}}
+.chain-row.sup-row .stk-cell{{border-left:2px solid var(--green)!important;}}
+.chain-row.res-row .stk-cell{{border-left:2px solid var(--red)!important;}}
+/* CE side */
+.ce-side{{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;align-items:center;padding:8px 10px 8px 6px;gap:2px;position:relative;overflow:hidden;}}
+.ce-heat-bg{{position:absolute;top:0;right:0;bottom:0;background:var(--green);opacity:0.09;pointer-events:none;border-radius:2px 0 0 2px;}}
+/* PE side */
+.pe-side{{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;align-items:center;padding:8px 6px 8px 10px;gap:2px;position:relative;overflow:hidden;}}
+.pe-heat-bg{{position:absolute;top:0;left:0;bottom:0;background:var(--red);opacity:0.09;pointer-events:none;border-radius:0 2px 2px 0;}}
+/* Strike cell */
+.stk-cell{{display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;border-left:1px solid var(--border);border-right:1px solid var(--border);background:#0a1520;min-height:36px;position:relative;flex-direction:column;gap:2px;}}
+.atm-tag{{background:var(--cyan);color:#000;font-size:7px;font-weight:800;padding:1px 6px;border-radius:0 0 4px 4px;position:absolute;top:0;letter-spacing:.5px;}}
+/* Cell values */
+.cv-ltp{{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;text-align:right;}}
+.cv-iv{{font-size:9px;color:var(--text2);font-family:'JetBrains Mono',monospace;text-align:right;}}
+.cv-oi{{font-size:9px;font-family:'JetBrains Mono',monospace;color:var(--text2);text-align:right;}}
+.cv-doi{{font-size:9px;font-family:'JetBrains Mono',monospace;text-align:right;}}
+.pe-side .cv-ltp,.pe-side .cv-iv,.pe-side .cv-oi,.pe-side .cv-doi{{text-align:left;}}
+.ce-ltp-v{{color:var(--green);}} .pe-ltp-v{{color:var(--red);}}
 .up{{color:var(--green)!important;}} .down{{color:var(--red)!important;}}
 
 /* ── GREEKS SIDEBAR ── */
@@ -1086,17 +1104,34 @@ canvas#payoffChart{{width:100%!important;height:288px!important;}}
   <div class="panel">
     <div class="panel-hdr">
       <div class="panel-title">📊 Live Option Chain</div>
-      <span style="font-size:10px;color:var(--text2);font-family:'DM Mono',monospace;" id="chainExpLbl"></span>
+      <div style="display:flex;align-items:center;gap:14px;">
+        <span style="font-size:10px;color:var(--text2);font-family:'JetBrains Mono',monospace;">
+          SPOT <b style="color:var(--cyan);" id="chainSpotLbl">—</b>
+        </span>
+        <span style="font-size:10px;color:var(--text2);font-family:'JetBrains Mono',monospace;">
+          DTE <b style="color:var(--gold);" id="chainDteLbl">—</b>
+        </span>
+        <span style="font-size:10px;color:var(--text2);font-family:'JetBrains Mono',monospace;" id="chainExpLbl"></span>
+      </div>
     </div>
     <div class="chain-wrap">
-      <table class="chain-tbl">
-        <thead><tr>
-          <th class="ce">LTP</th><th class="ce">IV%</th><th class="ce">OI(L)</th><th class="ce">ΔOI</th>
-          <th class="ctr">STRIKE</th>
-          <th class="pe">ΔOI</th><th class="pe">OI(L)</th><th class="pe">IV%</th><th class="pe">LTP</th>
-        </tr></thead>
-        <tbody id="chainBody"><tr><td colspan="9" style="text-align:center;padding:50px;color:var(--text3);font-family:'DM Mono',monospace;font-size:11px;">Loading…</td></tr></tbody>
-      </table>
+      <!-- Side headers -->
+      <div class="chain-side-hdr">
+        <div class="ce-hdr">── CALLS (CE) ──</div>
+        <div class="st-hdr">STRIKE</div>
+        <div class="pe-hdr">── PUTS (PE) ──</div>
+      </div>
+      <!-- Column labels -->
+      <div class="chain-col-hdr">
+        <div class="ce-cols">
+          <span>LTP</span><span>IV%</span><span>OI(L)</span><span>ΔOI</span>
+        </div>
+        <div></div>
+        <div class="pe-cols">
+          <span>ΔOI</span><span>OI(L)</span><span>IV%</span><span>LTP</span>
+        </div>
+      </div>
+      <div id="chainBody"><div style="text-align:center;padding:50px;color:var(--text3);font-family:'JetBrains Mono',monospace;font-size:11px;">Loading…</div></div>
     </div>
   </div>
 
@@ -1181,32 +1216,35 @@ canvas#payoffChart{{width:100%!important;height:288px!important;}}
 <div class="panel" style="margin-bottom:18px;">
   <div class="panel-hdr">
     <div class="panel-title">📈 Payoff Diagram
-      <span style="font-size:9px;color:var(--text3);margin-left:8px;font-family:'DM Mono',monospace;">🟢 Today (BSM+Greeks) &nbsp;|&nbsp; 🔵 At Expiry &nbsp;|&nbsp; bars = OI</span>
+      <span style="font-size:9px;color:var(--text3);margin-left:8px;font-family:'JetBrains Mono',monospace;">🟢 Today (BSM) &nbsp;|&nbsp; 🔵 At Expiry &nbsp;|&nbsp; bars = OI</span>
     </div>
     <select class="sel" style="width:200px;" id="payoffSel" onchange="drawPayoff()">
       <option value="">— Select Strategy —</option>
     </select>
   </div>
+  <!-- Stats boxes -->
+  <div id="payoffStats" style="display:none;grid-template-columns:repeat(4,1fr);gap:10px;padding:14px 16px 0;"></div>
   <div class="payoff-wrap" style="height:320px;padding:16px;position:relative;">
     <canvas id="payoffChart"></canvas>
   </div>
-  <!-- Tooltip floats fixed over viewport so it's never clipped -->
   <div id="payoffTooltip" style="
-    display:none;
-    position:fixed;
-    z-index:9999;
-    background:rgba(8,18,30,0.97);
-    border:1px solid rgba(0,212,255,0.28);
-    border-radius:10px;
-    padding:13px 16px;
-    min-width:250px;max-width:280px;
-    box-shadow:0 8px 36px rgba(0,0,0,0.7),0 0 0 1px rgba(0,212,255,0.08);
-    pointer-events:none;
-    font-family:'DM Mono',monospace;
-    backdrop-filter:blur(8px);
-    transition:opacity 0.1s;
+    display:none;position:fixed;z-index:9999;
+    background:rgba(8,18,30,0.97);border:1px solid rgba(0,212,255,0.28);
+    border-radius:10px;padding:13px 16px;min-width:250px;max-width:280px;
+    box-shadow:0 8px 36px rgba(0,0,0,0.7);pointer-events:none;
+    font-family:'JetBrains Mono',monospace;backdrop-filter:blur(8px);
   "></div>
-  <div style="text-align:center;padding:10px 16px 14px;font-size:11px;font-family:'DM Mono',monospace;border-top:1px solid var(--border);" id="projBadge">
+  <!-- Footer with breakevens + projected P&L -->
+  <div id="payoffFooter" style="display:none;padding:10px 16px 12px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span style="font-size:9px;color:var(--text2);font-family:'JetBrains Mono',monospace;letter-spacing:1px;">BREAKEVENS</span>
+      <div id="beBadges" style="display:flex;gap:6px;"></div>
+    </div>
+    <div style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--text2);" id="projBadge">
+      Select a strategy to see projected P&L
+    </div>
+  </div>
+  <div id="projBadgeFallback" style="text-align:center;padding:10px 16px 14px;font-size:11px;font-family:'JetBrains Mono',monospace;border-top:1px solid var(--border);color:var(--text2);">
     Select a strategy to see projected P&L
   </div>
 </div>
@@ -1340,42 +1378,55 @@ function renderChain() {{
   const d = ALL_DATA[currentExpiry];
   if (!d) return;
   document.getElementById("chainExpLbl").textContent = currentExpiry;
+  // Update spot/DTE labels in chain header
+  const chainSpot = document.getElementById("chainSpotLbl");
+  const chainDte  = document.getElementById("chainDteLbl");
+  if (chainSpot) chainSpot.textContent = "₹" + d.underlying.toLocaleString("en-IN");
+  if (chainDte)  chainDte.textContent  = d.dte;
+
   const supports    = getSupports();
   const resistances = getResistances();
   const underlying  = d.underlying;
   const rows        = [...d.all_strikes].sort((a, b) => b.strike - a.strike);
-  const maxOi       = Math.max(...rows.flatMap(r => [r.ce_oi, r.pe_oi]));
+  const maxOi       = Math.max(...rows.flatMap(r => [r.ce_oi, r.pe_oi]), 1);
 
-  const tbody = document.getElementById("chainBody");
-  tbody.innerHTML = rows.map(r => {{
+  const chainBody = document.getElementById("chainBody");
+  chainBody.innerHTML = rows.map(r => {{
     const isAtm = r.is_atm;
     const isSup = supports.includes(r.strike);
     const isRes = resistances.includes(r.strike);
     const ceOiL = (r.ce_oi / 1e5).toFixed(1);
     const peOiL = (r.pe_oi / 1e5).toFixed(1);
-    const ceBar = Math.round((r.ce_oi / maxOi) * 50);
-    const peBar = Math.round((r.pe_oi / maxOi) * 50);
-    const ceChg = r.ce_oi_chg >= 0
-      ? `<span class="up">+${{(r.ce_oi_chg/1e5).toFixed(1)}}L</span>`
-      : `<span class="down">${{(r.ce_oi_chg/1e5).toFixed(1)}}L</span>`;
-    const peChg = r.pe_oi_chg >= 0
-      ? `<span class="up">+${{(r.pe_oi_chg/1e5).toFixed(1)}}L</span>`
-      : `<span class="down">${{(r.pe_oi_chg/1e5).toFixed(1)}}L</span>`;
-    const rc    = isAtm ? "atm-row" : isSup ? "sup-row" : isRes ? "res-row" : "";
-    const badge = isAtm ? '<span class="atm-badge">ATM</span>' : "";
-    const smark = isSup ? '<span style="color:var(--green);font-size:8px;margin-left:3px;">▲S</span>' : "";
-    const rmark = isRes ? '<span style="color:var(--red);font-size:8px;margin-left:3px;">▼R</span>' : "";
-    return `<tr class="${{rc}}">
-      <td style="color:var(--green)">${{r.ce_ltp.toFixed(2)}}</td>
-      <td>${{r.ce_iv.toFixed(1)}}%</td>
-      <td><div class="oi-bar-w">${{ceOiL}}L<div class="oi-bar" style="width:${{ceBar}}px"></div></div></td>
-      <td>${{ceChg}}</td>
-      <td class="stk-col">${{r.strike.toLocaleString("en-IN")}}${{badge}}${{smark}}${{rmark}}</td>
-      <td>${{peChg}}</td>
-      <td><div class="oi-bar-w"><div class="oi-bar pe" style="width:${{peBar}}px"></div>${{peOiL}}L</div></td>
-      <td>${{r.pe_iv.toFixed(1)}}%</td>
-      <td style="color:var(--red)">${{r.pe_ltp.toFixed(2)}}</td>
-    </tr>`;
+    const ceHeat = Math.round((r.ce_oi / maxOi) * 100);
+    const peHeat = Math.round((r.pe_oi / maxOi) * 100);
+    const ceChgStr = (r.ce_oi_chg >= 0 ? "+" : "") + (r.ce_oi_chg/1e5).toFixed(1) + "L";
+    const peChgStr = (r.pe_oi_chg >= 0 ? "+" : "") + (r.pe_oi_chg/1e5).toFixed(1) + "L";
+    const ceChgCls = r.ce_oi_chg >= 0 ? "up" : "down";
+    const peChgCls = r.pe_oi_chg >= 0 ? "up" : "down";
+    const rc       = isAtm ? "atm-row" : isSup ? "sup-row" : isRes ? "res-row" : "";
+    const smark    = isSup ? '<span style="color:var(--green);font-size:7px;font-weight:700;letter-spacing:.5px;">▲ SUP</span>' : "";
+    const rmark    = isRes ? '<span style="color:var(--red);font-size:7px;font-weight:700;letter-spacing:.5px;">▼ RES</span>' : "";
+    return `<div class="chain-row ${{rc}}">
+      <div class="ce-side">
+        <div class="ce-heat-bg" style="width:${{ceHeat}}%"></div>
+        <span class="cv-ltp ce-ltp-v">${{r.ce_ltp.toFixed(2)}}</span>
+        <span class="cv-iv">${{r.ce_iv.toFixed(1)}}%</span>
+        <span class="cv-oi">${{ceOiL}}L</span>
+        <span class="cv-doi ${{ceChgCls}}">${{ceChgStr}}</span>
+      </div>
+      <div class="stk-cell">
+        ${{isAtm ? '<span class="atm-tag">ATM</span>' : ""}}
+        <span style="color:${{isAtm ? "var(--cyan)" : "var(--text)"}}">${{r.strike.toLocaleString("en-IN")}}</span>
+        ${{smark || rmark ? `<span style="display:flex;gap:4px;">${{smark}}${{rmark}}</span>` : ""}}
+      </div>
+      <div class="pe-side">
+        <div class="pe-heat-bg" style="width:${{peHeat}}%"></div>
+        <span class="cv-doi ${{peChgCls}}">${{peChgStr}}</span>
+        <span class="cv-oi">${{peOiL}}L</span>
+        <span class="cv-iv">${{r.pe_iv.toFixed(1)}}%</span>
+        <span class="cv-ltp pe-ltp-v">${{r.pe_ltp.toFixed(2)}}</span>
+      </div>
+    </div>`;
   }}).join("");
 }}
 
@@ -1906,12 +1957,51 @@ function drawPayoff() {{
   const netCost = Math.abs(s.netPrem) * LOT_SIZE || 1;
 
   // Current projected P&L at spot
-  const projPnl     = stratPnlAtSpot(s.legs, underlying, T_today);
-  const projPct     = ((projPnl / netCost) * 100).toFixed(1);
-  const projCol     = projPnl >= 0 ? "#00c896" : "#ff6b6b";
-  const projSign    = projPnl >= 0 ? "+" : "";
-  document.getElementById("projBadge").innerHTML =
-    `Projected P&L: <span style="color:${{projCol}};font-weight:800;">${{projSign}}₹${{Math.round(projPnl).toLocaleString("en-IN")}} (${{projSign}}${{projPct}}%)</span>`;
+  const projPnl  = stratPnlAtSpot(s.legs, underlying, T_today);
+  const projPct  = ((projPnl / netCost) * 100).toFixed(1);
+  const projCol  = projPnl >= 0 ? "var(--green)" : "var(--red)";
+  const projSign = projPnl >= 0 ? "+" : "";
+
+  // ── Stats boxes ──────────────────────────────────────────────
+  const statsEl = document.getElementById("payoffStats");
+  const maxP    = s.maxProfit;
+  const maxL    = s.maxLoss;
+  const bes     = s.breakevens || [];
+  statsEl.style.display = "grid";
+  statsEl.innerHTML = `
+    <div style="background:var(--bg2);border:1px solid var(--border);border-top:2px solid var(--green);border-radius:10px;padding:10px 14px;">
+      <div style="font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;">Max Profit</div>
+      <div style="font-size:15px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--green);margin-top:3px;">${{maxP >= 999999 ? "Unlimited" : "₹" + maxP.toLocaleString("en-IN")}}</div>
+    </div>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-top:2px solid var(--red);border-radius:10px;padding:10px 14px;">
+      <div style="font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;">Max Loss</div>
+      <div style="font-size:15px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--red);margin-top:3px;">₹${{maxL.toLocaleString("en-IN")}}</div>
+    </div>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-top:2px solid var(--gold);border-radius:10px;padding:10px 14px;">
+      <div style="font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;">Lower BE</div>
+      <div style="font-size:15px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--gold);margin-top:3px;">${{bes[0] ? "₹" + bes[0].toLocaleString("en-IN") : "—"}}</div>
+    </div>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-top:2px solid var(--gold);border-radius:10px;padding:10px 14px;">
+      <div style="font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;">Upper BE</div>
+      <div style="font-size:15px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--gold);margin-top:3px;">${{bes[1] ? "₹" + bes[1].toLocaleString("en-IN") : bes[0] ? "₹" + bes[0].toLocaleString("en-IN") : "—"}}</div>
+    </div>`;
+
+  // ── Footer with BE badges ─────────────────────────────────────
+  const footerEl   = document.getElementById("payoffFooter");
+  const fallbackEl = document.getElementById("projBadgeFallback");
+  if (footerEl)   footerEl.style.display   = "flex";
+  if (fallbackEl) fallbackEl.style.display = "none";
+  const beBadgesEl = document.getElementById("beBadges");
+  if (beBadgesEl) {{
+    beBadgesEl.innerHTML = bes.map((be, i) =>
+      `<span style="background:rgba(255,209,102,0.1);border:1px solid rgba(255,209,102,0.35);border-radius:6px;padding:3px 10px;font-size:10px;font-weight:700;color:var(--gold);font-family:'JetBrains Mono',monospace;">
+        ${{i === 0 ? "▼" : "▲"}} ₹${{be.toLocaleString("en-IN")}}
+      </span>`
+    ).join("");
+  }}
+  const projBadgeEl = document.getElementById("projBadge");
+  if (projBadgeEl) projBadgeEl.innerHTML =
+    `Projected P&L now: <span style="color:${{projCol}};font-weight:800;">${{projSign}}₹${{Math.round(projPnl).toLocaleString("en-IN")}} (${{projSign}}${{projPct}}%)</span>`;
 
   const ctx = document.getElementById("payoffChart").getContext("2d");
   if (payoffChart) payoffChart.destroy();
