@@ -947,6 +947,31 @@ canvas#payoffChart{{width:100%!important;height:208px!important;}}
 ::-webkit-scrollbar{{width:5px;height:5px;}}
 ::-webkit-scrollbar-track{{background:var(--bg);}}
 ::-webkit-scrollbar-thumb{{background:var(--border);border-radius:3px;}}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1100px){{
+  .main{{grid-template-columns:300px 1fr!important;}}
+  .greeks-panel{{display:none;}}
+  .ticker{{grid-template-columns:repeat(2,1fr);}}
+}}
+@media(max-width:800px){{
+  .main{{grid-template-columns:1fr!important;}}
+  .ticker{{grid-template-columns:repeat(2,1fr);}}
+  .strat-grid{{grid-template-columns:1fr!important;}}
+  .hdr{{flex-direction:column;gap:10px;align-items:flex-start;}}
+  .hdr>div:last-child{{align-self:flex-end;}}
+  .wrap{{padding:10px;}}
+  .chain-tbl th,.chain-tbl td{{padding:5px 6px;font-size:10px;}}
+  .sec-hdr{{flex-direction:column;gap:8px;align-items:flex-start;}}
+  .panel-body{{padding:12px;}}
+}}
+@media(max-width:500px){{
+  .ticker{{grid-template-columns:1fr 1fr;gap:8px;}}
+  .tick-val{{font-size:17px;}}
+  .hdr h1{{font-size:16px;}}
+  .bias-row{{grid-template-columns:repeat(3,1fr);}}
+  .sc-fields{{grid-template-columns:1fr 1fr;}}
+}}
 </style>
 </head>
 <body>
@@ -964,7 +989,7 @@ canvas#payoffChart{{width:100%!important;height:208px!important;}}
   <div style="display:flex;align-items:center;gap:14px;">
     <div style="text-align:right;">
       <div style="font-size:9px;color:var(--text3);font-family:'DM Mono',monospace;">GENERATED</div>
-      <div style="font-size:11px;color:var(--text2);font-family:'DM Mono',monospace;">{generated_at}</div>
+      <div class="gen-time" style="font-size:11px;color:var(--text2);font-family:'DM Mono',monospace;">{generated_at}</div>
     </div>
     <div style="text-align:right;">
       <div style="font-size:9px;color:var(--text3);font-family:'DM Mono',monospace;">NEXT REFRESH</div>
@@ -1185,23 +1210,67 @@ let payoffChart    = null;
 // ── Init ──────────────────────────────────────────────────────
 window.onload = () => {{
   populateExpiries();
+  restoreUserState();   // ← restore before first render
   if (currentExpiry) {{
     updateTicker();
     renderChain();
     renderGreeks(null);
   }}
   startCountdown();
+  // Save on lot/capital change
+  document.getElementById("lotSize").addEventListener("input", saveUserState);
+  document.getElementById("maxCap").addEventListener("input",  saveUserState);
+  // Save existing SR inputs
+  document.querySelectorAll(".sup-inp,.res-inp").forEach(inp => {{
+    inp.addEventListener("input", saveUserState);
+  }});
 }};
 
-// ── 30-second page reload countdown ──────────────────────────
+// ── Silent background refresh (no flicker, no reload) ────────
 function startCountdown() {{
   let secs = 30;
   const el = document.getElementById("countdown");
   setInterval(() => {{
     secs--;
-    if (secs <= 0) {{ location.reload(); }}
+    if (secs <= 0) {{
+      secs = 30;
+      silentRefresh();
+    }}
     el.textContent = secs + "s";
   }}, 1000);
+}}
+
+async function silentRefresh() {{
+  try {{
+    const resp = await fetch(location.href + "?_=" + Date.now(), {{cache:"no-store"}});
+    if (!resp.ok) return;
+    const html   = await resp.text();
+    const parser = new DOMParser();
+    const doc    = parser.parseFromString(html, "text/html");
+    // Extract fresh JSON data from new page
+    const scripts = doc.querySelectorAll("script");
+    for (const s of scripts) {{
+      const m = s.textContent.match(/const ALL_DATA\s*=\s*(\{{[\s\S]*?\}});/);
+      if (m) {{
+        try {{
+          const freshData = JSON.parse(m[1]);
+          // Merge fresh data into ALL_DATA
+          Object.assign(ALL_DATA, freshData);
+          // Re-render data panels silently (preserve user inputs)
+          updateTicker();
+          renderChain();
+          updateGreeksForStrike(parseInt(document.getElementById("greeksStrikeSel").value) || ALL_DATA[currentExpiry]?.atm_strike);
+          // Update generated time
+          const genEl = doc.querySelector(".gen-time");
+          if (genEl) document.querySelector(".gen-time") && (document.querySelector(".gen-time").textContent = genEl.textContent);
+          console.log("Silent refresh done:", new Date().toLocaleTimeString());
+        }} catch(e) {{ console.warn("Silent refresh parse error:", e); }}
+        break;
+      }}
+    }}
+  }} catch(e) {{
+    console.warn("Silent refresh fetch error:", e);
+  }}
 }}
 
 // ── Expiry ────────────────────────────────────────────────────
@@ -1218,6 +1287,7 @@ function onExpiryChange() {{
   updateTicker();
   renderChain();
   renderGreeks(null);
+  saveUserState();
 }}
 
 // ── Ticker ────────────────────────────────────────────────────
@@ -1375,8 +1445,68 @@ function setBias(b) {{
   document.getElementById("btnBull").className = "bias-btn" + (b==="bullish"?" bias-bull":"");
   document.getElementById("btnBear").className = "bias-btn" + (b==="bearish"?" bias-bear":"");
   document.getElementById("btnNeut").className = "bias-btn" + (b==="neutral"?" bias-neut":"");
+  saveUserState();
 }}
 setBias("neutral");
+
+// ── Persist user state across silent refreshes ────────────────
+function saveUserState() {{
+  const state = {{
+    bias:        marketBias,
+    expiry:      currentExpiry,
+    supports:    getSupports(),
+    resistances: getResistances(),
+    lotSize:     document.getElementById("lotSize").value,
+    maxCap:      document.getElementById("maxCap").value,
+  }};
+  try {{ sessionStorage.setItem("noa_state", JSON.stringify(state)); }} catch(e) {{}}
+}}
+
+function restoreUserState() {{
+  try {{
+    const raw = sessionStorage.getItem("noa_state");
+    if (!raw) return;
+    const state = JSON.parse(raw);
+
+    // Restore bias
+    if (state.bias) setBias(state.bias);
+
+    // Restore expiry
+    if (state.expiry && EXPIRY_LIST.includes(state.expiry)) {{
+      currentExpiry = state.expiry;
+      document.getElementById("expirySel").value = state.expiry;
+    }}
+
+    // Restore support levels
+    if (state.supports && state.supports.length) {{
+      const supC = document.getElementById("supContainer");
+      supC.innerHTML = "";
+      state.supports.forEach(v => {{
+        const div = document.createElement("div");
+        div.className = "sr-row";
+        div.innerHTML = `<input type="number" class="inp sup-inp" value="${{v}}" placeholder="e.g. 21800"/><button class="rm-btn" onclick="rmRow(this)">✕</button>`;
+        supC.appendChild(div);
+      }});
+    }}
+
+    // Restore resistance levels
+    if (state.resistances && state.resistances.length) {{
+      const resC = document.getElementById("resContainer");
+      resC.innerHTML = "";
+      state.resistances.forEach(v => {{
+        const div = document.createElement("div");
+        div.className = "sr-row";
+        div.innerHTML = `<input type="number" class="inp res-inp" value="${{v}}" placeholder="e.g. 22600"/><button class="rm-btn" onclick="rmRow(this)">✕</button>`;
+        resC.appendChild(div);
+      }});
+    }}
+
+    // Restore lot size & capital
+    if (state.lotSize) document.getElementById("lotSize").value = state.lotSize;
+    if (state.maxCap)  document.getElementById("maxCap").value  = state.maxCap;
+
+  }} catch(e) {{ console.warn("State restore error:", e); }}
+}}
 
 // ── S/R Input ─────────────────────────────────────────────────
 function addLevel(type) {{
@@ -1385,13 +1515,14 @@ function addLevel(type) {{
   const ph  = type==="sup"?"e.g. 21800":"e.g. 22600";
   const div = document.createElement("div");
   div.className = "sr-row";
-  div.innerHTML = `<input type="number" class="inp ${{cls}}" placeholder="${{ph}}"/><button class="rm-btn" onclick="rmRow(this)">✕</button>`;
+  div.innerHTML = `<input type="number" class="inp ${{cls}}" placeholder="${{ph}}" oninput="saveUserState()"/><button class="rm-btn" onclick="rmRow(this)">✕</button>`;
   c.appendChild(div);
 }}
 function rmRow(btn) {{
   const row = btn.parentElement;
   if (row.parentElement.children.length > 1) row.remove();
   else row.querySelector("input").value = "";
+  saveUserState();
 }}
 function getSupports()    {{ return [...document.querySelectorAll(".sup-inp")].map(i=>parseFloat(i.value)).filter(v=>!isNaN(v)&&v>0); }}
 function getResistances() {{ return [...document.querySelectorAll(".res-inp")].map(i=>parseFloat(i.value)).filter(v=>!isNaN(v)&&v>0); }}
