@@ -1864,38 +1864,44 @@ function drawPayoff() {{
   const underlying = d?.underlying || 0;
   const dte        = d?.dte || 7;
 
-  // T_expiry = 0 (pure intrinsic at expiry)
-  const T_expiry = 0;
+  // ── Three time snapshots for the payoff lines ──────────────────
+  // We always show 3 lines regardless of DTE:
+  //   1. "At Entry"  — assume trade was entered at 30 DTE (or actual DTE if > 30)
+  //   2. "Today"     — actual current DTE
+  //   3. "At Expiry" — T = 0, pure intrinsic
+  //
+  // This gives meaningful visual separation even when current DTE is small
+  // because the entry line will always have more time value than today.
 
-  // T_today = actual DTE remaining
-  // But if DTE < 2, BSM ≈ intrinsic and lines look identical.
-  // So we show TWO meaningful scenarios:
-  //   • "Today" line  = BSM at CURRENT time (actual DTE)
-  //   • "Expiry" line = intrinsic at expiry (T=0)
-  // For visual separation when DTE is small, we ALSO show a
-  // "Mid-point" line at half DTE if DTE > 1, else at 1 day out.
-  const T_today  = Math.max(dte / 365, 1 / 365);   // at least 1 day for BSM to show time value
+  const T_expiry   = 0;
+  const T_today    = Math.max(dte / 365, 0.5 / 365);       // actual remaining time
+  const entryDte   = Math.max(dte, 30);                     // entry assumed at 30 DTE min
+  const T_entry    = entryDte / 365;
 
-  // For display in tooltip: compute what "today" label means
+  // Mid = halfway between entry and expiry (shows theta decay slope)
+  const midDte     = Math.round(entryDte / 2);
+  const T_mid      = Math.max(midDte / 365, 1 / 365);
+
+  // Labels for tooltip
   const now        = new Date();
   const todayLabel = now.toLocaleDateString("en-IN", {{weekday:"short", day:"numeric", month:"short"}});
-
-  // Mid-point time (halfway between today and expiry) — for richer display
-  const T_mid      = Math.max((dte / 2) / 365, 0.5 / 365);
-  const midDays    = Math.round(dte / 2);
-  const midDate    = new Date(now.getTime() + midDays * 86400000);
-  const midLabel   = midDate.toLocaleDateString("en-IN", {{weekday:"short", day:"numeric", month:"short"}});
+  const midDate    = new Date(now.getTime() + (midDte - dte) * 86400000);
+  const midLabel   = dte >= entryDte
+                     ? midDate.toLocaleDateString("en-IN", {{weekday:"short", day:"numeric", month:"short"}})
+                     : "Mid (" + midDte + "d)";
 
   // Price range: spot ± 1500 in steps of 25
   const priceRange = [];
   for (let p = underlying - 1500; p <= underlying + 1500; p += 25) priceRange.push(p);
 
-  // Today P&L: BSM with actual DTE (Theta + time value fully reflected)
+  // Line 1: At Entry — maximum time value (30 DTE or actual if higher)
+  const entryPnl  = priceRange.map(p => stratPnlAtSpot(s.legs, p, T_entry));
+  // Line 2: Today — actual current DTE (shows how much theta has decayed)
   const todayPnl  = priceRange.map(p => stratPnlAtSpot(s.legs, p, T_today));
-  // Mid P&L: BSM halfway to expiry (shows theta decay progression)
-  const midPnl    = priceRange.map(p => stratPnlAtSpot(s.legs, p, T_mid));
-  // Expiry P&L: pure intrinsic, T=0
+  // Line 3: At Expiry — T=0, pure intrinsic value only
   const expiryPnl = priceRange.map(p => stratPnlAtSpot(s.legs, p, T_expiry));
+  // Alias for canvas dots
+  const midPnl    = todayPnl;  // today IS the mid reference in the chart
 
   // OI data for background bars (align to priceRange)
   const allStrikes = d?.all_strikes || [];
@@ -1956,45 +1962,41 @@ function drawPayoff() {{
           order:           3,
           barPercentage:   0.6,
         }},
-        // ── Today P&L line (green, BSM with Greeks) ──
+        // ── Entry P&L line (green solid — most time value) ──
         {{
-          label:       "Today P&L (BSM)",
+          label:       "At Entry (" + entryDte + "d)",
           type:        "line",
-          data:        todayPnl,
+          data:        entryPnl,
           borderColor: "#00c896",
           borderWidth: 2.5,
           pointRadius: 0,
-          pointHoverRadius: 5,
-          pointHoverBackgroundColor: "#00c896",
-          fill: {{target: {{value: 0}}, above: "rgba(0,200,150,0.12)", below: "rgba(255,107,107,0.10)"}},
-          tension:  0.3,
-          yAxisID:  "yPnl",
-          order:    1,
+          fill: {{target: {{value: 0}}, above: "rgba(0,200,150,0.10)", below: "rgba(255,107,107,0.08)"}},
+          tension:     0.3,
+          yAxisID:     "yPnl",
+          order:       1,
         }},
-        // ── Mid-point P&L line (gold, halfway to expiry) ──
+        // ── Today P&L line (gold dashed — current theta decay) ──
         {{
-          label:       "Mid (" + midLabel + ")",
+          label:       "Today (DTE:" + dte + ")",
           type:        "line",
-          data:        midPnl,
+          data:        todayPnl,
           borderColor: "#ffd166",
-          borderWidth: 1.5,
+          borderWidth: 2,
           pointRadius: 0,
-          borderDash:  [6, 4],
+          borderDash:  [6, 3],
           fill:        false,
-          tension:     0.2,
+          tension:     0.3,
           yAxisID:     "yPnl",
           order:       2,
         }},
-        // ── Expiry P&L line (blue, intrinsic) ──
+        // ── Expiry P&L line (blue dotted — intrinsic only) ──
         {{
           label:       "At Expiry",
           type:        "line",
           data:        expiryPnl,
           borderColor: "#5ba3ff",
-          borderWidth: 2,
+          borderWidth: 1.8,
           pointRadius: 0,
-          pointHoverRadius: 5,
-          pointHoverBackgroundColor: "#5ba3ff",
           borderDash:  [3, 3],
           fill:        false,
           tension:     0.1,
@@ -2120,22 +2122,21 @@ function drawPayoff() {{
         ctx2.stroke();
         ctx2.setLineDash([]);
 
-        // Today dot (green)
+        // Entry dot (green)
         ctx2.fillStyle   = "#00c896";
         ctx2.strokeStyle = "#060910";
         ctx2.lineWidth   = 2.5;
         ctx2.beginPath();
-        ctx2.arc(nearXPx, yScale.getPixelForValue(todayPnl[crosshairX]), 5, 0, Math.PI*2);
+        ctx2.arc(nearXPx, yScale.getPixelForValue(entryPnl[crosshairX]), 5, 0, Math.PI*2);
         ctx2.fill(); ctx2.stroke();
 
-        // Mid dot (gold) — only if DTE > 2
-        if (dte > 2) {{
-          ctx2.fillStyle   = "#ffd166";
-          ctx2.strokeStyle = "#060910";
-          ctx2.beginPath();
-          ctx2.arc(nearXPx, yScale.getPixelForValue(midPnl[crosshairX]), 4, 0, Math.PI*2);
-          ctx2.fill(); ctx2.stroke();
-        }}
+        // Today dot (gold)
+        ctx2.fillStyle   = "#ffd166";
+        ctx2.strokeStyle = "#060910";
+        ctx2.lineWidth   = 2;
+        ctx2.beginPath();
+        ctx2.arc(nearXPx, yScale.getPixelForValue(todayPnl[crosshairX]), 5, 0, Math.PI*2);
+        ctx2.fill(); ctx2.stroke();
 
         // Expiry dot (blue)
         ctx2.fillStyle   = "#5ba3ff";
@@ -2193,40 +2194,35 @@ function drawPayoff() {{
     const tPct     = ((todayVal / netCost) * 100).toFixed(1);
     const ePct     = ((expVal   / netCost) * 100).toFixed(1);
 
-    const midVal  = midPnl[bestIdx];
-    const mSign   = midVal >= 0 ? "+" : "";
-    const mCol    = midVal >= 0 ? "#00c896" : "#ff6b6b";
-    const mPct    = ((midVal / netCost) * 100).toFixed(1);
+    const entryVal = entryPnl[bestIdx];
+    const enSign   = entryVal >= 0 ? "+" : "";
+    const enCol    = entryVal >= 0 ? "#00c896" : "#ff6b6b";
+    const enPct    = ((entryVal / netCost) * 100).toFixed(1);
+
+    function ttRow(dot, label, sub, val, pct) {{
+      const s = val >= 0 ? "+" : "";
+      const c = val >= 0 ? "#00c896" : "#ff6b6b";
+      return `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+        <span style="font-size:9px;color:#6a8aaa;display:flex;align-items:center;gap:5px;">
+          <span style="width:8px;height:8px;border-radius:50%;background:${{dot}};display:inline-block;flex-shrink:0;"></span>
+          ${{label}}<span style="color:#3d5a73;margin-left:3px;">${{sub}}</span>
+        </span>
+        <span style="font-size:12px;font-weight:800;color:${{c}};font-family:'DM Mono',monospace;">
+          ${{s}}&#8377;${{Math.round(val).toLocaleString("en-IN")}}&nbsp;<span style="font-size:9px;opacity:.75;">(${{s}}${{pct}}%)</span>
+        </span>
+      </div>`;
+    }}
 
     tt.innerHTML = `
-      <div style="font-size:9px;color:#6a8aaa;margin-bottom:5px;letter-spacing:1px;text-transform:uppercase;">When price is at</div>
+      <div style="font-size:9px;color:#6a8aaa;margin-bottom:5px;letter-spacing:1px;">WHEN PRICE IS AT</div>
       <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:9px;">
-        <span style="font-size:17px;font-weight:800;color:#ddeeff;font-family:'DM Mono',monospace;">&#8377;${{price.toLocaleString("en-IN")}}</span>
-        <span style="font-size:11px;font-weight:700;color:${{pCol}};font-family:'DM Mono',monospace;">${{sign}}${{pctChg}}%&nbsp;(${{sign}}${{(price-underlying).toLocaleString("en-IN")}})</span>
+        <span style="font-size:16px;font-weight:800;color:#ddeeff;font-family:'DM Mono',monospace;">&#8377;${{price.toLocaleString("en-IN")}}</span>
+        <span style="font-size:11px;font-weight:700;color:${{pCol}};font-family:'DM Mono',monospace;">${{sign}}${{pctChg}}%&nbsp;(${{sign}}${{(price - underlying).toLocaleString("en-IN")}})</span>
       </div>
-      <div style="height:1px;background:rgba(255,255,255,0.07);margin-bottom:9px;"></div>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-        <span style="font-size:9px;color:#6a8aaa;display:flex;align-items:center;gap:5px;">
-          <span style="width:9px;height:9px;border-radius:50%;background:#00c896;display:inline-block;flex-shrink:0;"></span>
-          Today&nbsp;<span style="color:#3d5a73;">DTE:${{dte}}</span>
-        </span>
-        <span style="font-size:12px;font-weight:800;color:${{tCol}};font-family:'DM Mono',monospace;">${{tSign}}&#8377;${{Math.round(todayVal).toLocaleString("en-IN")}}&ensp;<span style="font-size:9px;opacity:.8;">(${{tSign}}${{tPct}}%)</span></span>
-      </div>
-      ${{dte > 2 ? `
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-        <span style="font-size:9px;color:#6a8aaa;display:flex;align-items:center;gap:5px;">
-          <span style="width:9px;height:9px;border-radius:50%;background:#ffd166;display:inline-block;flex-shrink:0;"></span>
-          ${{midLabel}}&nbsp;<span style="color:#3d5a73;">DTE:${{midDays}}</span>
-        </span>
-        <span style="font-size:12px;font-weight:800;color:${{mCol}};font-family:'DM Mono',monospace;">${{mSign}}&#8377;${{Math.round(midVal).toLocaleString("en-IN")}}&ensp;<span style="font-size:9px;opacity:.8;">(${{mSign}}${{mPct}}%)</span></span>
-      </div>` : ""}}
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <span style="font-size:9px;color:#6a8aaa;display:flex;align-items:center;gap:5px;">
-          <span style="width:9px;height:9px;border-radius:50%;background:#5ba3ff;display:inline-block;flex-shrink:0;"></span>
-          Expiry
-        </span>
-        <span style="font-size:12px;font-weight:800;color:${{eCol}};font-family:'DM Mono',monospace;">${{eSign}}&#8377;${{Math.round(expVal).toLocaleString("en-IN")}}&ensp;<span style="font-size:9px;opacity:.8;">(${{eSign}}${{ePct}}%)</span></span>
-      </div>`;
+      <div style="height:1px;background:rgba(255,255,255,0.07);margin-bottom:8px;"></div>
+      ${{ttRow("#00c896", "At Entry", entryDte + "d", entryVal, enPct)}}
+      ${{ttRow("#ffd166", "Today",    "DTE:" + dte,   todayVal, tPct)}}
+      ${{ttRow("#5ba3ff", "At Expiry","T=0",          expVal,   ePct)}}`;
 
     // ── Position tooltip fixed on viewport ──
     const ttW     = 268, ttH = 140;
