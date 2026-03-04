@@ -1614,7 +1614,7 @@ function analyze() {{
       vals: range.map(price => {{
         let pnl=0;
         legs.forEach(l=>{{
-          const intr=l.type==="CE"?Math.max(0,price-l.strike):Math.max(0,l.strike-price);
+          const intr=(l.opt_type||l.type)==="CE"?Math.max(0,price-l.strike):Math.max(0,l.strike-price);
           pnl+= l.action==="buy"?(intr-l.premium):(l.premium-intr);
         }});
         return Math.round(pnl*LOT_SIZE*100)/100;
@@ -1641,7 +1641,7 @@ function analyze() {{
     // PoP via BSM average
     let popSum=0;
     legs.forEach(l=>{{
-      const b=bsm(underlying,l.strike,T,RISK_FREE,l.iv/100,l.type);
+      const b=bsm(underlying,l.strike,T,RISK_FREE,l.iv/100,l.opt_type||l.type);
       popSum+= l.action==="sell"?b.pop:(1-b.pop);
     }});
     const pop=Math.round(popSum/legs.length*100*10)/10;
@@ -1786,7 +1786,7 @@ function renderStrategies() {{
     const sw      = Math.round((s.score/maxScore)*100);
     const beStr   = s.breakevens.length ? s.breakevens.map(b=>"₹"+b.toLocaleString("en-IN")).join(" / ") : "—";
     const netDisp = s.isDebit ? `<span class="down">-₹${{Math.abs(s.netPrem).toFixed(2)}}</span>` : `<span class="up">+₹${{s.netPrem.toFixed(2)}}</span>`;
-    const legTags = s.legs.map(l=>`<span class="leg-tag leg-${{l.action}}">${{l.action.toUpperCase()}} ${{l.strike}} ${{l.type}} @${{l.premium.toFixed(2)}}</span>`).join("");
+    const legTags = s.legs.map(l=>`<span class="leg-tag leg-${{l.action}}">${{l.action.toUpperCase()}} ${{l.strike}} ${{l.opt_type||l.type}} @${{l.premium.toFixed(2)}}</span>`).join("");
 
     return `<div class="strat-card" style="--cc:${{cc}};animation-delay:${{i*0.05}}s" onclick="selectPayoff('${{s.name}}')">
       <div class="sc-top">
@@ -1846,8 +1846,9 @@ function bsmPrice(S, K, T, r, sigma, type) {{
 function stratPnlAtSpot(legs, spotPrice, T) {{
   let pnl = 0;
   legs.forEach(l => {{
-    const sigma  = (l.iv || 15) / 100;
-    const theoVal = bsmPrice(spotPrice, l.strike, T, RISK_FREE, sigma, l.type);
+    const sigma   = (l.iv || 15) / 100;
+    const optType = l.opt_type || l.type || "CE";   // handle both field names
+    const theoVal = bsmPrice(spotPrice, l.strike, T, RISK_FREE, sigma, optType);
     const legPnl  = l.action === "buy" ? (theoVal - l.premium) : (l.premium - theoVal);
     pnl += legPnl;
   }});
@@ -2042,7 +2043,11 @@ function drawPayoff() {{
             color:         "#2d4560",
             font:          {{family: "DM Mono", size: 9}},
             maxTicksLimit: 12,
-            callback:      v => v.toLocaleString("en-IN"),
+            callback:      (val, idx) => {{
+              // val is the label value (price number) when labels are numeric array
+              const price = priceRange[idx] ?? val;
+              return price >= 1000 ? Math.round(price).toLocaleString("en-IN") : price;
+            }},
           }},
           grid:   {{color: "#0b1520"}},
           border: {{color: "#1a2535"}},
