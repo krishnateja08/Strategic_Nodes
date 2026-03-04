@@ -2096,94 +2096,102 @@ function drawPayoff() {{
         ctx2.restore();
       }},
 
-      // ── Mouse/Touch → update HTML tooltip overlay ──────────────
-      afterEvent(chart, args) {{
-        const event  = args.event;
-        const xScale = chart.scales.x;
-        const tt     = document.getElementById("payoffTooltip");
-
-        if (["mouseleave","touchend","mouseout"].includes(event.type)) {{
-          crosshairX = null;
-          tt.style.display = "none";
-          chart.draw();
-          return;
-        }}
-        if (!["mousemove","touchmove","touchstart"].includes(event.type)) return;
-
-        // chart.js normalises touch to event.x — use it directly
-        const evtX = event.x ?? (event.native?.touches?.[0]?.clientX
-                     ? event.native.touches[0].clientX - chart.canvas.getBoundingClientRect().left
-                     : null);
-        if (evtX === null) return;
-        if (evtX < xScale.left || evtX > xScale.right) {{
-          crosshairX = null;
-          tt.style.display = "none";
-          chart.draw();
-          return;
-        }}
-
-        // Nearest price index
-        let minDist = Infinity, bestIdx = 0;
-        priceRange.forEach((p, i) => {{
-          const dist = Math.abs(xScale.getPixelForValue(p) - evtX);
-          if (dist < minDist) {{ minDist = dist; bestIdx = i; }}
-        }});
-
-        if (crosshairX !== bestIdx) {{
-          crosshairX = bestIdx;
-          chart.draw();
-        }}
-
-        // ── Build HTML tooltip ──
-        const price    = priceRange[bestIdx];
-        const pctChg   = (((price - underlying) / underlying) * 100).toFixed(1);
-        const sign     = pctChg >= 0 ? "+" : "";
-        const pCol     = parseFloat(pctChg) >= 0 ? "#00c896" : "#ff6b6b";
-        const todayVal = todayPnl[bestIdx];
-        const expVal   = expiryPnl[bestIdx];
-        const tSign    = todayVal >= 0 ? "+" : "";
-        const eSign    = expVal   >= 0 ? "+" : "";
-        const tCol     = todayVal >= 0 ? "#00c896" : "#ff6b6b";
-        const eCol     = expVal   >= 0 ? "#00c896" : "#ff6b6b";
-        const tPct     = ((todayVal / netCost) * 100).toFixed(1);
-        const ePct     = ((expVal   / netCost) * 100).toFixed(1);
-
-        tt.innerHTML = `
-          <div style="font-size:9px;color:#6a8aaa;margin-bottom:4px;letter-spacing:.5px;">WHEN PRICE IS AT</div>
-          <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px;">
-            <span style="font-size:16px;font-weight:800;color:#ddeeff;font-family:'DM Mono',monospace;">₹${{price.toLocaleString("en-IN")}}</span>
-            <span style="font-size:11px;font-weight:700;color:${{pCol}};font-family:'DM Mono',monospace;">${{sign}}${{pctChg}}% (${{sign}}${{(price-underlying).toLocaleString("en-IN")}})</span>
-          </div>
-          <div style="height:1px;background:rgba(255,255,255,0.07);margin-bottom:8px;"></div>
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
-            <span style="font-size:9px;color:#6a8aaa;display:flex;align-items:center;gap:5px;"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#00c896;"></span>Today (BSM)</span>
-            <span style="font-size:12px;font-weight:800;color:${{tCol}};font-family:'DM Mono',monospace;">${{tSign}}₹${{Math.round(todayVal).toLocaleString("en-IN")}}&nbsp;<span style="font-size:9px;">(${{tSign}}${{tPct}}%)</span></span>
-          </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;">
-            <span style="font-size:9px;color:#6a8aaa;display:flex;align-items:center;gap:5px;"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#5ba3ff;"></span>At Expiry</span>
-            <span style="font-size:12px;font-weight:800;color:${{eCol}};font-family:'DM Mono',monospace;">${{eSign}}₹${{Math.round(expVal).toLocaleString("en-IN")}}&nbsp;<span style="font-size:9px;">(${{eSign}}${{ePct}}%)</span></span>
-          </div>`;
-
-        // Position tooltip using fixed coords (viewport-relative)
-        const canvasRect = chart.canvas.getBoundingClientRect();
-        const xPxAbs     = xScale.getPixelForValue(price);  // px from canvas left
-        const ttW        = 265;
-        const ttH        = 130;
-        // Convert canvas-relative x to viewport-relative x
-        let fixedLeft = canvasRect.left + xPxAbs + 18;
-        let fixedTop  = canvasRect.top  + chart.scales.yPnl.top + 10;
-        // Flip left if tooltip would go off screen right
-        if (fixedLeft + ttW > window.innerWidth - 12)
-          fixedLeft = canvasRect.left + xPxAbs - ttW - 18;
-        // Flip up if tooltip would go off screen bottom
-        if (fixedTop + ttH > window.innerHeight - 12)
-          fixedTop = canvasRect.top + chart.scales.yPnl.bottom - ttH - 10;
-        tt.style.left    = fixedLeft + "px";
-        tt.style.top     = fixedTop  + "px";
-        tt.style.display = "block";
-      }},
     }}],
   }});
+
+  // ── Attach native canvas events (reliable in Chart.js 4.x) ──
+  const canvas = document.getElementById("payoffChart");
+  const tt     = document.getElementById("payoffTooltip");
+
+  function showTooltip(clientX, clientY) {{
+    const rect   = canvas.getBoundingClientRect();
+    const xScale = payoffChart.scales.x;
+    const yScale = payoffChart.scales.yPnl;
+    // Canvas-relative X
+    const canvasX = clientX - rect.left;
+
+    if (canvasX < xScale.left || canvasX > xScale.right) {{
+      crosshairX = null;
+      tt.style.display = "none";
+      payoffChart.draw();
+      return;
+    }}
+
+    // Find nearest price index
+    let minDist = Infinity, bestIdx = 0;
+    priceRange.forEach((p, i) => {{
+      const dist = Math.abs(xScale.getPixelForValue(p) - canvasX);
+      if (dist < minDist) {{ minDist = dist; bestIdx = i; }}
+    }});
+
+    if (crosshairX !== bestIdx) {{
+      crosshairX = bestIdx;
+      payoffChart.draw();
+    }}
+
+    // ── Build tooltip HTML ──
+    const price    = priceRange[bestIdx];
+    const pctChg   = (((price - underlying) / underlying) * 100).toFixed(1);
+    const sign     = parseFloat(pctChg) >= 0 ? "+" : "";
+    const pCol     = parseFloat(pctChg) >= 0 ? "#00c896" : "#ff6b6b";
+    const todayVal = todayPnl[bestIdx];
+    const expVal   = expiryPnl[bestIdx];
+    const tSign    = todayVal >= 0 ? "+" : "";
+    const eSign    = expVal   >= 0 ? "+" : "";
+    const tCol     = todayVal >= 0 ? "#00c896" : "#ff6b6b";
+    const eCol     = expVal   >= 0 ? "#00c896" : "#ff6b6b";
+    const tPct     = ((todayVal / netCost) * 100).toFixed(1);
+    const ePct     = ((expVal   / netCost) * 100).toFixed(1);
+
+    tt.innerHTML = `
+      <div style="font-size:9px;color:#6a8aaa;margin-bottom:5px;letter-spacing:1px;text-transform:uppercase;">When price is at</div>
+      <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:9px;">
+        <span style="font-size:17px;font-weight:800;color:#ddeeff;">&#8377;${{price.toLocaleString("en-IN")}}</span>
+        <span style="font-size:11px;font-weight:700;color:${{pCol}};">${{sign}}${{pctChg}}%&nbsp;(${{sign}}${{(price-underlying).toLocaleString("en-IN")}})</span>
+      </div>
+      <div style="height:1px;background:rgba(255,255,255,0.07);margin-bottom:9px;"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <span style="font-size:9px;color:#6a8aaa;display:flex;align-items:center;gap:5px;">
+          <span style="width:8px;height:8px;border-radius:50%;background:#00c896;display:inline-block;"></span>Today (BSM)
+        </span>
+        <span style="font-size:12px;font-weight:800;color:${{tCol}};">${{tSign}}&#8377;${{Math.round(todayVal).toLocaleString("en-IN")}}&ensp;<span style="font-size:9px;opacity:.8;">(${{tSign}}${{tPct}}%)</span></span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:9px;color:#6a8aaa;display:flex;align-items:center;gap:5px;">
+          <span style="width:8px;height:8px;border-radius:50%;background:#5ba3ff;display:inline-block;"></span>At Expiry
+        </span>
+        <span style="font-size:12px;font-weight:800;color:${{eCol}};">${{eSign}}&#8377;${{Math.round(expVal).toLocaleString("en-IN")}}&ensp;<span style="font-size:9px;opacity:.8;">(${{eSign}}${{ePct}}%)</span></span>
+      </div>`;
+
+    // ── Position tooltip fixed on viewport ──
+    const ttW     = 268, ttH = 140;
+    let fixedL    = clientX + 18;
+    let fixedT    = clientY - ttH / 2;
+    if (fixedL + ttW > window.innerWidth  - 10) fixedL = clientX - ttW - 18;
+    if (fixedT < 8)                              fixedT = 8;
+    if (fixedT + ttH > window.innerHeight - 10)  fixedT = window.innerHeight - ttH - 10;
+    tt.style.left    = fixedL + "px";
+    tt.style.top     = fixedT + "px";
+    tt.style.display = "block";
+  }}
+
+  function hideTooltip() {{
+    crosshairX = null;
+    tt.style.display = "none";
+    payoffChart.draw();
+  }}
+
+  // Mouse events
+  canvas.addEventListener("mousemove",  e => showTooltip(e.clientX, e.clientY));
+  canvas.addEventListener("mouseleave", hideTooltip);
+
+  // Touch events
+  canvas.addEventListener("touchmove", e => {{
+    e.preventDefault();
+    const t = e.touches[0];
+    showTooltip(t.clientX, t.clientY);
+  }}, {{passive: false}});
+  canvas.addEventListener("touchend", hideTooltip);
 }}
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
