@@ -1187,8 +1187,18 @@ canvas#payoffChart{{width:100%!important;height:288px!important;}}
       <option value="">— Select Strategy —</option>
     </select>
   </div>
-  <div class="payoff-wrap" style="height:320px;padding:16px;">
+  <div class="payoff-wrap" style="height:320px;padding:16px;position:relative;">
     <canvas id="payoffChart"></canvas>
+    <div id="payoffTooltip" style="
+      display:none;position:absolute;z-index:99;
+      background:rgba(10,20,34,0.97);
+      border:1px solid rgba(0,212,255,0.25);
+      border-radius:10px;padding:12px 14px;
+      min-width:240px;max-width:270px;
+      box-shadow:0 8px 32px rgba(0,0,0,0.6);
+      pointer-events:none;
+      font-family:'DM Mono',monospace;
+    "></div>
   </div>
   <div style="text-align:center;padding:10px 16px 14px;font-size:11px;font-family:'DM Mono',monospace;border-top:1px solid var(--border);" id="projBadge">
     Select a strategy to see projected P&L
@@ -2020,170 +2030,139 @@ function drawPayoff() {{
       }},
     }},
     plugins: [{{
-      // ── Spot price vertical line & custom crosshair tooltip ──
+      // ── Spot line + crosshair drawn on canvas ──────────────────
       id: "crosshairSpot",
-      afterDraw(chart) {{
-        const xScale   = chart.scales.x;
-        const yScale   = chart.scales.yPnl;
-        const ctx2     = chart.ctx;
-        const spotIdx  = priceRange.findIndex(p => p >= underlying);
-        if (spotIdx < 0) return;
-        const xPx = xScale.getPixelForValue(priceRange[spotIdx]);
+      afterDatasetsDraw(chart) {{
+        const xScale = chart.scales.x;
+        const yScale = chart.scales.yPnl;
+        const ctx2   = chart.ctx;
 
-        // Draw vertical dashed line at spot
-        ctx2.save();
-        ctx2.setLineDash([6, 4]);
-        ctx2.strokeStyle = "rgba(0,200,150,0.7)";
-        ctx2.lineWidth   = 1.5;
-        ctx2.beginPath();
-        ctx2.moveTo(xPx, yScale.top);
-        ctx2.lineTo(xPx, yScale.bottom);
-        ctx2.stroke();
-        ctx2.restore();
-
-        // Spot label at top
-        ctx2.save();
-        ctx2.fillStyle    = "rgba(0,200,150,0.85)";
-        ctx2.font         = "bold 10px DM Mono, monospace";
-        ctx2.textAlign    = "center";
-        ctx2.fillText("▼ " + underlying.toLocaleString("en-IN"), xPx, yScale.top - 6);
-        ctx2.restore();
-
-        // ── Draw crosshair if active ──
-        if (crosshairX !== null) {{
-          const nearIdx  = crosshairX;
-          const nearXPx  = xScale.getPixelForValue(priceRange[nearIdx]);
-          const price    = priceRange[nearIdx];
-          const pctChg   = (((price - underlying) / underlying) * 100).toFixed(1);
-          const todayVal = todayPnl[nearIdx];
-          const expVal   = expiryPnl[nearIdx];
-          const sign     = pctChg >= 0 ? "+" : "";
-
-          // Crosshair vertical line
+        // ── Spot vertical line ──
+        const spotIdx = priceRange.findIndex(p => p >= underlying);
+        if (spotIdx >= 0) {{
+          const xPx = xScale.getPixelForValue(priceRange[spotIdx]);
           ctx2.save();
-          ctx2.setLineDash([3, 3]);
-          ctx2.strokeStyle = "rgba(255,255,255,0.2)";
-          ctx2.lineWidth   = 1;
+          ctx2.setLineDash([6,4]);
+          ctx2.strokeStyle = "rgba(0,200,150,0.65)";
+          ctx2.lineWidth   = 1.5;
           ctx2.beginPath();
-          ctx2.moveTo(nearXPx, yScale.top);
-          ctx2.lineTo(nearXPx, yScale.bottom);
+          ctx2.moveTo(xPx, yScale.top);
+          ctx2.lineTo(xPx, yScale.bottom);
           ctx2.stroke();
-          ctx2.restore();
-
-          // Tooltip box
-          const tW = 210, tH = 96, tX_raw = nearXPx + 12, tY = yScale.top + 10;
-          const tX = (tX_raw + tW > chart.width - 10) ? nearXPx - tW - 12 : tX_raw;
-
-          ctx2.save();
-          // Box shadow
-          ctx2.shadowColor   = "rgba(0,0,0,0.5)";
-          ctx2.shadowBlur    = 12;
-          ctx2.fillStyle     = "rgba(13,26,40,0.96)";
-          ctx2.strokeStyle   = "rgba(0,212,255,0.3)";
-          ctx2.lineWidth     = 1;
-          const r2 = 8;
-          ctx2.beginPath();
-          ctx2.moveTo(tX+r2,tY); ctx2.lineTo(tX+tW-r2,tY);
-          ctx2.quadraticCurveTo(tX+tW,tY,tX+tW,tY+r2);
-          ctx2.lineTo(tX+tW,tY+tH-r2);
-          ctx2.quadraticCurveTo(tX+tW,tY+tH,tX+tW-r2,tY+tH);
-          ctx2.lineTo(tX+r2,tY+tH); ctx2.quadraticCurveTo(tX,tY+tH,tX,tY+tH-r2);
-          ctx2.lineTo(tX,tY+r2); ctx2.quadraticCurveTo(tX,tY,tX+r2,tY);
-          ctx2.closePath();
-          ctx2.fill(); ctx2.stroke();
-          ctx2.shadowBlur = 0;
-
-          // "When price is at" header
-          ctx2.fillStyle  = "rgba(106,138,170,0.9)";
-          ctx2.font       = "10px DM Mono, monospace";
-          ctx2.textAlign  = "left";
-          ctx2.fillText("When price is at", tX+12, tY+18);
-
-          // Price + % change
-          const pCol = parseFloat(pctChg) >= 0 ? "#00c896" : "#ff6b6b";
-          ctx2.fillStyle = "#ddeeff";
-          ctx2.font      = "bold 14px DM Mono, monospace";
-          ctx2.fillText("₹" + price.toLocaleString("en-IN"), tX+12, tY+36);
-          ctx2.fillStyle = pCol;
-          ctx2.font      = "bold 11px DM Mono, monospace";
-          ctx2.fillText(sign + pctChg + "% (" + sign + (price-underlying).toLocaleString("en-IN") + ")", tX+100, tY+36);
-
-          // Divider
-          ctx2.strokeStyle = "rgba(255,255,255,0.08)";
-          ctx2.lineWidth   = 1;
-          ctx2.beginPath(); ctx2.moveTo(tX+12,tY+44); ctx2.lineTo(tX+tW-12,tY+44); ctx2.stroke();
-
-          // Today P&L row
-          const todayCol = todayVal >= 0 ? "#00c896" : "#ff6b6b";
-          const todayPct = ((todayVal / netCost) * 100).toFixed(1);
-          const todaySign = todayVal >= 0 ? "+" : "";
-          ctx2.fillStyle = "rgba(106,138,170,0.8)";
-          ctx2.font      = "9px DM Mono, monospace";
-          ctx2.fillText("Today (BSM)", tX+12, tY+58);
-          ctx2.fillStyle = todayCol;
-          ctx2.font      = "bold 11px DM Mono, monospace";
-          ctx2.fillText(todaySign + "₹" + Math.round(todayVal).toLocaleString("en-IN") + " (" + todaySign + todayPct + "%)", tX+90, tY+58);
-
-          // Expiry P&L row
-          const expCol  = expVal >= 0 ? "#00c896" : "#ff6b6b";
-          const expPct  = ((expVal / netCost) * 100).toFixed(1);
-          const expSign = expVal >= 0 ? "+" : "";
-          ctx2.fillStyle = "rgba(106,138,170,0.8)";
-          ctx2.font      = "9px DM Mono, monospace";
-          ctx2.fillText("At Expiry", tX+12, tY+76);
-          ctx2.fillStyle = expCol;
-          ctx2.font      = "bold 11px DM Mono, monospace";
-          ctx2.fillText(expSign + "₹" + Math.round(expVal).toLocaleString("en-IN") + " (" + expSign + expPct + "%)", tX+90, tY+76);
-
-          // Dot on Today line
-          const todayYPx = yScale.getPixelForValue(todayVal);
-          ctx2.fillStyle   = "#00c896";
-          ctx2.strokeStyle = "#0d1117";
-          ctx2.lineWidth   = 2;
-          ctx2.beginPath();
-          ctx2.arc(nearXPx, todayYPx, 5, 0, Math.PI*2);
-          ctx2.fill(); ctx2.stroke();
-
-          // Dot on Expiry line
-          const expYPx = yScale.getPixelForValue(expVal);
-          ctx2.fillStyle   = "#5ba3ff";
-          ctx2.strokeStyle = "#0d1117";
-          ctx2.beginPath();
-          ctx2.arc(nearXPx, expYPx, 5, 0, Math.PI*2);
-          ctx2.fill(); ctx2.stroke();
-
+          ctx2.setLineDash([]);
+          ctx2.fillStyle  = "rgba(0,200,150,0.9)";
+          ctx2.font       = "bold 9px DM Mono,monospace";
+          ctx2.textAlign  = "center";
+          ctx2.fillText("▼ " + underlying.toLocaleString("en-IN"), xPx, yScale.top - 4);
           ctx2.restore();
         }}
+
+        // ── Crosshair line + dots ──
+        if (crosshairX === null) return;
+        const nearXPx  = xScale.getPixelForValue(priceRange[crosshairX]);
+        const todayVal = todayPnl[crosshairX];
+        const expVal   = expiryPnl[crosshairX];
+
+        ctx2.save();
+        ctx2.setLineDash([3,3]);
+        ctx2.strokeStyle = "rgba(255,255,255,0.18)";
+        ctx2.lineWidth   = 1;
+        ctx2.beginPath();
+        ctx2.moveTo(nearXPx, yScale.top);
+        ctx2.lineTo(nearXPx, yScale.bottom);
+        ctx2.stroke();
+        ctx2.setLineDash([]);
+
+        // Today dot
+        ctx2.fillStyle   = "#00c896";
+        ctx2.strokeStyle = "#060910";
+        ctx2.lineWidth   = 2.5;
+        ctx2.beginPath();
+        ctx2.arc(nearXPx, yScale.getPixelForValue(todayVal), 5, 0, Math.PI*2);
+        ctx2.fill(); ctx2.stroke();
+
+        // Expiry dot
+        ctx2.fillStyle   = "#5ba3ff";
+        ctx2.strokeStyle = "#060910";
+        ctx2.beginPath();
+        ctx2.arc(nearXPx, yScale.getPixelForValue(expVal), 5, 0, Math.PI*2);
+        ctx2.fill(); ctx2.stroke();
+        ctx2.restore();
       }},
 
-      // ── Mouse / Touch event handling ──
+      // ── Mouse/Touch → update HTML tooltip overlay ──────────────
       afterEvent(chart, args) {{
-        const event = args.event;
-        if (!["mousemove","touchmove","touchstart"].includes(event.type)) {{
-          if (["mouseleave","touchend"].includes(event.type)) {{
-            crosshairX = null;
-            chart.draw();
-          }}
-          return;
-        }}
+        const event  = args.event;
         const xScale = chart.scales.x;
-        const evtX   = event.x;
-        if (evtX < xScale.left || evtX > xScale.right) {{
+        const tt     = document.getElementById("payoffTooltip");
+
+        if (["mouseleave","touchend","mouseout"].includes(event.type)) {{
           crosshairX = null;
+          tt.style.display = "none";
           chart.draw();
           return;
         }}
-        // Find nearest price index
+        if (!["mousemove","touchmove","touchstart"].includes(event.type)) return;
+
+        const evtX = event.x;
+        if (evtX < xScale.left || evtX > xScale.right) {{
+          crosshairX = null;
+          tt.style.display = "none";
+          chart.draw();
+          return;
+        }}
+
+        // Nearest price index
         let minDist = Infinity, bestIdx = 0;
         priceRange.forEach((p, i) => {{
-          const px   = xScale.getPixelForValue(p);
-          const dist = Math.abs(px - evtX);
+          const dist = Math.abs(xScale.getPixelForValue(p) - evtX);
           if (dist < minDist) {{ minDist = dist; bestIdx = i; }}
         }});
+
         if (crosshairX !== bestIdx) {{
           crosshairX = bestIdx;
           chart.draw();
         }}
+
+        // ── Build HTML tooltip ──
+        const price    = priceRange[bestIdx];
+        const pctChg   = (((price - underlying) / underlying) * 100).toFixed(1);
+        const sign     = pctChg >= 0 ? "+" : "";
+        const pCol     = parseFloat(pctChg) >= 0 ? "#00c896" : "#ff6b6b";
+        const todayVal = todayPnl[bestIdx];
+        const expVal   = expiryPnl[bestIdx];
+        const tSign    = todayVal >= 0 ? "+" : "";
+        const eSign    = expVal   >= 0 ? "+" : "";
+        const tCol     = todayVal >= 0 ? "#00c896" : "#ff6b6b";
+        const eCol     = expVal   >= 0 ? "#00c896" : "#ff6b6b";
+        const tPct     = ((todayVal / netCost) * 100).toFixed(1);
+        const ePct     = ((expVal   / netCost) * 100).toFixed(1);
+
+        tt.innerHTML = `
+          <div style="font-size:9px;color:#6a8aaa;margin-bottom:4px;letter-spacing:.5px;">WHEN PRICE IS AT</div>
+          <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px;">
+            <span style="font-size:16px;font-weight:800;color:#ddeeff;font-family:'DM Mono',monospace;">₹${{price.toLocaleString("en-IN")}}</span>
+            <span style="font-size:11px;font-weight:700;color:${{pCol}};font-family:'DM Mono',monospace;">${{sign}}${{pctChg}}% (${{sign}}${{(price-underlying).toLocaleString("en-IN")}})</span>
+          </div>
+          <div style="height:1px;background:rgba(255,255,255,0.07);margin-bottom:8px;"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+            <span style="font-size:9px;color:#6a8aaa;display:flex;align-items:center;gap:5px;"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#00c896;"></span>Today (BSM)</span>
+            <span style="font-size:12px;font-weight:800;color:${{tCol}};font-family:'DM Mono',monospace;">${{tSign}}₹${{Math.round(todayVal).toLocaleString("en-IN")}}&nbsp;<span style="font-size:9px;">(${{tSign}}${{tPct}}%)</span></span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:9px;color:#6a8aaa;display:flex;align-items:center;gap:5px;"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#5ba3ff;"></span>At Expiry</span>
+            <span style="font-size:12px;font-weight:800;color:${{eCol}};font-family:'DM Mono',monospace;">${{eSign}}₹${{Math.round(expVal).toLocaleString("en-IN")}}&nbsp;<span style="font-size:9px;">(${{eSign}}${{ePct}}%)</span></span>
+          </div>`;
+
+        // Position tooltip — flip left if near right edge
+        const canvasRect = chart.canvas.getBoundingClientRect();
+        const xPxAbs     = xScale.getPixelForValue(price);
+        const ttW        = 260;
+        let   leftPx     = xPxAbs + 14;
+        if (leftPx + ttW > chart.width - 10) leftPx = xPxAbs - ttW - 14;
+        tt.style.left    = leftPx + "px";
+        tt.style.top     = (chart.scales.yPnl.top + 10) + "px";
+        tt.style.display = "block";
       }},
     }}],
   }});
