@@ -1944,6 +1944,7 @@ function renderStrategies() {{
       <!-- ── INTRADAY SIMULATOR TOGGLE BUTTON ── -->
       <div style="padding:8px 12px;border-top:1px solid rgba(255,255,255,.05);" onclick="event.stopPropagation()">
         <button
+          data-simuid="${{uid}}"
           onclick="toggleSim('${{uid}}',this)"
           style="width:100%;background:rgba(245,197,24,.07);border:1px solid rgba(245,197,24,.2);border-radius:8px;
                  padding:7px 12px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;
@@ -2199,23 +2200,19 @@ function toggleSim(uid, btn) {{
   const isOpen = wrap.style.display !== "none";
 
   // Close ALL other open simulators first
-  document.querySelectorAll('[id^="sim-wrap-"]').forEach(el => {{
-    if (el.id !== "sim-wrap-" + uid && el.style.display !== "none") {{
-      el.style.display = "none";
-      const otherId    = el.id.replace("sim-wrap-", "");
-      const otherArrow = document.getElementById("sim-arrow-" + otherId);
-      if (otherArrow) otherArrow.style.transform = "rotate(0deg)";
-      // Reset button style — walk up to find the button
-      const otherBtn = el.previousElementSibling?.querySelector("button");
-      if (otherBtn) {{
-        otherBtn.style.background  = "rgba(245,197,24,.07)";
-        otherBtn.style.borderColor = "rgba(245,197,24,.2)";
-      }}
-    }}
+  document.querySelectorAll('[data-simuid]').forEach(otherBtn => {{
+    const otherId = otherBtn.getAttribute("data-simuid");
+    if (otherId === uid) return; // skip current
+    const otherWrap  = document.getElementById("sim-wrap-"  + otherId);
+    const otherArrow = document.getElementById("sim-arrow-" + otherId);
+    if (otherWrap)  otherWrap.style.display          = "none";
+    if (otherArrow) otherArrow.style.transform       = "rotate(0deg)";
+    otherBtn.style.background  = "rgba(245,197,24,.07)";
+    otherBtn.style.borderColor = "rgba(245,197,24,.2)";
   }});
 
   // Toggle this one
-  wrap.style.display   = isOpen ? "none" : "block";
+  wrap.style.display    = isOpen ? "none"   : "block";
   if (arrow) arrow.style.transform = isOpen ? "rotate(0deg)" : "rotate(180deg)";
   btn.style.background  = isOpen ? "rgba(245,197,24,.07)" : "rgba(245,197,24,.13)";
   btn.style.borderColor = isOpen ? "rgba(245,197,24,.2)"  : "rgba(245,197,24,.4)";
