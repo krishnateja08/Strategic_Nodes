@@ -497,32 +497,74 @@ RISK_FREE_R = 0.065
 
 
 def _strategy_pop(legs, underlying, T, r=RISK_FREE_R, breakevens=None, strategy_type=None):
-    """Estimate probability of profit using BSM for each leg.
-    For long volatility strategies (straddle/strangle), use breakeven-based probability.
     """
-    is_long_vol = (
-        strategy_type in ("straddle", "strangle")
-        and all(l["action"] == "buy" for l in legs)
-    )
-    if is_long_vol and breakevens:
-        lower_be = breakevens[0]
-        upper_be = breakevens[1] if len(breakevens) >= 2 else None
-        sigma    = legs[0]["iv"] / 100
-        bs_lower = black_scholes(underlying, lower_be, T, r, sigma, "PE")
-        prob_below = bs_lower.get("prob_profit", 0.25)
-        prob_above = 0
-        if upper_be:
-            bs_upper   = black_scholes(underlying, upper_be, T, r, sigma, "CE")
-            prob_above = 1 - bs_upper.get("prob_profit", 0.75)
-        return round(min((prob_below + prob_above) * 100, 99), 1)
+    Breakeven-aware PoP calculation for all strategy types.
+    - Debit spreads   : P(spot past single breakeven)
+    - Long vol        : P(spot outside either breakeven)
+    - Credit/neutral  : P(spot stays inside breakevens)
+    """
+    be = breakevens or []
+    avg_iv = sum(l["iv"] for l in legs) / len(legs)
+    sigma  = avg_iv / 100
+    all_sell = all(l["action"] == "sell" for l in legs)
+    all_buy  = all(l["action"] == "buy"  for l in legs)
 
-    total_pop = 0
-    for leg in legs:
-        sigma = leg["iv"] / 100
-        bs    = black_scholes(underlying, leg["strike"], T, r, sigma, leg["opt_type"])
-        pop   = bs.get("prob_profit", 0.5)
-        total_pop += (pop if leg["action"] == "sell" else 1 - pop)
-    return round(min((total_pop / len(legs)) * 100, 99), 1)
+    if be:
+        if strategy_type == "debit_spread":
+            be_price = be[0]
+            buy_leg  = next((l for l in legs if l["action"] == "buy"), legs[0])
+            is_call  = buy_leg["opt_type"] == "CE"
+            if is_call:
+                bs  = black_scholes(underlying, be_price, T, r, sigma, "CE")
+                pop = (1 - bs["prob_profit"]) * 100
+            else:
+                bs  = black_scholes(underlying, be_price, T, r, sigma, "PE")
+                pop = bs["prob_profit"] * 100
+
+        elif all_buy and strategy_type in ("straddle", "strangle"):
+            lower_be   = be[0]
+            upper_be   = be[1] if len(be) >= 2 else None
+            bs_lower   = black_scholes(underlying, lower_be, T, r, sigma, "PE")
+            prob_below = bs_lower["prob_profit"]
+            prob_above = 0
+            if upper_be:
+                bs_upper   = black_scholes(underlying, upper_be, T, r, sigma, "CE")
+                prob_above = 1 - bs_upper["prob_profit"]
+            pop = min((prob_below + prob_above) * 100, 99)
+
+        elif all_sell or strategy_type in ("credit_spread", "iron_condor", "iron_butterfly"):
+            lower_be   = be[0]
+            upper_be   = be[1] if len(be) >= 2 else None
+            bs_lower   = black_scholes(underlying, lower_be, T, r, sigma, "PE")
+            prob_below = bs_lower["prob_profit"]
+            prob_above = 0
+            if upper_be:
+                bs_upper   = black_scholes(underlying, upper_be, T, r, sigma, "CE")
+                prob_above = 1 - bs_upper["prob_profit"]
+            pop = min((1 - prob_below - prob_above) * 100, 99)
+
+        else:
+            total = sum(
+                (black_scholes(underlying, l["strike"], T, r, l["iv"]/100, l["opt_type"])
+                 .get("prob_profit", 0.5))
+                if l["action"] == "sell"
+                else (1 - black_scholes(underlying, l["strike"], T, r, l["iv"]/100, l["opt_type"])
+                      .get("prob_profit", 0.5))
+                for l in legs
+            )
+            pop = min(total / len(legs) * 100, 99)
+    else:
+        total = sum(
+            (black_scholes(underlying, l["strike"], T, r, l["iv"]/100, l["opt_type"])
+             .get("prob_profit", 0.5))
+            if l["action"] == "sell"
+            else (1 - black_scholes(underlying, l["strike"], T, r, l["iv"]/100, l["opt_type"])
+                  .get("prob_profit", 0.5))
+            for l in legs
+        )
+        pop = min(total / len(legs) * 100, 99)
+
+    return round(max(pop, 1), 1)
 
 
 def _payoff_at_expiry(legs, price_range):
@@ -1784,30 +1826,61 @@ function analyze() {{
       }}
     }}
 
-    // PoP via BSM — strategy-type aware
-    // For long vol (straddle/strangle): need price to move past a breakeven → use BE-based prob
-    // For debit spreads (directional): probability the bought leg expires ITM
-    // For credit spreads: probability all sold legs expire OTM (classic seller's PoP)
-    let popSum=0;
-    const isLongVol = (sType==="straddle"||sType==="strangle") && legs.every(l=>l.action==="buy");
-    if (isLongVol && bes.length >= 1) {{
-      // PoP = prob(spot < lower BE) + prob(spot > upper BE)
-      // i.e. 1 - prob(spot stays between breakevens)
-      const lowerBE = bes[0];
-      const upperBE = bes.length >= 2 ? bes[1] : null;
-      const bLower  = bsm(underlying, lowerBE,  T, RISK_FREE, (legs[0].iv||15)/100, "PE");
-      const probBelowLower = bLower.pop;  // prob spot < lowerBE at expiry
-      const probAboveUpper = upperBE
-        ? (1 - bsm(underlying, upperBE, T, RISK_FREE, (legs[0].iv||15)/100, "CE").pop)
-        : 0;
-      popSum = (probBelowLower + probAboveUpper) * legs.length; // normalise back for avg
+    // PoP — strategy-type aware, all using breakeven-based calculation where applicable
+    // Credit spreads / condors / butterflies: P(spot stays in profit zone) = classic seller PoP
+    // Debit spreads (directional): P(spot beyond single breakeven at expiry)
+    // Long vol (straddle/strangle): P(spot beyond either breakeven)
+    // Short vol: P(spot stays between breakevens)
+    let pop;
+    const allSell  = legs.every(l => l.action === "sell");
+    const allBuy   = legs.every(l => l.action === "buy");
+    const avgIv    = legs.reduce((a,l) => a + (l.iv||15), 0) / legs.length;
+    const sigma    = avgIv / 100;
+
+    if (bes.length >= 1) {{
+      if (sType === "debit_spread") {{
+        // Directional debit: need spot past single breakeven
+        const be = bes[0];
+        const isCall = legs.find(l => l.action==="buy")?.type === "CE";
+        if (isCall) {{
+          // Bull Call: need spot > BE
+          pop = Math.round((1 - bsm(underlying, be, T, RISK_FREE, sigma, "CE").pop) * 1000) / 10;
+        }} else {{
+          // Bear Put: need spot < BE
+          pop = Math.round(bsm(underlying, be, T, RISK_FREE, sigma, "PE").pop * 1000) / 10;
+        }}
+      }} else if (allBuy && (sType === "straddle" || sType === "strangle")) {{
+        // Long vol: need spot outside EITHER breakeven
+        const lowerBE = bes[0];
+        const upperBE = bes.length >= 2 ? bes[1] : null;
+        const probBelow = bsm(underlying, lowerBE, T, RISK_FREE, sigma, "PE").pop;
+        const probAbove = upperBE
+          ? (1 - bsm(underlying, upperBE, T, RISK_FREE, sigma, "CE").pop)
+          : 0;
+        pop = Math.round(Math.min((probBelow + probAbove) * 100, 99) * 10) / 10;
+      }} else if (allSell || sType === "credit_spread" || sType === "iron_condor" || sType === "iron_butterfly") {{
+        // Credit strategies: need spot to STAY inside breakevens
+        const lowerBE = bes[0];
+        const upperBE = bes.length >= 2 ? bes[1] : null;
+        const probBelow = bsm(underlying, lowerBE, T, RISK_FREE, sigma, "PE").pop;
+        const probAbove = upperBE
+          ? (1 - bsm(underlying, upperBE, T, RISK_FREE, sigma, "CE").pop)
+          : 0;
+        // Prob inside = 1 - prob outside
+        pop = Math.round(Math.min((1 - probBelow - probAbove) * 100, 99) * 10) / 10;
+      }} else {{
+        // Fallback: leg-by-leg average
+        let s=0;
+        legs.forEach(l=>{{ const b=bsm(underlying,l.strike,T,RISK_FREE,l.iv/100,l.opt_type||l.type); s+=l.action==="sell"?b.pop:(1-b.pop); }});
+        pop = Math.round(Math.min(s/legs.length*100,99)*10)/10;
+      }}
     }} else {{
-      legs.forEach(l=>{{
-        const b=bsm(underlying,l.strike,T,RISK_FREE,l.iv/100,l.opt_type||l.type);
-        popSum+= l.action==="sell"?b.pop:(1-b.pop);
-      }});
+      // No breakevens found — fallback
+      let s=0;
+      legs.forEach(l=>{{ const b=bsm(underlying,l.strike,T,RISK_FREE,l.iv/100,l.opt_type||l.type); s+=l.action==="sell"?b.pop:(1-b.pop); }});
+      pop = Math.round(Math.min(s/legs.length*100,99)*10)/10;
     }}
-    const pop=Math.round(Math.min(popSum/legs.length*100, 99)*10)/10;
+    pop = Math.max(pop, 1); // floor at 1%
 
     const rr   = maxL!==0?Math.round(Math.abs(maxP/maxL)*100)/100:0;
     const score= Math.round(pop*0.40+Math.min(rr*35,35)+Math.min(maxP/5000*25,25)*10)/10;
