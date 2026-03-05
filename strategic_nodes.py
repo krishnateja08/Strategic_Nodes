@@ -55,6 +55,7 @@ except ImportError:
 
 # ── NSE Trading Holidays (hardcoded — update each year) ──────────
 NSE_HOLIDAYS = {
+    # ── 2026 ──────────────────────────────────────────────────────
     "15-Jan-2026": "Municipal Corporation Election - Maharashtra",
     "26-Jan-2026": "Republic Day",
     "03-Mar-2026": "Holi",
@@ -86,12 +87,14 @@ for _ds in NSE_HOLIDAYS:
 # =================================================================
 
 def is_nse_holiday(dt):
+    """Return True if the given date is an NSE trading holiday or weekend."""
     if dt.weekday() >= 5:
         return True
     return dt in _HOLIDAY_DATES
 
 
 def get_prev_trading_day(dt):
+    """Return the nearest previous trading day."""
     candidate = dt - timedelta(days=1)
     for _ in range(10):
         if not is_nse_holiday(candidate):
@@ -132,14 +135,17 @@ class NSEOptionChain:
         return session, headers
 
     def _current_or_next_tuesday_ist(self):
+        """Find current/next Tuesday with holiday adjustment → previous trading day."""
         today = today_ist()
         wd    = today.weekday()
+
         if wd == 1:
             target_tuesday = today
         elif wd < 1:
             target_tuesday = today + timedelta(days=1 - wd)
         else:
             target_tuesday = today + timedelta(days=8 - wd)
+
         if is_nse_holiday(target_tuesday):
             reason   = NSE_HOLIDAYS.get(target_tuesday.strftime("%d-%b-%Y"), "Holiday/Weekend")
             adjusted = get_prev_trading_day(target_tuesday)
@@ -148,11 +154,13 @@ class NSEOptionChain:
             expiry_date = adjusted
         else:
             expiry_date = target_tuesday
+
         result = expiry_date.strftime("%d-%b-%Y")
         print(f"  Computed expiry (IST, holiday-adjusted): {result}")
         return result
 
     def _fetch_available_expiries(self, session, headers):
+        """Fallback: fetch real expiry list from NSE and pick nearest upcoming."""
         try:
             url  = (f"https://www.nseindia.com/api/option-chain-v3"
                     f"?type=Indices&symbol={self.symbol}")
@@ -175,6 +183,7 @@ class NSEOptionChain:
         return None
 
     def _fetch_for_expiry(self, session, headers, expiry):
+        """Fetch full option chain for a specific expiry date."""
         api_url = (f"https://www.nseindia.com/api/option-chain-v3"
                    f"?type=Indices&symbol={self.symbol}&expiry={expiry}")
         for attempt in range(1, 4):
@@ -185,14 +194,17 @@ class NSEOptionChain:
                     print(f"    HTTP {resp.status_code} on attempt {attempt}")
                     time.sleep(2)
                     continue
+
                 json_data   = resp.json()
                 data        = json_data.get("records", {}).get("data", [])
                 if not data:
                     return None
+
                 underlying  = json_data.get("records", {}).get("underlyingValue", 0)
                 atm_strike  = round(underlying / 50) * 50
                 lower_bound = underlying - 600
                 upper_bound = underlying + 600
+
                 rows = []
                 for item in data:
                     strike = item.get("strikePrice")
@@ -221,6 +233,7 @@ class NSEOptionChain:
                         "PE_Gamma":     pe.get("gamma",                0),
                         "PE_Vega":      pe.get("vega",                 0),
                     })
+
                 df = (pd.DataFrame(rows)
                         .sort_values("Strike")
                         .reset_index(drop=True))
@@ -237,6 +250,7 @@ class NSEOptionChain:
         return None
 
     def fetch_multiple_expiries(self, session, headers, n=7):
+        """Fetch next n expiries directly from NSE API."""
         expiry_list = []
         try:
             url  = (f"https://www.nseindia.com/api/option-chain-v3"
@@ -257,6 +271,8 @@ class NSEOptionChain:
                 print(f"  Expiry list from NSE ({len(expiry_list)}): {expiry_list}")
         except Exception as e:
             print(f"  WARNING expiry list fetch: {e}")
+
+        # Fallback: generate Tuesdays
         if not expiry_list:
             print("  Falling back to generated Tuesday expiry list...")
             today = today_ist()
@@ -271,6 +287,7 @@ class NSEOptionChain:
                     expiry_list.append(exp_str)
                 candidate += timedelta(days=7)
                 attempts  += 1
+
         results = {}
         for exp in expiry_list:
             print(f"    Fetching: {exp}")
@@ -280,20 +297,26 @@ class NSEOptionChain:
             else:
                 print(f"      SKIP: {exp}")
             time.sleep(0.8)
+
         print(f"  Fetched {len(results)}/{len(expiry_list)} expiries")
         return results, expiry_list
 
     def fetch(self):
+        """Main entry point — returns (result, session, headers, expiry_list)."""
         session, headers = self._make_session()
         expiry           = self._current_or_next_tuesday_ist()
         result           = self._fetch_for_expiry(session, headers, expiry)
+
         if result is None:
             print(f"  Computed expiry {expiry} not found. Trying API fallback...")
             real_expiry = self._fetch_available_expiries(session, headers)
             if real_expiry and real_expiry != expiry:
                 result = self._fetch_for_expiry(session, headers, real_expiry)
+
         if result is None:
             print("  ERROR: Option chain fetch failed.")
+
+        # Cache full expiry list
         self._cached_expiry_list = []
         try:
             url  = (f"https://www.nseindia.com/api/option-chain-v3"
@@ -313,6 +336,7 @@ class NSEOptionChain:
                         continue
         except Exception as e:
             print(f"  WARNING expiry list: {e}")
+
         return result, session, headers
 
 
@@ -321,11 +345,21 @@ class NSEOptionChain:
 # =================================================================
 
 def black_scholes(S, K, T, r, sigma, option_type="CE"):
+    """
+    Black-Scholes option pricing.
+    S     = spot price
+    K     = strike price
+    T     = time to expiry in years
+    r     = risk-free rate (e.g. 0.065)
+    sigma = implied volatility (e.g. 0.15 for 15%)
+    """
     if T <= 0 or sigma <= 0:
         intrinsic = max(0, S - K) if option_type == "CE" else max(0, K - S)
         return {"price": intrinsic, "delta": 0, "gamma": 0, "theta": 0, "vega": 0}
+
     d1 = (math.log(S / K) + (r + 0.5 * sigma ** 2) * T) / (sigma * math.sqrt(T))
     d2 = d1 - sigma * math.sqrt(T)
+
     if option_type == "CE":
         price = S * norm.cdf(d1) - K * math.exp(-r * T) * norm.cdf(d2)
         delta = norm.cdf(d1)
@@ -334,10 +368,12 @@ def black_scholes(S, K, T, r, sigma, option_type="CE"):
         price = K * math.exp(-r * T) * norm.cdf(-d2) - S * norm.cdf(-d1)
         delta = norm.cdf(d1) - 1
         prob_profit = norm.cdf(-d2)
+
     gamma = norm.pdf(d1) / (S * sigma * math.sqrt(T))
     theta = (-(S * norm.pdf(d1) * sigma) / (2 * math.sqrt(T))
              - r * K * math.exp(-r * T) * (norm.cdf(d2) if option_type == "CE" else norm.cdf(-d2))) / 365
     vega  = S * norm.pdf(d1) * math.sqrt(T) / 100
+
     return {
         "price":       round(price, 2),
         "delta":       round(delta, 4),
@@ -350,6 +386,11 @@ def black_scholes(S, K, T, r, sigma, option_type="CE"):
 
 
 def compute_greeks_for_chain(df, underlying, expiry_str, r=0.065):
+    """
+    Compute/enrich Greeks for entire option chain.
+    Uses NSE Greeks if available, falls back to BSM.
+    Returns enriched DataFrame + atm_greeks dict + all_strikes list.
+    """
     today   = today_ist()
     try:
         exp_dt  = datetime.strptime(expiry_str, "%d-%b-%Y").date()
@@ -357,18 +398,27 @@ def compute_greeks_for_chain(df, underlying, expiry_str, r=0.065):
     except Exception:
         dte = 7
     T = dte / 365.0
+
     atm_strike  = round(underlying / 50) * 50
     atm_greeks  = {}
     all_strikes = []
+
     for _, row in df.iterrows():
         strike  = row["Strike"]
         is_atm  = bool(strike == atm_strike)
+
+        # ── IV: use NSE value, fallback to BSM approximation ──
         ce_iv = row.get("CE_IV", 0) or 0
         pe_iv = row.get("PE_IV", 0) or 0
-        if ce_iv <= 0: ce_iv = 15.0
-        if pe_iv <= 0: pe_iv = 15.0
+        if ce_iv <= 0:
+            ce_iv = 15.0
+        if pe_iv <= 0:
+            pe_iv = 15.0
+
         sigma_ce = ce_iv / 100
         sigma_pe = pe_iv / 100
+
+        # ── Greeks: use NSE if non-zero, else BSM ─────────────
         ce_delta = row.get("CE_Delta", 0) or 0
         pe_delta = row.get("PE_Delta", 0) or 0
         ce_theta = row.get("CE_Theta", 0) or 0
@@ -377,22 +427,27 @@ def compute_greeks_for_chain(df, underlying, expiry_str, r=0.065):
         pe_gamma = row.get("PE_Gamma", 0) or 0
         ce_vega  = row.get("CE_Vega",  0) or 0
         pe_vega  = row.get("PE_Vega",  0) or 0
+
         if ce_delta == 0 and T > 0:
             bsm_ce   = black_scholes(underlying, strike, T, r, sigma_ce, "CE")
             ce_delta = bsm_ce["delta"]
             ce_theta = bsm_ce["theta"]
             ce_gamma = bsm_ce["gamma"]
             ce_vega  = bsm_ce["vega"]
+
         if pe_delta == 0 and T > 0:
             bsm_pe   = black_scholes(underlying, strike, T, r, sigma_pe, "PE")
             pe_delta = bsm_pe["delta"]
             pe_theta = bsm_pe["theta"]
             pe_gamma = bsm_pe["gamma"]
             pe_vega  = bsm_pe["vega"]
+
+        # ── Probability of profit via BSM d2 ──────────────────
         bsm_pop_ce = black_scholes(underlying, strike, T, r, sigma_ce, "CE")
         bsm_pop_pe = black_scholes(underlying, strike, T, r, sigma_pe, "PE")
         ce_pop = round(bsm_pop_ce.get("prob_profit", 0.5) * 100, 1)
         pe_pop = round(bsm_pop_pe.get("prob_profit", 0.5) * 100, 1)
+
         strike_data = {
             "strike":   strike,
             "is_atm":   is_atm,
@@ -419,8 +474,10 @@ def compute_greeks_for_chain(df, underlying, expiry_str, r=0.065):
             "pe_pop":   pe_pop,
         }
         all_strikes.append(strike_data)
+
         if is_atm:
             atm_greeks = strike_data
+
     return {
         "expiry":      expiry_str,
         "underlying":  underlying,
@@ -440,11 +497,18 @@ RISK_FREE_R = 0.065
 
 
 def _strategy_pop(legs, underlying, T, r=RISK_FREE_R, breakevens=None, strategy_type=None):
+    """
+    Breakeven-aware PoP calculation for all strategy types.
+    - Debit spreads   : P(spot past single breakeven)
+    - Long vol        : P(spot outside either breakeven)
+    - Credit/neutral  : P(spot stays inside breakevens)
+    """
     be = breakevens or []
     avg_iv = sum(l["iv"] for l in legs) / len(legs)
     sigma  = avg_iv / 100
     all_sell = all(l["action"] == "sell" for l in legs)
     all_buy  = all(l["action"] == "buy"  for l in legs)
+
     if be:
         if strategy_type == "debit_spread":
             be_price = be[0]
@@ -456,6 +520,7 @@ def _strategy_pop(legs, underlying, T, r=RISK_FREE_R, breakevens=None, strategy_
             else:
                 bs  = black_scholes(underlying, be_price, T, r, sigma, "PE")
                 pop = bs["prob_profit"] * 100
+
         elif all_buy and strategy_type in ("straddle", "strangle"):
             lower_be   = be[0]
             upper_be   = be[1] if len(be) >= 2 else None
@@ -466,6 +531,7 @@ def _strategy_pop(legs, underlying, T, r=RISK_FREE_R, breakevens=None, strategy_
                 bs_upper   = black_scholes(underlying, upper_be, T, r, sigma, "CE")
                 prob_above = 1 - bs_upper["prob_profit"]
             pop = min((prob_below + prob_above) * 100, 99)
+
         elif all_sell or strategy_type in ("credit_spread", "iron_condor", "iron_butterfly"):
             lower_be   = be[0]
             upper_be   = be[1] if len(be) >= 2 else None
@@ -476,6 +542,7 @@ def _strategy_pop(legs, underlying, T, r=RISK_FREE_R, breakevens=None, strategy_
                 bs_upper   = black_scholes(underlying, upper_be, T, r, sigma, "CE")
                 prob_above = 1 - bs_upper["prob_profit"]
             pop = min((1 - prob_below - prob_above) * 100, 99)
+
         else:
             total = sum(
                 (black_scholes(underlying, l["strike"], T, r, l["iv"]/100, l["opt_type"])
@@ -496,10 +563,12 @@ def _strategy_pop(legs, underlying, T, r=RISK_FREE_R, breakevens=None, strategy_
             for l in legs
         )
         pop = min(total / len(legs) * 100, 99)
+
     return round(max(pop, 1), 1)
 
 
 def _payoff_at_expiry(legs, price_range):
+    """Calculate net P&L across a range of expiry prices."""
     payoffs = []
     for price in price_range:
         pnl = 0
@@ -515,23 +584,38 @@ def _payoff_at_expiry(legs, price_range):
 
 
 def build_strategies(oc_analysis, support_levels, resistance_levels, bias="neutral"):
+    """
+    Build and score all option spread strategies based on:
+    - Live NSE option chain data
+    - Support / Resistance levels
+    - Market bias
+    - BSM probability of profit
+    Returns sorted list of strategy dicts.
+    """
     if not oc_analysis:
         return []
+
     all_strikes = oc_analysis["all_strikes"]
     underlying  = oc_analysis["underlying"]
     atm_strike  = oc_analysis["atm_strike"]
     expiry_str  = oc_analysis["expiry"]
     dte         = oc_analysis["dte"]
     T           = max(dte / 365.0, 0.001)
+
+    # Build quick lookup
     strike_map = {s["strike"]: s for s in all_strikes}
     strikes    = sorted(strike_map.keys())
+
     def nearest(val):
         return min(strikes, key=lambda x: abs(x - val))
+
     def get(strike, field, default=0):
         return strike_map.get(strike, {}).get(field, default)
+
     avg_support    = sum(support_levels)    / len(support_levels)    if support_levels    else underlying - 300
     avg_resistance = sum(resistance_levels) / len(resistance_levels) if resistance_levels else underlying + 300
     sr_range       = avg_resistance - avg_support
+
     atm  = atm_strike
     s_st = nearest(avg_support)
     r_st = nearest(avg_resistance)
@@ -539,28 +623,50 @@ def build_strategies(oc_analysis, support_levels, resistance_levels, bias="neutr
     otm_p = nearest(underlying - sr_range * 0.3)
     far_c = nearest(avg_resistance + 150)
     far_p = nearest(avg_support    - 150)
+
+    # Expected move
     atm_iv = (get(atm, "ce_iv", 15) + get(atm, "pe_iv", 15)) / 2
     exp_move = round(underlying * (atm_iv / 100) * math.sqrt(T), 0)
+
     raw = []
+
+    # ── Helper to build a strategy dict ───────────────────────────
     def make_strategy(name, legs, bias_tag, strategy_type):
-        net_premium  = sum((-l["premium"] if l["action"] == "buy" else l["premium"]) for l in legs)
+        net_premium  = sum(
+            (-l["premium"] if l["action"] == "buy" else l["premium"]) for l in legs
+        )
         is_debit     = net_premium < 0
         net_premium  = round(net_premium, 2)
+
+        # Max profit / loss
         price_range  = list(range(int(underlying - 1500), int(underlying + 1500), 25))
         payoffs      = _payoff_at_expiry(legs, price_range)
         max_profit   = max(payoffs)
         max_loss     = min(payoffs)
+
         if max_profit <= 0:
             return None
+
+        # Breakevens
         breakevens = []
         for i in range(len(payoffs) - 1):
             if (payoffs[i] < 0) != (payoffs[i + 1] < 0):
                 be = price_range[i] + (price_range[i + 1] - price_range[i]) * abs(payoffs[i]) / (abs(payoffs[i]) + abs(payoffs[i + 1]))
                 breakevens.append(round(be, 0))
+
+        # RR ratio
         rr_ratio = round(abs(max_profit / max_loss), 2) if max_loss != 0 else 0
-        pop = _strategy_pop(legs, underlying, T, breakevens=breakevens, strategy_type=strategy_type)
+
+        # PoP via BSM — breakeven-aware for long vol strategies
+        pop = _strategy_pop(legs, underlying, T,
+                            breakevens=breakevens, strategy_type=strategy_type)
+
+        # Score: 40% PoP + 35% RR + 25% max profit normalised
         score = round(pop * 0.40 + min(rr_ratio * 35, 35) + min(max_profit / 5000 * 25, 25), 1)
+
+        # Margin estimate (simplified: max loss for debit, wing width for credit)
         margin_est = abs(max_loss)
+
         return {
             "name":          name,
             "type":          strategy_type,
@@ -581,84 +687,134 @@ def build_strategies(oc_analysis, support_levels, resistance_levels, bias="neutr
             "dte":           dte,
             "exp_move":      exp_move,
         }
+
+    # ── 1. Bull Call Spread ────────────────────────────────────────
     if bias != "bearish":
         buy_st, sell_st = atm, r_st
         if buy_st != sell_st:
             s = make_strategy("Bull Call Spread", [
-                {"action": "buy",  "strike": buy_st,  "opt_type": "CE", "premium": get(buy_st,  "ce_ltp"), "iv": get(buy_st,  "ce_iv", 15)},
-                {"action": "sell", "strike": sell_st, "opt_type": "CE", "premium": get(sell_st, "ce_ltp"), "iv": get(sell_st, "ce_iv", 15)},
+                {"action": "buy",  "strike": buy_st,  "opt_type": "CE",
+                 "premium": get(buy_st,  "ce_ltp"), "iv": get(buy_st,  "ce_iv", 15)},
+                {"action": "sell", "strike": sell_st, "opt_type": "CE",
+                 "premium": get(sell_st, "ce_ltp"), "iv": get(sell_st, "ce_iv", 15)},
             ], "bullish", "debit_spread")
             if s: raw.append(s)
+
+    # ── 2. Bear Put Spread ─────────────────────────────────────────
     if bias != "bullish":
         buy_st, sell_st = atm, s_st
         if buy_st != sell_st:
             s = make_strategy("Bear Put Spread", [
-                {"action": "buy",  "strike": buy_st,  "opt_type": "PE", "premium": get(buy_st,  "pe_ltp"), "iv": get(buy_st,  "pe_iv", 15)},
-                {"action": "sell", "strike": sell_st, "opt_type": "PE", "premium": get(sell_st, "pe_ltp"), "iv": get(sell_st, "pe_iv", 15)},
+                {"action": "buy",  "strike": buy_st,  "opt_type": "PE",
+                 "premium": get(buy_st,  "pe_ltp"), "iv": get(buy_st,  "pe_iv", 15)},
+                {"action": "sell", "strike": sell_st, "opt_type": "PE",
+                 "premium": get(sell_st, "pe_ltp"), "iv": get(sell_st, "pe_iv", 15)},
             ], "bearish", "debit_spread")
             if s: raw.append(s)
+
+    # ── 3. Bull Put Spread (Credit) ────────────────────────────────
     if bias != "bearish":
         sell_st = s_st
         buy_st  = nearest(avg_support - 150)
         if sell_st != buy_st:
             s = make_strategy("Bull Put Spread", [
-                {"action": "sell", "strike": sell_st, "opt_type": "PE", "premium": get(sell_st, "pe_ltp"), "iv": get(sell_st, "pe_iv", 15)},
-                {"action": "buy",  "strike": buy_st,  "opt_type": "PE", "premium": get(buy_st,  "pe_ltp"), "iv": get(buy_st,  "pe_iv", 15)},
+                {"action": "sell", "strike": sell_st, "opt_type": "PE",
+                 "premium": get(sell_st, "pe_ltp"), "iv": get(sell_st, "pe_iv", 15)},
+                {"action": "buy",  "strike": buy_st,  "opt_type": "PE",
+                 "premium": get(buy_st,  "pe_ltp"), "iv": get(buy_st,  "pe_iv", 15)},
             ], "bullish", "credit_spread")
             if s: raw.append(s)
+
+    # ── 4. Bear Call Spread (Credit) ───────────────────────────────
     if bias != "bullish":
         sell_st = r_st
         buy_st  = nearest(avg_resistance + 150)
         if sell_st != buy_st:
             s = make_strategy("Bear Call Spread", [
-                {"action": "sell", "strike": sell_st, "opt_type": "CE", "premium": get(sell_st, "ce_ltp"), "iv": get(sell_st, "ce_iv", 15)},
-                {"action": "buy",  "strike": buy_st,  "opt_type": "CE", "premium": get(buy_st,  "ce_ltp"), "iv": get(buy_st,  "ce_iv", 15)},
+                {"action": "sell", "strike": sell_st, "opt_type": "CE",
+                 "premium": get(sell_st, "ce_ltp"), "iv": get(sell_st, "ce_iv", 15)},
+                {"action": "buy",  "strike": buy_st,  "opt_type": "CE",
+                 "premium": get(buy_st,  "ce_ltp"), "iv": get(buy_st,  "ce_iv", 15)},
             ], "bearish", "credit_spread")
             if s: raw.append(s)
+
+    # ── 5. Iron Condor ─────────────────────────────────────────────
+    {
+        "sell_ce": r_st, "buy_ce": far_c,
+        "sell_pe": s_st, "buy_pe": far_p,
+    }
     sell_ce, buy_ce = r_st, far_c
     sell_pe, buy_pe = s_st, far_p
     if len({sell_ce, buy_ce, sell_pe, buy_pe}) == 4:
         s = make_strategy("Iron Condor", [
-            {"action": "sell", "strike": sell_ce, "opt_type": "CE", "premium": get(sell_ce, "ce_ltp"), "iv": get(sell_ce, "ce_iv", 15)},
-            {"action": "buy",  "strike": buy_ce,  "opt_type": "CE", "premium": get(buy_ce,  "ce_ltp"), "iv": get(buy_ce,  "ce_iv", 15)},
-            {"action": "sell", "strike": sell_pe, "opt_type": "PE", "premium": get(sell_pe, "pe_ltp"), "iv": get(sell_pe, "pe_iv", 15)},
-            {"action": "buy",  "strike": buy_pe,  "opt_type": "PE", "premium": get(buy_pe,  "pe_ltp"), "iv": get(buy_pe,  "pe_iv", 15)},
+            {"action": "sell", "strike": sell_ce, "opt_type": "CE",
+             "premium": get(sell_ce, "ce_ltp"), "iv": get(sell_ce, "ce_iv", 15)},
+            {"action": "buy",  "strike": buy_ce,  "opt_type": "CE",
+             "premium": get(buy_ce,  "ce_ltp"), "iv": get(buy_ce,  "ce_iv", 15)},
+            {"action": "sell", "strike": sell_pe, "opt_type": "PE",
+             "premium": get(sell_pe, "pe_ltp"), "iv": get(sell_pe, "pe_iv", 15)},
+            {"action": "buy",  "strike": buy_pe,  "opt_type": "PE",
+             "premium": get(buy_pe,  "pe_ltp"), "iv": get(buy_pe,  "pe_iv", 15)},
         ], "neutral", "iron_condor")
         if s: raw.append(s)
+
+    # ── 6. Iron Butterfly ──────────────────────────────────────────
     wing = int(sr_range * 0.4 / 50) * 50
     wing = max(wing, 100)
     buy_c_ibf = nearest(atm + wing)
     buy_p_ibf = nearest(atm - wing)
     if len({atm, buy_c_ibf, buy_p_ibf}) == 3:
         s = make_strategy("Iron Butterfly", [
-            {"action": "sell", "strike": atm,       "opt_type": "CE", "premium": get(atm,       "ce_ltp"), "iv": get(atm,       "ce_iv", 15)},
-            {"action": "sell", "strike": atm,       "opt_type": "PE", "premium": get(atm,       "pe_ltp"), "iv": get(atm,       "pe_iv", 15)},
-            {"action": "buy",  "strike": buy_c_ibf, "opt_type": "CE", "premium": get(buy_c_ibf, "ce_ltp"), "iv": get(buy_c_ibf, "ce_iv", 15)},
-            {"action": "buy",  "strike": buy_p_ibf, "opt_type": "PE", "premium": get(buy_p_ibf, "pe_ltp"), "iv": get(buy_p_ibf, "pe_iv", 15)},
+            {"action": "sell", "strike": atm,       "opt_type": "CE",
+             "premium": get(atm,       "ce_ltp"), "iv": get(atm,       "ce_iv", 15)},
+            {"action": "sell", "strike": atm,       "opt_type": "PE",
+             "premium": get(atm,       "pe_ltp"), "iv": get(atm,       "pe_iv", 15)},
+            {"action": "buy",  "strike": buy_c_ibf, "opt_type": "CE",
+             "premium": get(buy_c_ibf, "ce_ltp"), "iv": get(buy_c_ibf, "ce_iv", 15)},
+            {"action": "buy",  "strike": buy_p_ibf, "opt_type": "PE",
+             "premium": get(buy_p_ibf, "pe_ltp"), "iv": get(buy_p_ibf, "pe_iv", 15)},
         ], "neutral", "iron_butterfly")
         if s: raw.append(s)
+
+    # ── 7. Long Straddle ───────────────────────────────────────────
     s = make_strategy("Long Straddle", [
-        {"action": "buy", "strike": atm, "opt_type": "CE", "premium": get(atm, "ce_ltp"), "iv": get(atm, "ce_iv", 15)},
-        {"action": "buy", "strike": atm, "opt_type": "PE", "premium": get(atm, "pe_ltp"), "iv": get(atm, "pe_iv", 15)},
+        {"action": "buy", "strike": atm, "opt_type": "CE",
+         "premium": get(atm, "ce_ltp"), "iv": get(atm, "ce_iv", 15)},
+        {"action": "buy", "strike": atm, "opt_type": "PE",
+         "premium": get(atm, "pe_ltp"), "iv": get(atm, "pe_iv", 15)},
     ], "volatile", "straddle")
     if s: raw.append(s)
+
+    # ── 8. Short Straddle ──────────────────────────────────────────
     if bias == "neutral":
         s = make_strategy("Short Straddle", [
-            {"action": "sell", "strike": atm, "opt_type": "CE", "premium": get(atm, "ce_ltp"), "iv": get(atm, "ce_iv", 15)},
-            {"action": "sell", "strike": atm, "opt_type": "PE", "premium": get(atm, "pe_ltp"), "iv": get(atm, "pe_iv", 15)},
+            {"action": "sell", "strike": atm, "opt_type": "CE",
+             "premium": get(atm, "ce_ltp"), "iv": get(atm, "ce_iv", 15)},
+            {"action": "sell", "strike": atm, "opt_type": "PE",
+             "premium": get(atm, "pe_ltp"), "iv": get(atm, "pe_iv", 15)},
         ], "neutral", "straddle")
         if s: raw.append(s)
+
+    # ── 9. Long Strangle ───────────────────────────────────────────
     s = make_strategy("Long Strangle", [
-        {"action": "buy", "strike": otm_c, "opt_type": "CE", "premium": get(otm_c, "ce_ltp"), "iv": get(otm_c, "ce_iv", 15)},
-        {"action": "buy", "strike": otm_p, "opt_type": "PE", "premium": get(otm_p, "pe_ltp"), "iv": get(otm_p, "pe_iv", 15)},
+        {"action": "buy", "strike": otm_c, "opt_type": "CE",
+         "premium": get(otm_c, "ce_ltp"), "iv": get(otm_c, "ce_iv", 15)},
+        {"action": "buy", "strike": otm_p, "opt_type": "PE",
+         "premium": get(otm_p, "pe_ltp"), "iv": get(otm_p, "pe_iv", 15)},
     ], "volatile", "strangle")
     if s: raw.append(s)
+
+    # ── 10. Short Strangle ─────────────────────────────────────────
     if bias == "neutral":
         s = make_strategy("Short Strangle", [
-            {"action": "sell", "strike": otm_c, "opt_type": "CE", "premium": get(otm_c, "ce_ltp"), "iv": get(otm_c, "ce_iv", 15)},
-            {"action": "sell", "strike": otm_p, "opt_type": "PE", "premium": get(otm_p, "pe_ltp"), "iv": get(otm_p, "pe_iv", 15)},
+            {"action": "sell", "strike": otm_c, "opt_type": "CE",
+             "premium": get(otm_c, "ce_ltp"), "iv": get(otm_c, "ce_iv", 15)},
+            {"action": "sell", "strike": otm_p, "opt_type": "PE",
+             "premium": get(otm_p, "pe_ltp"), "iv": get(otm_p, "pe_iv", 15)},
         ], "neutral", "strangle")
         if s: raw.append(s)
+
+    # Sort by score descending
     raw.sort(key=lambda x: x["score"], reverse=True)
     return raw
 
@@ -668,6 +824,12 @@ def build_strategies(oc_analysis, support_levels, resistance_levels, bias="neutr
 # =================================================================
 
 def build_html(all_expiry_data, expiry_list, generated_at):
+    """
+    Build the complete index.html with all data baked in as JSON.
+    All strategy calculation + Greeks rendering happens in JavaScript.
+    """
+
+    # Serialize data per expiry
     expiry_json = {}
     for exp, data in all_expiry_data.items():
         oc = compute_greeks_for_chain(data["df"], data["underlying"], exp)
@@ -739,48 +901,11 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 .panel-title{{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text2);display:flex;align-items:center;gap:7px;}}
 .panel-body{{padding:18px;}}
 
-/* ── PARAM PANEL TABS ── */
-.ptab-row{{display:flex;border-bottom:1px solid var(--border);margin:-18px -18px 16px;}}
-.ptab{{flex:1;padding:11px 6px;font-family:'DM Mono',monospace;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;text-align:center;color:var(--text2);border:none;background:transparent;transition:all .2s;border-bottom:2px solid transparent;margin-bottom:-1px;}}
-.ptab.active{{color:var(--cyan);border-bottom-color:var(--cyan);background:rgba(0,212,255,.05);}}
-.ptab.ptab-be.active{{color:var(--gold);border-bottom-color:var(--gold);background:rgba(255,209,102,.05);}}
-.ptab:hover:not(.active){{color:var(--text);background:rgba(255,255,255,.03);}}
-
-/* ── TARGET BE SECTION ── */
-.be-find-btn{{width:100%;padding:13px;background:linear-gradient(135deg,var(--gold),#ff9500);border:none;border-radius:9px;color:#000;font-family:'Syne',sans-serif;font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:2px;cursor:pointer;transition:all .3s;margin-top:6px;}}
-.be-find-btn:hover{{transform:translateY(-2px);box-shadow:0 8px 28px rgba(255,209,102,.33);}}
-.be-find-btn:active{{transform:translateY(0);}}
-.be-info-box{{background:rgba(255,209,102,.05);border:1px solid rgba(255,209,102,.18);border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:9.5px;color:rgba(255,209,102,.75);line-height:1.7;font-family:'DM Mono',monospace;}}
-.be-results-wrap{{margin-top:14px;}}
-.be-match-card{{background:var(--bg2);border:1px solid var(--border);border-radius:9px;padding:12px 14px;margin-bottom:9px;cursor:pointer;transition:all .25s;position:relative;overflow:hidden;}}
-.be-match-card:hover{{border-color:var(--cyan);transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,0,0,.3);}}
-.be-match-card.be-best{{border-color:var(--gold);border-top:2px solid var(--gold);background:rgba(255,209,102,.03);}}
-.be-match-rank{{position:absolute;top:8px;right:10px;font-size:8px;font-weight:700;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:10px;}}
-.be-match-name{{font-size:12px;font-weight:800;margin-bottom:6px;}}
-.be-match-legs{{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;}}
-.be-leg-tag{{border-radius:5px;padding:3px 7px;font-size:9px;font-weight:700;font-family:'DM Mono',monospace;}}
-.be-leg-buy{{border:1px solid var(--green);color:var(--green);background:#00c89608;}}
-.be-leg-sell{{border:1px solid var(--red);color:var(--red);background:#ff6b6b08;}}
-.be-accuracy-row{{display:grid;grid-template-columns:1fr 1fr;gap:6px;}}
-.be-accuracy-box{{background:var(--bg3);border-radius:6px;padding:7px 9px;}}
-.be-acc-lbl{{font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;font-family:'DM Mono',monospace;}}
-.be-acc-target{{font-size:9px;color:var(--text2);font-family:'DM Mono',monospace;margin-top:1px;}}
-.be-acc-actual{{font-size:12px;font-weight:700;font-family:'DM Mono',monospace;margin-top:2px;}}
-.be-acc-diff{{font-size:9px;font-family:'DM Mono',monospace;margin-top:1px;}}
-.be-diff-good{{color:var(--green);}}
-.be-diff-ok{{color:var(--gold);}}
-.be-diff-bad{{color:var(--red);}}
-.be-net-prem{{font-size:10px;font-family:'DM Mono',monospace;color:var(--text2);margin-top:6px;padding-top:6px;border-top:1px solid var(--border2);display:flex;justify-content:space-between;align-items:center;}}
-.be-empty{{text-align:center;padding:24px 12px;color:var(--text3);font-family:'DM Mono',monospace;font-size:10px;line-height:1.8;}}
-.be-score-bar{{height:2px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:6px;}}
-.be-score-fill{{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--gold),#ff9500);transition:width .6s;}}
-
 /* ── INPUTS ── */
 .form-grp{{margin-bottom:14px;}}
 .form-lbl{{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text2);margin-bottom:6px;font-family:'DM Mono',monospace;}}
 .inp{{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:9px 12px;color:var(--text);font-family:'DM Mono',monospace;font-size:13px;outline:none;transition:all .2s;}}
 .inp:focus{{border-color:var(--cyan);box-shadow:0 0 0 3px #00d4ff12;}}
-.inp-gold:focus{{border-color:var(--gold)!important;box-shadow:0 0 0 3px rgba(255,209,102,.12)!important;}}
 .sel{{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:9px 12px;color:var(--text);font-family:'DM Mono',monospace;font-size:12px;outline:none;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%2300d4ff' d='M5 7L0 2h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;transition:all .2s;}}
 .sel:focus{{border-color:var(--cyan);box-shadow:0 0 0 3px #00d4ff12;}}
 .sel option{{background:#0d1117;}}
@@ -802,26 +927,33 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 
 /* ── OPTION CHAIN ── */
 .chain-wrap{{overflow:auto;max-height:540px;}}
+/* Side header labels */
 .chain-side-hdr{{display:grid;grid-template-columns:1fr 100px 1fr;padding:7px 0;border-bottom:1px solid var(--border);background:linear-gradient(90deg,#0d1a26,#0d1117);position:sticky;top:0;z-index:3;}}
 .chain-side-hdr .ce-hdr{{text-align:right;padding-right:12px;font-size:9px;font-weight:800;color:var(--green);letter-spacing:1.5px;text-transform:uppercase;}}
 .chain-side-hdr .st-hdr{{text-align:center;font-size:9px;font-weight:800;color:var(--text2);letter-spacing:1px;text-transform:uppercase;}}
 .chain-side-hdr .pe-hdr{{text-align:left;padding-left:12px;font-size:9px;font-weight:800;color:var(--red);letter-spacing:1.5px;text-transform:uppercase;}}
+/* Sub-column labels */
 .chain-col-hdr{{display:grid;grid-template-columns:1fr 100px 1fr;padding:5px 0 4px;border-bottom:1px solid var(--border2);background:#0a1218;position:sticky;top:32px;z-index:2;}}
 .chain-col-hdr .ce-cols{{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;padding:0 10px 0 6px;}}
 .chain-col-hdr .pe-cols{{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;padding:0 6px 0 10px;}}
 .chain-col-hdr span{{font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;font-family:'JetBrains Mono',monospace;text-align:right;}}
 .chain-col-hdr .pe-cols span{{text-align:left;}}
+/* Rows */
 .chain-row{{display:grid;grid-template-columns:1fr 100px 1fr;border-bottom:1px solid var(--border2);transition:background .12s;position:relative;}}
 .chain-row:hover{{background:#ffffff04;}}
 .chain-row.atm-row{{background:#00d4ff07;border-left:2px solid var(--cyan);}}
 .chain-row.sup-row .stk-cell{{border-left:2px solid var(--green)!important;}}
 .chain-row.res-row .stk-cell{{border-left:2px solid var(--red)!important;}}
+/* CE side */
 .ce-side{{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;align-items:center;padding:8px 10px 8px 6px;gap:2px;position:relative;overflow:hidden;}}
 .ce-heat-bg{{position:absolute;top:0;right:0;bottom:0;background:var(--green);opacity:0.09;pointer-events:none;border-radius:2px 0 0 2px;}}
+/* PE side */
 .pe-side{{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;align-items:center;padding:8px 6px 8px 10px;gap:2px;position:relative;overflow:hidden;}}
 .pe-heat-bg{{position:absolute;top:0;left:0;bottom:0;background:var(--red);opacity:0.09;pointer-events:none;border-radius:0 2px 2px 0;}}
+/* Strike cell */
 .stk-cell{{display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;border-left:1px solid var(--border);border-right:1px solid var(--border);background:#0a1520;min-height:36px;position:relative;flex-direction:column;gap:2px;}}
 .atm-tag{{background:var(--cyan);color:#000;font-size:7px;font-weight:800;padding:1px 6px;border-radius:0 0 4px 4px;position:absolute;top:0;letter-spacing:.5px;}}
+/* Cell values */
 .cv-ltp{{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;text-align:right;}}
 .cv-iv{{font-size:9px;color:var(--text2);font-family:'JetBrains Mono',monospace;text-align:right;}}
 .cv-oi{{font-size:9px;font-family:'JetBrains Mono',monospace;color:var(--text2);text-align:right;}}
@@ -965,6 +1097,7 @@ canvas#payoffChart{{width:100%!important;height:288px!important;}}
   .hdr{{flex-direction:column;gap:10px;align-items:flex-start;}}
   .hdr>div:last-child{{align-self:flex-end;}}
   .wrap{{padding:10px;}}
+  .chain-tbl th,.chain-tbl td{{padding:5px 6px;font-size:10px;}}
   .sec-hdr{{flex-direction:column;gap:8px;align-items:flex-start;}}
   .panel-body{{padding:12px;}}
 }}
@@ -1040,110 +1173,52 @@ canvas#payoffChart{{width:100%!important;height:288px!important;}}
     </div>
     <div class="panel-body">
 
-      <!-- ═══ PARAM PANEL TABS ═══ -->
-      <div class="ptab-row">
-        <button class="ptab active" id="ptab-sr" onclick="switchParamTab('sr',this)">⚡ S/R Strategy</button>
-        <button class="ptab ptab-be" id="ptab-be" onclick="switchParamTab('be',this)">🎯 Target BE</button>
+      <div class="form-grp">
+        <label class="form-lbl">Market Bias</label>
+        <div class="bias-row">
+          <button class="bias-btn" id="btnBull" onclick="setBias('bullish')">🐂 Bullish</button>
+          <button class="bias-btn" id="btnBear" onclick="setBias('bearish')">🐻 Bearish</button>
+          <button class="bias-btn" id="btnNeut" onclick="setBias('neutral')">⚖️ Neutral</button>
+        </div>
       </div>
 
-      <!-- ═══ TAB 1: S/R CONTENT (existing) ═══ -->
-      <div id="param-sr-content">
+      <div class="divider"></div>
 
+      <div class="form-grp">
+        <label class="form-lbl">Support Levels</label>
+        <div id="supContainer">
+          <div class="sr-row"><input type="number" class="inp sup-inp" placeholder="e.g. 22000"/><button class="rm-btn" onclick="rmRow(this)">✕</button></div>
+        </div>
+        <button class="add-btn" onclick="addLevel('sup')">+ Add Support</button>
+      </div>
+
+      <div class="form-grp">
+        <label class="form-lbl">Resistance Levels</label>
+        <div id="resContainer">
+          <div class="sr-row"><input type="number" class="inp res-inp" placeholder="e.g. 22500"/><button class="rm-btn" onclick="rmRow(this)">✕</button></div>
+        </div>
+        <button class="add-btn" onclick="addLevel('res')">+ Add Resistance</button>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="form-grp">
+        <label class="form-lbl">Expiry</label>
+        <select class="sel" id="expirySel" onchange="onExpiryChange()"></select>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
         <div class="form-grp">
-          <label class="form-lbl">Market Bias</label>
-          <div class="bias-row">
-            <button class="bias-btn" id="btnBull" onclick="setBias('bullish')">🐂 Bullish</button>
-            <button class="bias-btn" id="btnBear" onclick="setBias('bearish')">🐻 Bearish</button>
-            <button class="bias-btn" id="btnNeut" onclick="setBias('neutral')">⚖️ Neutral</button>
-          </div>
+          <label class="form-lbl">Lot Size</label>
+          <input type="number" class="inp" id="lotSize" value="65"/>
         </div>
-
-        <div class="divider"></div>
-
         <div class="form-grp">
-          <label class="form-lbl">Support Levels</label>
-          <div id="supContainer">
-            <div class="sr-row"><input type="number" class="inp sup-inp" placeholder="e.g. 22000"/><button class="rm-btn" onclick="rmRow(this)">✕</button></div>
-          </div>
-          <button class="add-btn" onclick="addLevel('sup')">+ Add Support</button>
+          <label class="form-lbl">Max Capital ₹</label>
+          <input type="number" class="inp" id="maxCap" placeholder="500000"/>
         </div>
+      </div>
 
-        <div class="form-grp">
-          <label class="form-lbl">Resistance Levels</label>
-          <div id="resContainer">
-            <div class="sr-row"><input type="number" class="inp res-inp" placeholder="e.g. 22500"/><button class="rm-btn" onclick="rmRow(this)">✕</button></div>
-          </div>
-          <button class="add-btn" onclick="addLevel('res')">+ Add Resistance</button>
-        </div>
-
-        <div class="divider"></div>
-
-        <div class="form-grp">
-          <label class="form-lbl">Expiry</label>
-          <select class="sel" id="expirySel" onchange="onExpiryChange()"></select>
-        </div>
-
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-          <div class="form-grp">
-            <label class="form-lbl">Lot Size</label>
-            <input type="number" class="inp" id="lotSize" value="65"/>
-          </div>
-          <div class="form-grp">
-            <label class="form-lbl">Max Capital ₹</label>
-            <input type="number" class="inp" id="maxCap" placeholder="500000"/>
-          </div>
-        </div>
-
-        <button class="analyze-btn" onclick="analyze()">⚡ Analyze Strategies</button>
-
-      </div><!-- end param-sr-content -->
-
-      <!-- ═══ TAB 2: TARGET BE CONTENT (NEW) ═══ -->
-      <div id="param-be-content" style="display:none;">
-
-        <div class="be-info-box">
-          🎯 Enter your <strong>desired break-even prices</strong>.<br>
-          The engine will scan every live NSE strike and find the best matching strategy + exact legs to get you closest to those BEs.
-        </div>
-
-        <div class="form-grp">
-          <label class="form-lbl" style="color:var(--red);">▼ Lower Break-Even</label>
-          <input type="number" class="inp inp-gold" id="beLower" placeholder="e.g. 24100"
-                 style="border-color:rgba(255,107,107,.4);" oninput="saveUserState()"/>
-          <div style="font-size:9px;color:var(--text3);margin-top:4px;font-family:'DM Mono',monospace;">
-            The lowest price where you want to break even
-          </div>
-        </div>
-
-        <div class="form-grp">
-          <label class="form-lbl" style="color:var(--green);">▲ Upper Break-Even</label>
-          <input type="number" class="inp inp-gold" id="beUpper" placeholder="e.g. 25380"
-                 style="border-color:rgba(0,200,150,.4);" oninput="saveUserState()"/>
-          <div style="font-size:9px;color:var(--text3);margin-top:4px;font-family:'DM Mono',monospace;">
-            The highest price where you want to break even
-          </div>
-        </div>
-
-        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:12px;" id="beCalcPreview">
-          <div style="font-size:9px;color:var(--text3);font-family:'DM Mono',monospace;text-align:center;">
-            Enter both BEs above to see required premium
-          </div>
-        </div>
-
-        <div class="form-grp">
-          <label class="form-lbl">Expiry</label>
-          <select class="sel" id="expirySelBe" onchange="saveUserState()"></select>
-        </div>
-
-        <button class="be-find-btn" onclick="findBEStrategies()">🎯 Find Matching Strategies</button>
-
-        <!-- Results appear here -->
-        <div class="be-results-wrap" id="beResultsWrap">
-          <div class="be-empty">Enter your target break-even levels<br>and click Find to see matching strategies</div>
-        </div>
-
-      </div><!-- end param-be-content -->
-
+      <button class="analyze-btn" onclick="analyze()">⚡ Analyze Strategies</button>
     </div>
   </div>
 
@@ -1162,11 +1237,13 @@ canvas#payoffChart{{width:100%!important;height:288px!important;}}
       </div>
     </div>
     <div class="chain-wrap">
+      <!-- Side headers -->
       <div class="chain-side-hdr">
         <div class="ce-hdr">── CALLS (CE) ──</div>
         <div class="st-hdr">STRIKE</div>
         <div class="pe-hdr">── PUTS (PE) ──</div>
       </div>
+      <!-- Column labels -->
       <div class="chain-col-hdr">
         <div class="ce-cols">
           <span>LTP</span><span>IV%</span><span>OI(L)</span><span>ΔOI</span>
@@ -1253,7 +1330,7 @@ canvas#payoffChart{{width:100%!important;height:288px!important;}}
     </select>
   </div>
   <div class="strat-grid" id="stratGrid">
-    <div class="empty"><div class="empty-icon">📋</div><p>Enter support &amp; resistance levels<br>then click ⚡ Analyze Strategies<br><br>— or —<br><br>Switch to 🎯 Target BE tab<br>to find strategies by break-even</p></div>
+    <div class="empty"><div class="empty-icon">📋</div><p>Enter support &amp; resistance levels<br>then click ⚡ Analyze Strategies</p></div>
   </div>
 </div>
 
@@ -1267,6 +1344,7 @@ canvas#payoffChart{{width:100%!important;height:288px!important;}}
       <option value="">— Select Strategy —</option>
     </select>
   </div>
+  <!-- Stats boxes -->
   <div id="payoffStats" style="display:none;grid-template-columns:repeat(4,1fr);gap:10px;padding:14px 16px 0;"></div>
   <div class="payoff-wrap" style="height:320px;padding:16px;position:relative;">
     <canvas id="payoffChart"></canvas>
@@ -1278,6 +1356,7 @@ canvas#payoffChart{{width:100%!important;height:288px!important;}}
     box-shadow:0 8px 36px rgba(0,0,0,0.7);pointer-events:none;
     font-family:'JetBrains Mono',monospace;backdrop-filter:blur(8px);
   "></div>
+  <!-- Footer with breakevens + projected P&L -->
   <div id="payoffFooter" style="display:none;padding:10px 16px 12px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
     <div style="display:flex;align-items:center;gap:8px;">
       <span style="font-size:9px;color:var(--text2);font-family:'JetBrains Mono',monospace;letter-spacing:1px;">BREAKEVENS</span>
@@ -1310,81 +1389,32 @@ let currentExpiry  = EXPIRY_LIST[0] || "";
 let marketBias     = "neutral";
 let strategies     = [];
 let payoffChart    = null;
-let activeParamTab = "sr";
 
 // ── Init ──────────────────────────────────────────────────────
 window.onload = () => {{
   populateExpiries();
-  restoreUserState();
+  restoreUserState();   // ← restore before first render
   if (currentExpiry) {{
     updateTicker();
     renderChain();
     renderGreeks(null);
   }}
   startCountdown();
+  // Save on lot/capital change
   document.getElementById("lotSize").addEventListener("input", saveUserState);
   document.getElementById("maxCap").addEventListener("input",  saveUserState);
+  // Save existing SR inputs
   document.querySelectorAll(".sup-inp,.res-inp").forEach(inp => {{
     inp.addEventListener("input", saveUserState);
   }});
-  // BE preview updates
-  document.getElementById("beLower").addEventListener("input", updateBePreview);
-  document.getElementById("beUpper").addEventListener("input", updateBePreview);
 }};
 
-// ── Param tab switcher ────────────────────────────────────────
-function switchParamTab(tab, btn) {{
-  activeParamTab = tab;
-  document.getElementById("param-sr-content").style.display = tab === "sr" ? "block" : "none";
-  document.getElementById("param-be-content").style.display = tab === "be" ? "block" : "none";
-  document.querySelectorAll(".ptab").forEach(b => b.classList.remove("active"));
-  btn.classList.add("active");
-  saveUserState();
-}}
-
-// ── BE Preview calculation ────────────────────────────────────
-function updateBePreview() {{
-  const lower = parseFloat(document.getElementById("beLower").value);
-  const upper = parseFloat(document.getElementById("beUpper").value);
-  const prev  = document.getElementById("beCalcPreview");
-  if (isNaN(lower) || isNaN(upper) || lower <= 0 || upper <= 0) {{
-    prev.innerHTML = '<div style="font-size:9px;color:var(--text3);font-family:\'DM Mono\',monospace;text-align:center;">Enter both BEs above to see required premium</div>';
-    return;
-  }}
-  if (upper <= lower) {{
-    prev.innerHTML = '<div style="font-size:9px;color:var(--red);font-family:\'DM Mono\',monospace;text-align:center;">⚠ Upper BE must be greater than Lower BE</div>';
-    return;
-  }}
-  const range      = upper - lower;
-  const center     = (upper + lower) / 2;
-  const stradPrem  = (range / 2).toFixed(2);
-  const d          = ALL_DATA[currentExpiry || EXPIRY_LIST[0]];
-  const spot       = d ? d.underlying : 0;
-  prev.innerHTML = `
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
-      <div>
-        <div style="font-size:8px;color:var(--text3);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.7px;">BE Range</div>
-        <div style="font-size:13px;font-weight:700;color:var(--gold);font-family:'DM Mono',monospace;">${{range.toFixed(0)}} pts</div>
-      </div>
-      <div>
-        <div style="font-size:8px;color:var(--text3);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.7px;">Center Strike</div>
-        <div style="font-size:13px;font-weight:700;color:var(--cyan);font-family:'DM Mono',monospace;">~₹${{center.toFixed(0)}}</div>
-      </div>
-      <div>
-        <div style="font-size:8px;color:var(--text3);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.7px;">Min Premium Needed</div>
-        <div style="font-size:13px;font-weight:700;color:var(--green);font-family:'DM Mono',monospace;">₹${{stradPrem}}</div>
-      </div>
-      <div>
-        <div style="font-size:8px;color:var(--text3);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.7px;">Spot vs Center</div>
-        <div style="font-size:11px;font-weight:700;font-family:'DM Mono',monospace;color:var(--text2);">${{spot ? (spot > center ? "▲ +" : "▼ ") + Math.abs(spot - center).toFixed(0) + " pts" : "—"}}</div>
-      </div>
-    </div>`;
-}}
-
-// ── Silent background refresh ─────────────────────────────────
+// ── Silent background refresh (no flicker, no reload) ────────
 function startCountdown() {{
+  // ── Live IST clock (updates every second) ──
   function updateClock() {{
     const now = new Date();
+    // IST = UTC + 5:30
     const ist = new Date(now.getTime() + (5.5 * 60 * 60 * 1000));
     const hh  = String(ist.getUTCHours()).padStart(2, "0");
     const mm  = String(ist.getUTCMinutes()).padStart(2, "0");
@@ -1394,11 +1424,16 @@ function startCountdown() {{
   }}
   updateClock();
   setInterval(updateClock, 1000);
+
+  // ── Refresh countdown ──
   let secs = 30;
   const el = document.getElementById("countdown");
   setInterval(() => {{
     secs--;
-    if (secs <= 0) {{ secs = 30; silentRefresh(); }}
+    if (secs <= 0) {{
+      secs = 30;
+      silentRefresh();
+    }}
     el.textContent = secs + "s";
   }}, 1000);
 }}
@@ -1410,44 +1445,46 @@ async function silentRefresh() {{
     const html   = await resp.text();
     const parser = new DOMParser();
     const doc    = parser.parseFromString(html, "text/html");
+    // Extract fresh JSON data from new page
     const scripts = doc.querySelectorAll("script");
     for (const s of scripts) {{
       const m = s.textContent.match(/const ALL_DATA\s*=\s*(\{{[\s\S]*?\}});/);
       if (m) {{
         try {{
           const freshData = JSON.parse(m[1]);
+          // Merge fresh data into ALL_DATA
           Object.assign(ALL_DATA, freshData);
+          // Re-render data panels silently (preserve user inputs)
           updateTicker();
           renderChain();
           updateGreeksForStrike(parseInt(document.getElementById("greeksStrikeSel").value) || ALL_DATA[currentExpiry]?.atm_strike);
+          // Update generated time
           const genEl = doc.querySelector(".gen-time");
           if (genEl) document.querySelector(".gen-time") && (document.querySelector(".gen-time").textContent = genEl.textContent);
+          console.log("Silent refresh done:", new Date().toLocaleTimeString());
         }} catch(e) {{ console.warn("Silent refresh parse error:", e); }}
         break;
       }}
     }}
-  }} catch(e) {{ console.warn("Silent refresh fetch error:", e); }}
+  }} catch(e) {{
+    console.warn("Silent refresh fetch error:", e);
+  }}
 }}
 
 // ── Expiry ────────────────────────────────────────────────────
 function populateExpiries() {{
-  const sel   = document.getElementById("expirySel");
-  const selBe = document.getElementById("expirySelBe");
-  const opts  = EXPIRY_LIST.map((e, i) =>
+  const sel = document.getElementById("expirySel");
+  sel.innerHTML = EXPIRY_LIST.map((e, i) =>
     `<option value="${{e}}"${{i===0?' selected':''}}>${{e}}${{i===0?' (Weekly)':''}}</option>`
   ).join("");
-  sel.innerHTML   = opts;
-  selBe.innerHTML = opts;
   currentExpiry = EXPIRY_LIST[0] || "";
 }}
 
 function onExpiryChange() {{
   currentExpiry = document.getElementById("expirySel").value;
-  document.getElementById("expirySelBe").value = currentExpiry;
   updateTicker();
   renderChain();
   renderGreeks(null);
-  updateBePreview();
   saveUserState();
 }}
 
@@ -1463,6 +1500,7 @@ function updateTicker() {{
     const ivAvg = ((atm.ce_iv || 0) + (atm.pe_iv || 0)) / 2;
     document.getElementById("atmIv").textContent = "ATM IV: " + ivAvg.toFixed(1) + "%";
   }}
+  // Max OI
   let maxCeOi = 0, maxCeSt = 0, maxPeOi = 0, maxPeSt = 0;
   d.all_strikes.forEach(s => {{
     if (s.ce_oi > maxCeOi) {{ maxCeOi = s.ce_oi; maxCeSt = s.strike; }}
@@ -1477,14 +1515,18 @@ function renderChain() {{
   const d = ALL_DATA[currentExpiry];
   if (!d) return;
   document.getElementById("chainExpLbl").textContent = currentExpiry;
+  // Update spot/DTE labels in chain header
   const chainSpot = document.getElementById("chainSpotLbl");
   const chainDte  = document.getElementById("chainDteLbl");
   if (chainSpot) chainSpot.textContent = "₹" + d.underlying.toLocaleString("en-IN");
   if (chainDte)  chainDte.textContent  = d.dte;
+
   const supports    = getSupports();
   const resistances = getResistances();
+  const underlying  = d.underlying;
   const rows        = [...d.all_strikes].sort((a, b) => b.strike - a.strike);
   const maxOi       = Math.max(...rows.flatMap(r => [r.ce_oi, r.pe_oi]), 1);
+
   const chainBody = document.getElementById("chainBody");
   chainBody.innerHTML = rows.map(r => {{
     const isAtm = r.is_atm;
@@ -1530,9 +1572,12 @@ function renderGreeks(strikeOverride) {{
   const d = ALL_DATA[currentExpiry];
   if (!d) return;
   document.getElementById("greeksExpTag").textContent = currentExpiry;
+
+  // Populate strike dropdown
   const sel   = document.getElementById("greeksStrikeSel");
   const atm   = d.atm_strike;
   const rows  = [...d.all_strikes].sort((a, b) => b.strike - a.strike);
+
   let ceOpts = "", atmOpt = "", peOpts = "";
   rows.forEach(r => {{
     const s    = r.strike;
@@ -1549,6 +1594,7 @@ function renderGreeks(strikeOverride) {{
     `<optgroup label="─ OTM CALLS (CE) ─">${{ceOpts}}</optgroup>` +
     `<optgroup label="─ ATM ─">${{atmOpt}}</optgroup>` +
     `<optgroup label="─ OTM PUTS (PE) ─">${{peOpts}}</optgroup>`;
+
   const targetStrike = strikeOverride || atm;
   updateGreeksForStrike(targetStrike);
 }}
@@ -1559,9 +1605,11 @@ function updateGreeksForStrike(strike) {{
   if (!d) return;
   const row = d.all_strikes.find(s => s.strike === strike);
   if (!row) return;
+
   const atm      = d.atm_strike;
   const dist     = Math.abs(strike - atm) / 50;
   const typeLabel = row.is_atm ? "ATM" : strike > atm ? `OTM CE +${{dist}}` : `OTM PE -${{dist}}`;
+
   document.getElementById("greeksTypeLabel").textContent  = typeLabel;
   document.getElementById("greeksStrikeVal").textContent  = "₹" + strike.toLocaleString("en-IN");
   document.getElementById("greeksCeLtp").textContent      = "CE ₹" + row.ce_ltp.toFixed(1);
@@ -1576,8 +1624,12 @@ function updateGreeksForStrike(strike) {{
   document.getElementById("greeksVegaPe").textContent     = row.pe_vega.toFixed(4);
   document.getElementById("greeksGammaCe").textContent    = row.ce_gamma.toFixed(6);
   document.getElementById("greeksGammaPe").textContent    = row.pe_gamma.toFixed(6);
+
+  // Delta bars
   document.getElementById("dbarCe").style.width = Math.abs(row.ce_delta) * 100 + "%";
   document.getElementById("dbarPe").style.width = Math.abs(row.pe_delta) * 100 + "%";
+
+  // IV gauge
   const ivAvg   = (row.ce_iv + row.pe_iv) / 2;
   const ivPct   = Math.min(100, (ivAvg / 60) * 100);
   const ivCol   = ivAvg > 25 ? "var(--red)" : ivAvg > 18 ? "var(--gold)" : "var(--green)";
@@ -1589,6 +1641,8 @@ function updateGreeksForStrike(strike) {{
   document.getElementById("greeksIvBar").style.boxShadow = `0 0 6px ${{ivCol}}88`;
   document.getElementById("greeksIvRegime").textContent  = ivReg;
   document.getElementById("greeksIvRegime").style.color  = ivCol;
+
+  // IV Skew
   const skew    = row.pe_iv - row.ce_iv;
   const skewCol = skew > 1.5 ? "var(--red)" : skew < -1.5 ? "var(--green)" : "var(--purple)";
   const skewTxt = skew > 0 ? `PE Skew +${{skew.toFixed(1)}}` : `CE Skew ${{skew.toFixed(1)}}`;
@@ -1606,7 +1660,7 @@ function setBias(b) {{
 }}
 setBias("neutral");
 
-// ── Persist user state ────────────────────────────────────────
+// ── Persist user state across silent refreshes ────────────────
 function saveUserState() {{
   const state = {{
     bias:        marketBias,
@@ -1615,9 +1669,6 @@ function saveUserState() {{
     resistances: getResistances(),
     lotSize:     document.getElementById("lotSize").value,
     maxCap:      document.getElementById("maxCap").value,
-    activeTab:   activeParamTab,
-    beLower:     document.getElementById("beLower").value,
-    beUpper:     document.getElementById("beUpper").value,
   }};
   try {{ sessionStorage.setItem("noa_state", JSON.stringify(state)); }} catch(e) {{}}
 }}
@@ -1627,12 +1678,17 @@ function restoreUserState() {{
     const raw = sessionStorage.getItem("noa_state");
     if (!raw) return;
     const state = JSON.parse(raw);
+
+    // Restore bias
     if (state.bias) setBias(state.bias);
+
+    // Restore expiry
     if (state.expiry && EXPIRY_LIST.includes(state.expiry)) {{
       currentExpiry = state.expiry;
-      document.getElementById("expirySel").value    = state.expiry;
-      document.getElementById("expirySelBe").value  = state.expiry;
+      document.getElementById("expirySel").value = state.expiry;
     }}
+
+    // Restore support levels
     if (state.supports && state.supports.length) {{
       const supC = document.getElementById("supContainer");
       supC.innerHTML = "";
@@ -1643,6 +1699,8 @@ function restoreUserState() {{
         supC.appendChild(div);
       }});
     }}
+
+    // Restore resistance levels
     if (state.resistances && state.resistances.length) {{
       const resC = document.getElementById("resContainer");
       resC.innerHTML = "";
@@ -1653,14 +1711,11 @@ function restoreUserState() {{
         resC.appendChild(div);
       }});
     }}
+
+    // Restore lot size & capital
     if (state.lotSize) document.getElementById("lotSize").value = state.lotSize;
     if (state.maxCap)  document.getElementById("maxCap").value  = state.maxCap;
-    if (state.beLower) document.getElementById("beLower").value = state.beLower;
-    if (state.beUpper) document.getElementById("beUpper").value = state.beUpper;
-    if (state.activeTab && state.activeTab === "be") {{
-      const btn = document.getElementById("ptab-be");
-      if (btn) switchParamTab("be", btn);
-    }}
+
   }} catch(e) {{ console.warn("State restore error:", e); }}
 }}
 
@@ -1703,373 +1758,6 @@ function bsm(S,K,T,r,sigma,type) {{
   return {{price:Math.max(0,price),delta,pop}};
 }}
 
-// =================================================================
-// 🎯 TARGET BE ENGINE — Find best strategy matching your break-evens
-// =================================================================
-
-function findBEStrategies() {{
-  const expKey    = document.getElementById("expirySelBe").value || currentExpiry;
-  const d         = ALL_DATA[expKey];
-  if (!d) {{ alert("No data loaded for this expiry."); return; }}
-
-  const lowerBE = parseFloat(document.getElementById("beLower").value);
-  const upperBE = parseFloat(document.getElementById("beUpper").value);
-
-  if (isNaN(lowerBE) || isNaN(upperBE) || lowerBE <= 0 || upperBE <= 0) {{
-    alert("Please enter both Lower and Upper Break-Even values.");
-    return;
-  }}
-  if (upperBE <= lowerBE) {{
-    alert("Upper BE must be greater than Lower BE.");
-    return;
-  }}
-
-  const underlying = d.underlying;
-  const dte        = d.dte;
-  const T          = Math.max(dte / 365, 0.001);
-  const strikes    = d.all_strikes;
-  const smap       = {{}};
-  strikes.forEach(s => {{ smap[s.strike] = s; }});
-  const allSt      = strikes.map(s => s.strike).sort((a,b) => a - b);
-  const nearest    = val => allSt.reduce((a,b) => Math.abs(b-val) < Math.abs(a-val) ? b : a);
-  const get        = (st, f, def=0) => (smap[st]||{{}})[f] || def;
-
-  const targetCenter = (upperBE + lowerBE) / 2;
-  const targetRange  = upperBE - lowerBE;
-  const candidates   = [];
-
-  // ─────────────────────────────────────────────────────────────
-  // Helper: compute actual BEs from a leg array via payoff curve
-  // ─────────────────────────────────────────────────────────────
-  function computeActualBEs(legs) {{
-    const range = [];
-    for (let p = underlying - 2000; p <= underlying + 2000; p += 10) range.push(p);
-    const payoffs = range.map(price => {{
-      let pnl = 0;
-      legs.forEach(l => {{
-        const intr = l.type === "CE" ? Math.max(0, price - l.strike) : Math.max(0, l.strike - price);
-        pnl += l.action === "buy" ? (intr - l.premium) : (l.premium - intr);
-      }});
-      return pnl;
-    }});
-    const bes = [];
-    for (let i = 0; i < payoffs.length - 1; i++) {{
-      if ((payoffs[i] < 0) !== (payoffs[i+1] < 0)) {{
-        const frac = Math.abs(payoffs[i]) / (Math.abs(payoffs[i]) + Math.abs(payoffs[i+1]));
-        bes.push(Math.round(range[i] + frac * (range[i+1] - range[i])));
-      }}
-    }}
-    return bes;
-  }}
-
-  function makeCandidate(name, legs, icon) {{
-    const netPrem = legs.reduce((a,l) => a + (l.action==="sell" ? l.premium : -l.premium), 0);
-    if (netPrem <= 0) return null; // only credit strategies for BE targeting
-    const bes = computeActualBEs(legs);
-    if (bes.length < 1) return null;
-    const actualLower = bes[0];
-    const actualUpper = bes.length >= 2 ? bes[1] : bes[0];
-    const lowerDiff   = Math.abs(actualLower - lowerBE);
-    const upperDiff   = bes.length >= 2 ? Math.abs(actualUpper - upperBE) : 9999;
-    const totalDiff   = lowerDiff + upperDiff;
-    // accuracy score: 0 = perfect match, higher = worse
-    const accuracy    = Math.max(0, 100 - (totalDiff / targetRange) * 100);
-    const maxPayoff   = [];
-    for (let p = underlying-2000; p<=underlying+2000; p+=25) {{
-      let pnl=0;
-      legs.forEach(l=>{{
-        const intr=l.type==="CE"?Math.max(0,p-l.strike):Math.max(0,l.strike-p);
-        pnl+=l.action==="buy"?(intr-l.premium):(l.premium-intr);
-      }});
-      maxPayoff.push(pnl*LOT_SIZE);
-    }}
-    const maxProfit = Math.max(...maxPayoff);
-    const maxLoss   = Math.abs(Math.min(...maxPayoff));
-
-    // PoP
-    let pop = 50;
-    if (bes.length >= 2) {{
-      const sigma = ((legs.find(l=>l.type==="CE")?.iv||15) + (legs.find(l=>l.type==="PE")?.iv||15)) / 2 / 100;
-      const probBelow = bsm(underlying, actualLower, T, RISK_FREE, sigma, "PE").pop;
-      const probAbove = 1 - bsm(underlying, actualUpper, T, RISK_FREE, sigma, "CE").pop;
-      pop = Math.round(Math.min((1 - probBelow - probAbove) * 100, 99) * 10) / 10;
-    }}
-
-    return {{
-      name, legs, icon, netPrem: Math.round(netPrem*100)/100,
-      actualLower, actualUpper,
-      lowerDiff: Math.round(actualLower - lowerBE),
-      upperDiff: bes.length >= 2 ? Math.round(actualUpper - upperBE) : null,
-      totalDiff, accuracy: Math.round(accuracy),
-      maxProfit: Math.round(maxProfit), maxLoss: Math.round(maxLoss), pop,
-      bes,
-    }};
-  }}
-
-  // ─────────────────────────────────────────────────────────────
-  // STRATEGY 1: Short Straddle
-  // BE_upper = strike + premium, BE_lower = strike - premium
-  // Best strike = center of BEs, need premium ≈ range/2
-  // ─────────────────────────────────────────────────────────────
-  const stCenter = nearest(targetCenter);
-  const stRow    = smap[stCenter];
-  if (stRow) {{
-    const c = makeCandidate("Short Straddle", [
-      {{action:"sell", strike:stCenter, type:"CE", premium:stRow.ce_ltp||0.01, iv:stRow.ce_iv||15}},
-      {{action:"sell", strike:stCenter, type:"PE", premium:stRow.pe_ltp||0.01, iv:stRow.pe_iv||15}},
-    ], "⚖️");
-    if (c) candidates.push(c);
-  }}
-
-  // Also try ±1 strike either side of center
-  [nearest(targetCenter - 50), nearest(targetCenter + 50)].forEach(st => {{
-    if (st === stCenter) return;
-    const row = smap[st];
-    if (!row) return;
-    const c = makeCandidate("Short Straddle", [
-      {{action:"sell", strike:st, type:"CE", premium:row.ce_ltp||0.01, iv:row.ce_iv||15}},
-      {{action:"sell", strike:st, type:"PE", premium:row.pe_ltp||0.01, iv:row.pe_iv||15}},
-    ], "⚖️");
-    if (c) candidates.push(c);
-  }});
-
-  // ─────────────────────────────────────────────────────────────
-  // STRATEGY 2: Short Strangle
-  // Sell CE above upper BE area, sell PE below lower BE area
-  // BE_upper = sell_CE + total_premium, BE_lower = sell_PE - total_premium
-  // Scan: CE strikes from ATM to upperBE, PE strikes from lowerBE to ATM
-  // ─────────────────────────────────────────────────────────────
-  const ceRange = allSt.filter(s => s >= underlying && s <= upperBE + 300);
-  const peRange = allSt.filter(s => s >= lowerBE - 300 && s <= underlying);
-
-  // Try a focused set of CE/PE combinations (most promising strikes)
-  const ceCands = ceRange.slice(0, 8);
-  const peCands = peRange.slice(-8);
-
-  ceCands.forEach(ces => {{
-    peCands.forEach(pes => {{
-      if (ces <= pes) return;
-      const ceRow = smap[ces], peRow = smap[pes];
-      if (!ceRow || !peRow) return;
-      const c = makeCandidate("Short Strangle", [
-        {{action:"sell", strike:ces, type:"CE", premium:ceRow.ce_ltp||0.01, iv:ceRow.ce_iv||15}},
-        {{action:"sell", strike:pes, type:"PE", premium:peRow.pe_ltp||0.01, iv:peRow.pe_iv||15}},
-      ], "🔀");
-      if (c && c.totalDiff < targetRange * 1.5) candidates.push(c);
-    }});
-  }});
-
-  // ─────────────────────────────────────────────────────────────
-  // STRATEGY 3: Iron Condor
-  // Sell CE/PE inside the BEs, buy CE/PE outside for protection
-  // BE_upper ≈ sell_CE + net_credit, BE_lower ≈ sell_PE - net_credit
-  // ─────────────────────────────────────────────────────────────
-  // Best sell CE: scan strikes just below upperBE
-  const icCeSells = allSt.filter(s => s >= underlying && s <= upperBE).slice(-4);
-  const icPeSells = allSt.filter(s => s >= lowerBE && s <= underlying).slice(0, 4);
-
-  icCeSells.forEach(sceStr => {{
-    icPeSells.forEach(speStr => {{
-      if (sceStr <= speStr) return;
-      const buyC = nearest(sceStr + 150);
-      const buyP = nearest(speStr - 150);
-      if (buyC === sceStr || buyP === speStr) return;
-      const sceRow = smap[sceStr], speRow = smap[speStr];
-      const bcRow  = smap[buyC],   bpRow  = smap[buyP];
-      if (!sceRow || !speRow || !bcRow || !bpRow) return;
-      const c = makeCandidate("Iron Condor", [
-        {{action:"sell", strike:sceStr, type:"CE", premium:sceRow.ce_ltp||0.01, iv:sceRow.ce_iv||15}},
-        {{action:"buy",  strike:buyC,   type:"CE", premium:bcRow.ce_ltp||0.01,  iv:bcRow.ce_iv||15}},
-        {{action:"sell", strike:speStr, type:"PE", premium:speRow.pe_ltp||0.01, iv:speRow.pe_iv||15}},
-        {{action:"buy",  strike:buyP,   type:"PE", premium:bpRow.pe_ltp||0.01,  iv:bpRow.pe_iv||15}},
-      ], "🦅");
-      if (c && c.totalDiff < targetRange * 1.5) candidates.push(c);
-    }});
-  }});
-
-  // ─────────────────────────────────────────────────────────────
-  // STRATEGY 4: Bull Put Spread (lower BE focus)
-  // BE = sell_strike - net_credit
-  // Scan sell strikes; find where actual BE lands near lowerBE
-  // ─────────────────────────────────────────────────────────────
-  allSt.filter(s => s >= lowerBE - 100 && s <= underlying + 100).forEach(sellSt => {{
-    const buySt = nearest(sellSt - 150);
-    if (buySt === sellSt) return;
-    const sRow = smap[sellSt], bRow = smap[buySt];
-    if (!sRow || !bRow) return;
-    const c = makeCandidate("Bull Put Spread", [
-      {{action:"sell", strike:sellSt, type:"PE", premium:sRow.pe_ltp||0.01, iv:sRow.pe_iv||15}},
-      {{action:"buy",  strike:buySt,  type:"PE", premium:bRow.pe_ltp||0.01, iv:bRow.pe_iv||15}},
-    ], "🐂");
-    if (c && c.bes.length >= 1 && Math.abs(c.bes[0] - lowerBE) < 300) candidates.push(c);
-  }});
-
-  // ─────────────────────────────────────────────────────────────
-  // STRATEGY 5: Bear Call Spread (upper BE focus)
-  // BE = sell_strike + net_credit
-  // ─────────────────────────────────────────────────────────────
-  allSt.filter(s => s >= underlying - 100 && s <= upperBE + 100).forEach(sellSt => {{
-    const buySt = nearest(sellSt + 150);
-    if (buySt === sellSt) return;
-    const sRow = smap[sellSt], bRow = smap[buySt];
-    if (!sRow || !bRow) return;
-    const c = makeCandidate("Bear Call Spread", [
-      {{action:"sell", strike:sellSt, type:"CE", premium:sRow.ce_ltp||0.01, iv:sRow.ce_iv||15}},
-      {{action:"buy",  strike:buySt,  type:"CE", premium:bRow.ce_ltp||0.01, iv:bRow.ce_iv||15}},
-    ], "🐻");
-    if (c && c.bes.length >= 1 && Math.abs(c.bes[0] - upperBE) < 300) candidates.push(c);
-  }});
-
-  // ─────────────────────────────────────────────────────────────
-  // STRATEGY 6: Iron Butterfly
-  // ─────────────────────────────────────────────────────────────
-  const ibfCenter = nearest(targetCenter);
-  const ibfWing   = Math.max(Math.round(targetRange * 0.45 / 50) * 50, 100);
-  const ibfBuyC   = nearest(ibfCenter + ibfWing);
-  const ibfBuyP   = nearest(ibfCenter - ibfWing);
-  if (ibfBuyC !== ibfCenter && ibfBuyP !== ibfCenter) {{
-    const cRow = smap[ibfCenter], bcRow = smap[ibfBuyC], bpRow = smap[ibfBuyP];
-    if (cRow && bcRow && bpRow) {{
-      const c = makeCandidate("Iron Butterfly", [
-        {{action:"sell", strike:ibfCenter, type:"CE", premium:cRow.ce_ltp||0.01,  iv:cRow.ce_iv||15}},
-        {{action:"sell", strike:ibfCenter, type:"PE", premium:cRow.pe_ltp||0.01,  iv:cRow.pe_iv||15}},
-        {{action:"buy",  strike:ibfBuyC,   type:"CE", premium:bcRow.ce_ltp||0.01, iv:bcRow.ce_iv||15}},
-        {{action:"buy",  strike:ibfBuyP,   type:"PE", premium:bpRow.pe_ltp||0.01, iv:bpRow.pe_iv||15}},
-      ], "🦋");
-      if (c) candidates.push(c);
-    }}
-  }}
-
-  // ─────────────────────────────────────────────────────────────
-  // Deduplicate by name+strikes, sort by totalDiff ascending
-  // ─────────────────────────────────────────────────────────────
-  const seen = new Set();
-  const unique = candidates.filter(c => {{
-    if (!c) return false;
-    const key = c.name + "|" + c.legs.map(l=>l.action[0]+l.strike+l.type).join(",");
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  }});
-  unique.sort((a,b) => a.totalDiff - b.totalDiff);
-
-  const top = unique.slice(0, 6);
-
-  // Push to main strategies array and render in strategy grid too
-  strategies = top.map((c, idx) => {{
-    // Convert to strategy grid format
-    const range = [];
-    for (let p = underlying - 1500; p <= underlying + 1500; p += 25) range.push(p);
-    const payoffs = range.map(price => {{
-      let pnl = 0;
-      c.legs.forEach(l => {{
-        const intr = l.type==="CE" ? Math.max(0,price-l.strike) : Math.max(0,l.strike-price);
-        pnl += l.action==="buy" ? (intr-l.premium) : (l.premium-intr);
-      }});
-      return Math.round(pnl*LOT_SIZE*100)/100;
-    }});
-    return {{
-      name:       c.name + " (BE Match #" + (idx+1) + ")",
-      type:       "be_match",
-      bias:       "neutral",
-      legs:       c.legs.map(l => ({{...l, opt_type: l.type, premium: l.premium}})),
-      netPrem:    c.netPrem,
-      isDebit:    false,
-      maxProfit:  c.maxProfit,
-      maxLoss:    c.maxLoss,
-      breakevens: c.bes,
-      rr:         c.maxLoss > 0 ? Math.round(Math.abs(c.maxProfit/c.maxLoss)*100)/100 : 0,
-      pop:        c.pop,
-      score:      c.accuracy,
-      margin:     c.maxLoss,
-      payoffs, priceRange: range,
-      _beMatch: c,
-    }};
-  }});
-
-  renderBEResults(top, lowerBE, upperBE);
-  renderStrategies();
-  populatePayoffSel();
-
-  // Auto-select best match in payoff chart
-  if (top.length > 0) {{
-    setTimeout(() => {{
-      document.getElementById("payoffSel").value = strategies[0].name;
-      drawPayoff();
-    }}, 200);
-  }}
-}}
-
-// ── Render BE results in left panel ──────────────────────────
-function renderBEResults(results, lowerBE, upperBE) {{
-  const wrap = document.getElementById("beResultsWrap");
-  if (!results.length) {{
-    wrap.innerHTML = '<div class="be-empty">No matching strategies found.<br>Try adjusting your BE range.</div>';
-    return;
-  }}
-
-  const maxAcc = Math.max(...results.map(r => r.accuracy), 1);
-
-  wrap.innerHTML = `
-    <div style="font-size:9px;font-weight:700;color:var(--text2);font-family:'DM Mono',monospace;
-                text-transform:uppercase;letter-spacing:1px;margin:12px 0 8px;
-                display:flex;align-items:center;justify-content:space-between;">
-      <span>🎯 ${{results.length}} Matches Found</span>
-      <span style="color:var(--text3);">Click to view payoff</span>
-    </div>` +
-    results.map((r, i) => {{
-      const isBest    = i === 0;
-      const accCol    = r.accuracy >= 75 ? "var(--green)" : r.accuracy >= 45 ? "var(--gold)" : "var(--red)";
-      const accLabel  = r.accuracy >= 75 ? "Excellent" : r.accuracy >= 45 ? "Good" : "Approximate";
-      const lDiffCol  = Math.abs(r.lowerDiff) <= 25 ? "be-diff-good" : Math.abs(r.lowerDiff) <= 75 ? "be-diff-ok" : "be-diff-bad";
-      const uDiffCol  = r.upperDiff !== null ? (Math.abs(r.upperDiff) <= 25 ? "be-diff-good" : Math.abs(r.upperDiff) <= 75 ? "be-diff-ok" : "be-diff-bad") : "";
-      const lDiffStr  = r.lowerDiff >= 0 ? "+" + r.lowerDiff : "" + r.lowerDiff;
-      const uDiffStr  = r.upperDiff !== null ? (r.upperDiff >= 0 ? "+" + r.upperDiff : "" + r.upperDiff) : "N/A";
-      const legTags   = r.legs.map(l =>
-        `<span class="be-leg-tag ${{l.action==="buy"?"be-leg-buy":"be-leg-sell"}}">${{l.action.toUpperCase()}} ${{l.strike}} ${{l.type}} @₹${{l.premium.toFixed(1)}}</span>`
-      ).join("");
-      const swPct     = Math.round((r.accuracy / maxAcc) * 100);
-      const stratName = strategies[i]?.name || r.name;
-
-      return `
-      <div class="be-match-card ${{isBest?"be-best":""}}" onclick="selectBEPayoff('${{stratName.replace(/'/g,"\\'")}}')">
-        ${{isBest ? '<span class="be-match-rank" style="background:rgba(255,209,102,.15);color:var(--gold);border:1px solid rgba(255,209,102,.3);">🏆 BEST</span>' :
-                    `<span class="be-match-rank" style="background:var(--bg3);color:var(--text3);border:1px solid var(--border);">#${{i+1}}</span>`}}
-        <div class="be-match-name">${{r.icon}} ${{r.name}}</div>
-        <div class="be-match-legs">${{legTags}}</div>
-        <div class="be-accuracy-row">
-          <div class="be-accuracy-box">
-            <div class="be-acc-lbl">▼ Lower BE</div>
-            <div class="be-acc-target" style="color:var(--text3);">Target: ₹${{lowerBE.toLocaleString("en-IN")}}</div>
-            <div class="be-acc-actual" style="color:var(--red);">₹${{r.actualLower.toLocaleString("en-IN")}}</div>
-            <div class="be-acc-diff ${{lDiffCol}}">${{lDiffStr}} pts off</div>
-          </div>
-          <div class="be-accuracy-box">
-            <div class="be-acc-lbl">▲ Upper BE</div>
-            <div class="be-acc-target" style="color:var(--text3);">Target: ₹${{upperBE.toLocaleString("en-IN")}}</div>
-            <div class="be-acc-actual" style="color:var(--green);">${{r.upperDiff !== null ? "₹" + r.actualUpper.toLocaleString("en-IN") : "—"}}</div>
-            <div class="be-acc-diff ${{uDiffCol}}">${{uDiffStr}} pts off</div>
-          </div>
-        </div>
-        <div class="be-net-prem">
-          <span>Net Credit: <b style="color:var(--green);">₹${{r.netPrem.toFixed(2)}}</b></span>
-          <span>PoP: <b style="color:${{r.pop>=60?"var(--green)":r.pop>=45?"var(--gold)":"var(--red)"}};">${{r.pop}}%</b></span>
-        </div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:6px;">
-          <span style="font-size:8px;color:var(--text3);font-family:'DM Mono',monospace;">MATCH</span>
-          <div class="be-score-bar" style="flex:1;"><div class="be-score-fill" style="width:${{swPct}}%;"></div></div>
-          <span style="font-size:10px;font-weight:700;font-family:'DM Mono',monospace;color:${{accCol}};">${{r.accuracy}}% ${{accLabel}}</span>
-        </div>
-      </div>`;
-    }}).join("");
-}}
-
-function selectBEPayoff(name) {{
-  document.getElementById("payoffSel").value = name;
-  drawPayoff();
-  document.querySelector(".payoff-wrap")?.scrollIntoView({{behavior:"smooth", block:"start"}});
-}}
-
 // ── Strategy Engine (JS) ──────────────────────────────────────
 function analyze() {{
   const d = ALL_DATA[currentExpiry];
@@ -2080,20 +1768,25 @@ function analyze() {{
     alert("Please enter at least one support and one resistance level.");
     return;
   }}
-  renderChain();
+
+  renderChain(); // re-render chain to mark S/R rows
+
   const underlying  = d.underlying;
   const atm         = d.atm_strike;
   const dte         = d.dte;
   const T           = Math.max(dte / 365, 0.001);
-  const strikesArr  = d.all_strikes;
+  const strikes     = d.all_strikes;
   const smap        = {{}};
-  strikesArr.forEach(s => {{ smap[s.strike] = s; }});
-  const allSt       = strikesArr.map(s => s.strike).sort((a,b)=>a-b);
+  strikes.forEach(s => {{ smap[s.strike] = s; }});
+  const allSt       = strikes.map(s => s.strike).sort((a,b)=>a-b);
+
   const nearest = val => allSt.reduce((a,b)=>Math.abs(b-val)<Math.abs(a-val)?b:a);
   const get     = (st, field, def=0) => (smap[st]||{{}})[field] || def;
+
   const avgSup  = supports.reduce((a,b)=>a+b,0)/supports.length;
   const avgRes  = resistances.reduce((a,b)=>a+b,0)/resistances.length;
   const srRange = avgRes - avgSup;
+
   const s_st  = nearest(avgSup);
   const r_st  = nearest(avgRes);
   const otm_c = nearest(underlying + srRange*0.3);
@@ -2123,6 +1816,8 @@ function analyze() {{
     const maxP    = Math.max(...po.vals);
     const maxL    = Math.min(...po.vals);
     if(maxP<=0) return null;
+
+    // Breakevens
     const bes=[];
     for(let i=0;i<po.vals.length-1;i++){{
       if((po.vals[i]<0)!==(po.vals[i+1]<0)){{
@@ -2130,45 +1825,66 @@ function analyze() {{
         bes.push(Math.round(be));
       }}
     }}
+
+    // PoP — strategy-type aware, all using breakeven-based calculation where applicable
+    // Credit spreads / condors / butterflies: P(spot stays in profit zone) = classic seller PoP
+    // Debit spreads (directional): P(spot beyond single breakeven at expiry)
+    // Long vol (straddle/strangle): P(spot beyond either breakeven)
+    // Short vol: P(spot stays between breakevens)
     let pop;
     const allSell  = legs.every(l => l.action === "sell");
     const allBuy   = legs.every(l => l.action === "buy");
     const avgIv    = legs.reduce((a,l) => a + (l.iv||15), 0) / legs.length;
     const sigma    = avgIv / 100;
+
     if (bes.length >= 1) {{
       if (sType === "debit_spread") {{
+        // Directional debit: need spot past single breakeven
         const be = bes[0];
         const isCall = legs.find(l => l.action==="buy")?.type === "CE";
         if (isCall) {{
+          // Bull Call: need spot > BE
           pop = Math.round((1 - bsm(underlying, be, T, RISK_FREE, sigma, "CE").pop) * 1000) / 10;
         }} else {{
+          // Bear Put: need spot < BE
           pop = Math.round(bsm(underlying, be, T, RISK_FREE, sigma, "PE").pop * 1000) / 10;
         }}
       }} else if (allBuy && (sType === "straddle" || sType === "strangle")) {{
-        const lowerBE2 = bes[0];
-        const upperBE2 = bes.length >= 2 ? bes[1] : null;
-        const probBelow = bsm(underlying, lowerBE2, T, RISK_FREE, sigma, "PE").pop;
-        const probAbove = upperBE2 ? (1 - bsm(underlying, upperBE2, T, RISK_FREE, sigma, "CE").pop) : 0;
+        // Long vol: need spot outside EITHER breakeven
+        const lowerBE = bes[0];
+        const upperBE = bes.length >= 2 ? bes[1] : null;
+        const probBelow = bsm(underlying, lowerBE, T, RISK_FREE, sigma, "PE").pop;
+        const probAbove = upperBE
+          ? (1 - bsm(underlying, upperBE, T, RISK_FREE, sigma, "CE").pop)
+          : 0;
         pop = Math.round(Math.min((probBelow + probAbove) * 100, 99) * 10) / 10;
       }} else if (allSell || sType === "credit_spread" || sType === "iron_condor" || sType === "iron_butterfly") {{
-        const lowerBE2 = bes[0];
-        const upperBE2 = bes.length >= 2 ? bes[1] : null;
-        const probBelow = bsm(underlying, lowerBE2, T, RISK_FREE, sigma, "PE").pop;
-        const probAbove = upperBE2 ? (1 - bsm(underlying, upperBE2, T, RISK_FREE, sigma, "CE").pop) : 0;
+        // Credit strategies: need spot to STAY inside breakevens
+        const lowerBE = bes[0];
+        const upperBE = bes.length >= 2 ? bes[1] : null;
+        const probBelow = bsm(underlying, lowerBE, T, RISK_FREE, sigma, "PE").pop;
+        const probAbove = upperBE
+          ? (1 - bsm(underlying, upperBE, T, RISK_FREE, sigma, "CE").pop)
+          : 0;
+        // Prob inside = 1 - prob outside
         pop = Math.round(Math.min((1 - probBelow - probAbove) * 100, 99) * 10) / 10;
       }} else {{
+        // Fallback: leg-by-leg average
         let s=0;
         legs.forEach(l=>{{ const b=bsm(underlying,l.strike,T,RISK_FREE,l.iv/100,l.opt_type||l.type); s+=l.action==="sell"?b.pop:(1-b.pop); }});
         pop = Math.round(Math.min(s/legs.length*100,99)*10)/10;
       }}
     }} else {{
+      // No breakevens found — fallback
       let s=0;
       legs.forEach(l=>{{ const b=bsm(underlying,l.strike,T,RISK_FREE,l.iv/100,l.opt_type||l.type); s+=l.action==="sell"?b.pop:(1-b.pop); }});
       pop = Math.round(Math.min(s/legs.length*100,99)*10)/10;
     }}
-    pop = Math.max(pop, 1);
+    pop = Math.max(pop, 1); // floor at 1%
+
     const rr   = maxL!==0?Math.round(Math.abs(maxP/maxL)*100)/100:0;
     const score= Math.round(pop*0.40+Math.min(rr*35,35)+Math.min(maxP/5000*25,25)*10)/10;
+
     return {{
       name, biasTag, sType, legs,
       netPrem:  Math.round(netPrem*100)/100,
@@ -2185,6 +1901,8 @@ function analyze() {{
 
   const raw=[];
   const bias=marketBias;
+
+  // Bull Call Spread
   if(bias!=="bearish"){{
     const s=makeStrat("Bull Call Spread",[
       {{action:"buy", strike:atm,  type:"CE",premium:get(atm, "ce_ltp"),iv:get(atm, "ce_iv",15)}},
@@ -2192,6 +1910,7 @@ function analyze() {{
     ],"bullish","debit_spread");
     if(s) raw.push(s);
   }}
+  // Bear Put Spread
   if(bias!=="bullish"){{
     const s=makeStrat("Bear Put Spread",[
       {{action:"buy", strike:atm,  type:"PE",premium:get(atm, "pe_ltp"),iv:get(atm, "pe_iv",15)}},
@@ -2199,6 +1918,7 @@ function analyze() {{
     ],"bearish","debit_spread");
     if(s) raw.push(s);
   }}
+  // Bull Put Spread
   if(bias!=="bearish"){{
     const s=makeStrat("Bull Put Spread",[
       {{action:"sell",strike:s_st, type:"PE",premium:get(s_st,"pe_ltp"),iv:get(s_st,"pe_iv",15)}},
@@ -2206,6 +1926,7 @@ function analyze() {{
     ],"bullish","credit_spread");
     if(s) raw.push(s);
   }}
+  // Bear Call Spread
   if(bias!=="bullish"){{
     const s=makeStrat("Bear Call Spread",[
       {{action:"sell",strike:r_st, type:"CE",premium:get(r_st,"ce_ltp"),iv:get(r_st,"ce_iv",15)}},
@@ -2213,6 +1934,7 @@ function analyze() {{
     ],"bearish","credit_spread");
     if(s) raw.push(s);
   }}
+  // Iron Condor
   {{
     const s=makeStrat("Iron Condor",[
       {{action:"sell",strike:r_st, type:"CE",premium:get(r_st, "ce_ltp"),iv:get(r_st, "ce_iv",15)}},
@@ -2222,6 +1944,7 @@ function analyze() {{
     ],"neutral","iron_condor");
     if(s) raw.push(s);
   }}
+  // Iron Butterfly
   {{
     const wing=Math.max(Math.round(srRange*0.4/50)*50,100);
     const bc=nearest(atm+wing), bp=nearest(atm-wing);
@@ -2233,6 +1956,7 @@ function analyze() {{
     ],"neutral","iron_butterfly");
     if(s) raw.push(s);
   }}
+  // Long Straddle
   {{
     const s=makeStrat("Long Straddle",[
       {{action:"buy",strike:atm,type:"CE",premium:get(atm,"ce_ltp"),iv:get(atm,"ce_iv",15)}},
@@ -2240,6 +1964,7 @@ function analyze() {{
     ],"volatile","straddle");
     if(s) raw.push(s);
   }}
+  // Short Straddle
   if(bias==="neutral"){{
     const s=makeStrat("Short Straddle",[
       {{action:"sell",strike:atm,type:"CE",premium:get(atm,"ce_ltp"),iv:get(atm,"ce_iv",15)}},
@@ -2247,6 +1972,7 @@ function analyze() {{
     ],"neutral","straddle");
     if(s) raw.push(s);
   }}
+  // Long Strangle
   {{
     const s=makeStrat("Long Strangle",[
       {{action:"buy",strike:otm_c,type:"CE",premium:get(otm_c,"ce_ltp"),iv:get(otm_c,"ce_iv",15)}},
@@ -2254,6 +1980,7 @@ function analyze() {{
     ],"volatile","strangle");
     if(s) raw.push(s);
   }}
+  // Short Strangle
   if(bias==="neutral"){{
     const s=makeStrat("Short Strangle",[
       {{action:"sell",strike:otm_c,type:"CE",premium:get(otm_c,"ce_ltp"),iv:get(otm_c,"ce_iv",15)}},
@@ -2261,6 +1988,7 @@ function analyze() {{
     ],"neutral","strangle");
     if(s) raw.push(s);
   }}
+
   strategies=raw.filter(s=>s!==null);
   renderStrategies();
   populatePayoffSel();
@@ -2275,54 +2003,373 @@ function renderStrategies() {{
     if(sortBy==="rr")     return b.rr-a.rr;
     return b.score-a.score;
   }});
+
   document.getElementById("stratCount").textContent = sorted.length+" STRATEGIES";
   if(!sorted.length) {{
     document.getElementById("stratGrid").innerHTML='<div class="empty"><div class="empty-icon">📋</div><p>No strategies found for current settings.</p></div>';
     return;
   }}
-  const colors={{bullish:"var(--green)",bearish:"var(--red)",neutral:"var(--cyan)",volatile:"var(--purple)"  }};
+
+  const colors={{bullish:"var(--green)",bearish:"var(--red)",neutral:"var(--cyan)",volatile:"var(--purple)"}};
   const emojis={{bullish:"🐂",bearish:"🐻",neutral:"⚖️",volatile:"⚡"}};
   const maxScore=Math.max(...sorted.map(s=>s.score));
+
   document.getElementById("stratGrid").innerHTML = sorted.map((s,i)=>{{
-    // detect BE match
-    const isBEMatch = s.type === "be_match";
-    const cc      = isBEMatch ? "var(--gold)" : (colors[s.biasTag]||"var(--cyan)");
+    const cc      = colors[s.biasTag]||"var(--cyan)";
     const popCol  = s.pop>=60?"var(--green)":s.pop>=45?"var(--gold)":"var(--red)";
     const popBg   = s.pop>=60?"#00c89620":s.pop>=45?"#ffd16620":"#ff6b6b20";
     const rrDisp  = s.rr===0?"∞":s.rr.toFixed(2)+"x";
     const sw      = Math.round((s.score/maxScore)*100);
-    const beStr   = s.breakevens?.length ? s.breakevens.map(b=>"₹"+b.toLocaleString("en-IN")).join(" / ") : "—";
-    const netPremField = s.netPrem !== undefined ? s.netPrem : 0;
-    const netDisp = (netPremField < 0)
-      ? `<span class="down">-₹${{Math.abs(netPremField).toFixed(2)}}</span>`
-      : `<span class="up">+₹${{netPremField.toFixed(2)}}</span>`;
+    const beStr   = s.breakevens.length ? s.breakevens.map(b=>"₹"+b.toLocaleString("en-IN")).join(" / ") : "—";
+    const netDisp = s.isDebit ? `<span class="down">-₹${{Math.abs(s.netPrem).toFixed(2)}}</span>` : `<span class="up">+₹${{s.netPrem.toFixed(2)}}</span>`;
+    const legTags = s.legs.map(l=>`<span class="leg-tag leg-${{l.action}}">${{l.action.toUpperCase()}} ${{l.strike}} ${{l.opt_type||l.type}} @${{l.premium.toFixed(2)}}</span>`).join("");
+    // Stable unique ID based on strategy name — never changes with sort order
     const uid = s.name.replace(/[^a-zA-Z0-9]/g,"_");
-    const legTags = (s.legs||[]).map(l=>`<span class="leg-tag leg-${{l.action}}">${{l.action.toUpperCase()}} ${{l.strike}} ${{l.opt_type||l.type}} @${{(l.premium||0).toFixed(2)}}</span>`).join("");
-    const beMatchBadge = isBEMatch ? `<div style="background:rgba(255,209,102,.1);border:1px solid rgba(255,209,102,.3);border-radius:6px;padding:3px 8px;font-size:8px;font-weight:700;color:var(--gold);font-family:'DM Mono',monospace;margin-bottom:6px;display:inline-block;">🎯 TARGET BE MATCH · ${{s.score}}% accuracy</div>` : "";
-    return `<div class="strat-card" style="--cc:${{cc}};animation-delay:${{i*0.05}}s${{isBEMatch?";border-top:2px solid var(--gold)":""}}" onclick="selectPayoff('${{s.name.replace(/'/g,"\\'")}}')">
+
+    return `<div class="strat-card" style="--cc:${{cc}};animation-delay:${{i*0.05}}s" onclick="selectPayoff('${{s.name}}')">
       <div class="sc-top">
         <div>
-          ${{beMatchBadge}}
-          <div class="sc-name">${{isBEMatch?"🎯":emojis[s.biasTag]||"📊"}} ${{s.name}}</div>
-          <div class="sc-sub">${{isBEMatch?"BE MATCH":"${{(s.biasTag||"").toUpperCase()}}"}} · ${{(s.isDebit?"DEBIT":"CREDIT")}} · DTE:${{ALL_DATA[currentExpiry]?.dte||"—"}}</div>
+          <div class="sc-name">${{emojis[s.biasTag]||"📊"}} ${{s.name}}</div>
+          <div class="sc-sub">${{s.biasTag.toUpperCase()}} · ${{s.isDebit?"DEBIT":"CREDIT"}} SPREAD · DTE:${{ALL_DATA[currentExpiry]?.dte||"—"}}</div>
         </div>
         <div class="pop-pill" style="background:${{popBg}};color:${{popCol}};border:1px solid ${{popCol}}33;">${{s.pop}}%<br><span style="font-size:8px;font-weight:400;">PoP</span></div>
       </div>
       <div class="sc-fields">
-        <div class="sc-field"><span class="sc-field-lbl">Max Profit</span><span class="sc-field-val up">₹${{(s.maxProfit||0).toLocaleString("en-IN")}}</span></div>
-        <div class="sc-field"><span class="sc-field-lbl">Max Loss</span><span class="sc-field-val down">₹${{(s.maxLoss||0).toLocaleString("en-IN")}}</span></div>
-        <div class="sc-field"><span class="sc-field-lbl">RR Ratio</span><span class="sc-field-val" style="color:var(--gold);">1:${{rrDisp}}</span></div>
-        <div class="sc-field"><span class="sc-field-lbl">Net Credit</span><span class="sc-field-val">${{netDisp}}</span></div>
-        <div class="sc-field" style="grid-column:1/-1"><span class="sc-field-lbl">Break-Evens</span><span class="sc-field-val" style="font-size:10px;color:${{isBEMatch?"var(--gold)":"var(--text2)"}};">${{beStr}}</span></div>
+        <div class="sc-field"><span class="sc-field-lbl">Strike Price</span><span class="sc-field-val" style="color:var(--cyan);">ATM ₹${{ALL_DATA[currentExpiry]?.atm_strike?.toLocaleString("en-IN")||"—"}}</span></div>
+        <div class="sc-field"><span class="sc-field-lbl">Max Profit</span><span class="sc-field-val up">₹${{s.maxProfit.toLocaleString("en-IN")}}</span></div>
+        <div class="sc-field"><span class="sc-field-lbl">Max Loss</span><span class="sc-field-val down">₹${{s.maxLoss.toLocaleString("en-IN")}}</span></div>
+        <div class="sc-field"><span class="sc-field-lbl">Max RR Ratio</span><span class="sc-field-val" style="color:var(--gold);">1:${{rrDisp}}</span></div>
+        <div class="sc-field"><span class="sc-field-lbl">Breakevens</span><span class="sc-field-val" style="font-size:10px;color:var(--text2);">${{beStr}}</span></div>
+        <div class="sc-field"><span class="sc-field-lbl">Net Credit/Debit</span><span class="sc-field-val">${{netDisp}}</span></div>
+        <div class="sc-field" style="grid-column:1/-1"><span class="sc-field-lbl">Est. Margin / Premium</span><span class="sc-field-val" style="color:var(--purple);">₹${{s.margin.toLocaleString("en-IN")}}</span></div>
       </div>
       <div class="sc-legs">${{legTags}}</div>
       <div class="sc-score">
-        <span class="score-lbl">${{isBEMatch?"ACCURACY":"SCORE"}}</span>
-        <div class="score-bar-track"><div class="score-bar-fill" style="width:${{sw}}%;${{isBEMatch?"background:linear-gradient(90deg,var(--gold),#ff9500);":""}}"></div></div>
-        <span class="score-num" style="${{isBEMatch?"color:var(--gold);":''}}">${{s.score}}</span>
+        <span class="score-lbl">SCORE</span>
+        <div class="score-bar-track"><div class="score-bar-fill" style="width:${{sw}}%"></div></div>
+        <span class="score-num">${{s.score}}</span>
       </div>
+
+      <!-- ── INTRADAY SIMULATOR TOGGLE BUTTON ── -->
+      <div style="padding:8px 12px;border-top:1px solid rgba(255,255,255,.05);" onclick="event.stopPropagation()">
+        <button
+          data-simuid="${{uid}}"
+          onclick="toggleSim('${{uid}}',this)"
+          style="width:100%;background:rgba(245,197,24,.07);border:1px solid rgba(245,197,24,.2);border-radius:8px;
+                 padding:7px 12px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;
+                 font-family:'DM Mono',monospace;font-size:9.5px;font-weight:700;color:rgba(255,209,102,.8);
+                 letter-spacing:.8px;text-transform:uppercase;transition:all .2s;">
+          <span style="display:flex;align-items:center;gap:7px;">
+            <span style="font-size:12px;">📊</span> Intraday P&L Simulator
+          </span>
+          <span id="sim-arrow-${{uid}}" style="font-size:11px;transition:transform .25s;">▼</span>
+        </button>
+      </div>
+
+      <!-- ── INTRADAY P&L SIMULATOR (collapsed by default) ── -->
+      <div id="sim-wrap-${{uid}}" style="display:none;overflow:hidden;">
+        ${{buildIntradaySim(s, uid)}}
+      </div>
+
     </div>`;
   }}).join("");
+}}
+
+// ── Build Intraday P&L Simulator HTML for a strategy card ────────
+function buildIntradaySim(s, uid) {{
+  const d         = ALL_DATA[currentExpiry];
+  if (!d) return "";
+  const underlying = d.underlying;
+  const dte        = d.dte;
+
+  // ── Net Greeks across all legs ────────────────────────────────
+  // delta: +for buy, -for sell; theta: always negative cost for net long position
+  let netDelta = 0, netTheta = 0, netVega = 0;
+  s.legs.forEach(l => {{
+    const st   = d.all_strikes.find(x => x.strike === l.strike);
+    if (!st) return;
+    const isCE = (l.opt_type || l.type) === "CE";
+    const mult = l.action === "buy" ? 1 : -1;
+    netDelta += mult * (isCE ? (st.ce_delta||0) : Math.abs(st.pe_delta||0));
+    netTheta += mult * (isCE ? (st.ce_theta||0) : (st.pe_theta||0));
+    netVega  += mult * (isCE ? (st.ce_vega||0)  : (st.pe_vega||0));
+  }});
+  const thetaDay  = Math.round(netTheta * LOT_SIZE);    // ₹ per day
+  const deltaPerPt= netDelta * LOT_SIZE;                // ₹ per 1 point move
+  const vegaPerIV = netVega  * LOT_SIZE;               // ₹ per 1% IV change
+  const maxP      = s.maxProfit;
+  const maxL      = s.maxLoss;
+
+  // ── Scenario rows ─────────────────────────────────────────────
+  const moves = [
+    {{label:"+300 pts", pts:300, cls:"bull"}},
+    {{label:"+200 pts", pts:200, cls:"bull"}},
+    {{label:"+150 pts", pts:150, cls:"bull"}},
+    {{label:"+100 pts", pts:100, cls:"bull"}},
+    {{label: "+50 pts", pts: 50, cls:"bull"}},
+    {{label:    "Flat", pts:  0, cls:"flat"}},
+    {{label: "−50 pts", pts: -50, cls:"bear"}},
+    {{label:"−100 pts", pts:-100, cls:"bear"}},
+    {{label:"−150 pts", pts:-150, cls:"bear"}},
+    {{label:"−200 pts", pts:-200, cls:"bear"}},
+    {{label:"−300 pts", pts:-300, cls:"bear"}},
+  ];
+
+  const scenarioRows = moves.map(m => {{
+    const dPnl = Math.round(m.pts * deltaPerPt);
+    const raw  = dPnl + thetaDay;
+    const total= Math.max(-maxL, Math.min(maxP * 0.92, raw));
+    const pct  = maxP > 0 ? ((total/maxP)*100).toFixed(0) : "—";
+    const spot = Math.round(underlying + m.pts);
+    const pCol = total > 0 ? "#00c896" : total < 0 ? "#ff6b6b" : "#6480ff";
+    const mBg  = m.cls==="bull"?"rgba(0,200,150,.12)":m.cls==="bear"?"rgba(255,107,107,.12)":"rgba(245,197,24,.1)";
+    const mTxt = m.cls==="bull"?"#00c896":m.cls==="bear"?"#ff6b6b":"#ffd166";
+    const isFlat = m.pts === 0 ? 'class="sim-flat"' : '';
+
+    // Per-leg value estimates via delta approx
+    const legCols = s.legs.map(l => {{
+      const st  = d.all_strikes.find(x => x.strike === l.strike);
+      const isCE= (l.opt_type||l.type)==="CE";
+      const ltp = isCE ? (st?.ce_ltp||l.premium) : (st?.pe_ltp||l.premium);
+      const dlt = isCE ? (st?.ce_delta||0) : Math.abs(st?.pe_delta||0);
+      const tht = isCE ? (st?.ce_theta||0) : (st?.pe_theta||0);
+      const est = Math.max(0, ltp + dlt * m.pts + tht).toFixed(0);
+      const col = l.action === "buy" ? "#00c8e0" : "#ff9090";
+      return `<td style="color:${{col}};font-size:9px;">₹${{est}}</td>`;
+    }}).join("");
+
+    return `<tr ${{isFlat}}>
+      <td><span class="sim-move-lbl" style="background:${{mBg}};color:${{mTxt}};">${{m.label}}</span></td>
+      <td style="color:rgba(255,255,255,.4);font-size:9px;">₹${{spot.toLocaleString("en-IN")}}</td>
+      ${{legCols}}
+      <td><span class="sim-pnl-val" style="color:${{pCol}};">${{total>=0?"+":""}}₹${{Math.abs(Math.round(total)).toLocaleString("en-IN")}}</span><span style="font-size:8px;opacity:.55;margin-left:3px;">${{total>=0?"+":""}}${{pct}}%</span></td>
+    </tr>`;
+  }}).join("");
+
+  // Dynamic leg column headers
+  const legHeaders = s.legs.map(l =>
+    `<th style="color:${{l.action==="buy"?"rgba(0,200,220,.7)":"rgba(255,144,144,.7)"}};font-size:7.5px;">${{l.action.toUpperCase()}} ${{l.strike}}</th>`
+  ).join("");
+
+  // Greeks contribution bar widths (relative to max abs)
+  const absMax   = Math.max(Math.abs(thetaDay), Math.abs(Math.round(deltaPerPt*100)), Math.abs(Math.round(vegaPerIV)), 1);
+  const dBar     = Math.round(Math.abs(thetaDay)/absMax*100);
+  const tBar     = 100; // theta is base
+  const vBar     = Math.round(Math.abs(Math.round(vegaPerIV))/absMax*100);
+
+  // Greeks summary note
+  const netDSign = netDelta >= 0 ? "+" : "";
+  const thetaStr = thetaDay >= 0 ? `+₹${{thetaDay}}` : `−₹${{Math.abs(thetaDay)}}`;
+  const vegaStr  = vegaPerIV >= 0 ? `~+₹${{Math.round(Math.abs(vegaPerIV))}}` : `~−₹${{Math.round(Math.abs(vegaPerIV))}}`;
+
+  const sliderMin = Math.round(underlying - 400);
+  const sliderMax = Math.round(underlying + 400);
+  const sliderMid = underlying;
+  const sliderPct = 50; // start at current spot
+
+  return `
+  <div class="intraday-sim" onclick="event.stopPropagation()">
+
+    <!-- Tabs -->
+    <div class="sim-tabs">
+      <button class="sim-tab active" onclick="simTab('${{uid}}','sc',this)">📊 Scenarios</button>
+      <button class="sim-tab"        onclick="simTab('${{uid}}','gr',this)">🔬 Greeks</button>
+      <button class="sim-tab"        onclick="simTab('${{uid}}','sl',this)">🎚 Slider</button>
+    </div>
+
+    <!-- TAB 1: Scenarios -->
+    <div id="sim-sc-${{uid}}">
+      <div class="sim-hdr">
+        <div style="display:flex;align-items:center;gap:7px;">
+          <div class="sim-icon">📅</div>
+          <div><div class="sim-title">TODAY'S P&L SCENARIOS</div><div class="sim-subtitle">Exit before market close — Delta + Theta estimate</div></div>
+        </div>
+        <div style="font-family:'DM Mono',monospace;font-size:8px;color:rgba(255,255,255,.22);">DTE: ${{dte}}</div>
+      </div>
+      <div style="overflow-x:auto;padding:0 10px 10px;">
+        <table class="sim-tbl">
+          <thead><tr><th>Nifty Move</th><th>Spot</th>${{legHeaders}}<th style="color:rgba(255,255,255,.55);">Today P&L</th></tr></thead>
+          <tbody>${{scenarioRows}}</tbody>
+        </table>
+      </div>
+      <div class="sim-note">
+        <span style="flex-shrink:0;">⏱</span>
+        <span>Formula: <strong style="color:#ffd166;">Delta × move + Theta/day</strong>. Actual P&L may vary with IV. Max profit of ₹${{maxP.toLocaleString("en-IN")}} is only achievable <strong>at expiry</strong>.</span>
+      </div>
+    </div>
+
+    <!-- TAB 2: Greeks -->
+    <div id="sim-gr-${{uid}}" style="display:none;">
+      <div class="sim-hdr">
+        <div style="display:flex;align-items:center;gap:7px;">
+          <div class="sim-icon">🔬</div>
+          <div><div class="sim-title">GREEKS BREAKDOWN</div><div class="sim-subtitle">P&L contribution from each Greek (flat market)</div></div>
+        </div>
+      </div>
+      <div class="sim-live-pnl">
+        <div class="slpb" style="background:rgba(0,200,150,.07);border:1px solid rgba(0,200,150,.18);">
+          <div class="slpb-lbl">Δ Delta P&L</div>
+          <div class="slpb-num" style="color:#00c896;" id="sim-dp-${{uid}}">+₹0</div>
+          <div class="slpb-sub">flat = ₹0</div>
+        </div>
+        <div class="slpb" style="background:rgba(255,107,107,.07);border:1px solid rgba(255,107,107,.18);">
+          <div class="slpb-lbl">Θ Theta Cost</div>
+          <div class="slpb-num" style="color:#ff9090;">${{thetaStr}}/day</div>
+          <div class="slpb-sub">time decay</div>
+        </div>
+        <div class="slpb" style="background:rgba(138,160,255,.07);border:1px solid rgba(138,160,255,.18);">
+          <div class="slpb-lbl">ν Vega ±1%</div>
+          <div class="slpb-num" style="color:#8aa0ff;">${{vegaStr}}</div>
+          <div class="slpb-sub">per 1% IV move</div>
+        </div>
+        <div class="slpb" style="background:rgba(245,197,24,.07);border:1px solid rgba(245,197,24,.18);">
+          <div class="slpb-lbl">Net (Flat)</div>
+          <div class="slpb-num" style="color:#ffd166;">${{thetaStr}}</div>
+          <div class="slpb-sub">just theta drag</div>
+        </div>
+      </div>
+      <div style="padding:10px 10px 0;">
+        <div style="font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.22);margin-bottom:8px;">Greek contribution bars</div>
+        <div class="cbar-row">
+          <div class="cbar-lbl" style="color:#00c896;">Δ Delta</div>
+          <div class="cbar-track"><div class="cbar-fill" style="width:${{dBar}}%;background:#00c896;" id="sim-db-${{uid}}"></div></div>
+          <div class="cbar-val" style="color:#00c896;" id="sim-dv-${{uid}}">₹0 (flat)</div>
+        </div>
+        <div class="cbar-row">
+          <div class="cbar-lbl" style="color:#ff9090;">Θ Theta</div>
+          <div class="cbar-track"><div class="cbar-fill" style="width:${{tBar}}%;background:#ff6b6b;"></div></div>
+          <div class="cbar-val" style="color:#ff9090;">${{thetaStr}}/day</div>
+        </div>
+        <div class="cbar-row">
+          <div class="cbar-lbl" style="color:#8aa0ff;">ν Vega</div>
+          <div class="cbar-track"><div class="cbar-fill" style="width:${{vBar}}%;background:#8aa0ff;"></div></div>
+          <div class="cbar-val" style="color:#8aa0ff;">${{vegaStr}}</div>
+        </div>
+      </div>
+      <div style="margin:10px 10px 12px;padding:9px 11px;background:rgba(0,0,0,.18);border-radius:8px;font-size:9px;color:rgba(255,255,255,.35);line-height:1.8;">
+        <strong style="color:rgba(255,255,255,.55);">Net Delta:</strong> ${{netDSign}}${{netDelta.toFixed(3)}} per point &nbsp;→&nbsp;
+        <strong style="color:#00c896;">₹${{deltaPerPt.toFixed(1)}} per Nifty point</strong><br>
+        <strong style="color:rgba(255,255,255,.55);">Net Theta:</strong> ${{thetaStr}} per trading day<br>
+        <em style="color:rgba(255,255,255,.2);">Delta profit offsets theta drag only when Nifty moves in your favour.</em>
+      </div>
+    </div>
+
+    <!-- TAB 3: Slider -->
+    <div id="sim-sl-${{uid}}" style="display:none;">
+      <div class="sim-hdr">
+        <div style="display:flex;align-items:center;gap:7px;">
+          <div class="sim-icon">🎚</div>
+          <div><div class="sim-title">LIVE SCENARIO SLIDER</div><div class="sim-subtitle">Drag to see today's estimated exit P&L</div></div>
+        </div>
+      </div>
+      <div class="sim-slide-wrap">
+        <div class="sim-slide-labels">
+          <span class="sim-slide-edge">₹${{sliderMin.toLocaleString("en-IN")}}</span>
+          <span class="sim-slide-cur" id="sim-sc-lbl-${{uid}}">Spot: ₹${{sliderMid.toLocaleString("en-IN")}}</span>
+          <span class="sim-slide-edge">₹${{sliderMax.toLocaleString("en-IN")}}</span>
+        </div>
+        <input class="sim-range" type="range"
+          id="sim-range-${{uid}}"
+          min="${{sliderMin}}" max="${{sliderMax}}"
+          value="${{sliderMid}}" step="25"
+          style="--pct:${{sliderPct}}%"
+          oninput="simSlide('${{uid}}',${{underlying}},${{deltaPerPt}},${{thetaDay}},${{maxP}},${{maxL}},this.value)">
+      </div>
+      <div style="padding:0 10px 14px;">
+        <div style="background:rgba(0,0,0,.25);border-radius:10px;padding:14px;text-align:center;border:1px solid rgba(255,255,255,.06);">
+          <div style="font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.22);margin-bottom:6px;">ESTIMATED EXIT P&L TODAY</div>
+          <div style="font-family:'DM Mono',monospace;font-size:28px;font-weight:700;" id="sim-bigpnl-${{uid}}">${{thetaStr}}</div>
+          <div style="font-size:9px;color:rgba(255,255,255,.28);margin-top:4px;" id="sim-note-${{uid}}">Theta drag only (flat market)</div>
+          <div style="display:flex;gap:12px;justify-content:center;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.05);">
+            <div style="text-align:center;">
+              <div style="font-size:7.5px;color:rgba(255,255,255,.28);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;">Delta P&L</div>
+              <div style="font-family:'DM Mono',monospace;font-size:12px;font-weight:700;color:#00c896;" id="sim-slide-d-${{uid}}">₹0</div>
+            </div>
+            <div style="text-align:center;">
+              <div style="font-size:7.5px;color:rgba(255,255,255,.28);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;">Theta Cost</div>
+              <div style="font-family:'DM Mono',monospace;font-size:12px;font-weight:700;color:#ff9090;">${{thetaStr}}</div>
+            </div>
+            <div style="text-align:center;">
+              <div style="font-size:7.5px;color:rgba(255,255,255,.28);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;">% of Max</div>
+              <div style="font-family:'DM Mono',monospace;font-size:12px;font-weight:700;color:#ffd166;" id="sim-slide-pct-${{uid}}">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>`;
+}}
+
+// ── Intraday sim toggle (collapse/expand) ────────────────────────
+function toggleSim(uid, btn) {{
+  const wrap  = document.getElementById("sim-wrap-" + uid);
+  const arrow = document.getElementById("sim-arrow-" + uid);
+  if (!wrap) return;
+  const isOpen = wrap.style.display !== "none";
+
+  // Close ALL other open simulators first
+  document.querySelectorAll('[data-simuid]').forEach(otherBtn => {{
+    const otherId = otherBtn.getAttribute("data-simuid");
+    if (otherId === uid) return; // skip current
+    const otherWrap  = document.getElementById("sim-wrap-"  + otherId);
+    const otherArrow = document.getElementById("sim-arrow-" + otherId);
+    if (otherWrap)  otherWrap.style.display          = "none";
+    if (otherArrow) otherArrow.style.transform       = "rotate(0deg)";
+    otherBtn.style.background  = "rgba(245,197,24,.07)";
+    otherBtn.style.borderColor = "rgba(245,197,24,.2)";
+  }});
+
+  // Toggle this one
+  wrap.style.display    = isOpen ? "none"   : "block";
+  if (arrow) arrow.style.transform = isOpen ? "rotate(0deg)" : "rotate(180deg)";
+  btn.style.background  = isOpen ? "rgba(245,197,24,.07)" : "rgba(245,197,24,.13)";
+  btn.style.borderColor = isOpen ? "rgba(245,197,24,.2)"  : "rgba(245,197,24,.4)";
+}}
+
+// ── Intraday sim tab switcher ─────────────────────────────────────
+function simTab(uid, tab, btn) {{
+  ["sc","gr","sl"].forEach(t => {{
+    const el = document.getElementById("sim-"+t+"-"+uid);
+    if (el) el.style.display = (t===tab) ? "block" : "none";
+  }});
+  btn.closest(".intraday-sim").querySelectorAll(".sim-tab").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+}}
+
+// ── Intraday sim slider update ────────────────────────────────────
+function simSlide(uid, spot, dPerPt, thetaDay, maxP, maxL, val) {{
+  const cur    = parseInt(val);
+  const move   = cur - spot;
+  const dPnl   = Math.round(move * dPerPt);
+  const total  = Math.max(-maxL, Math.min(maxP * 0.92, dPnl + thetaDay));
+  const pct    = maxP > 0 ? ((total/maxP)*100).toFixed(1) : "—";
+  const range  = document.getElementById("sim-range-"+uid);
+  const sliderMin = parseInt(range.min), sliderMax = parseInt(range.max);
+  const pctFill = ((cur - sliderMin)/(sliderMax - sliderMin)*100).toFixed(1);
+  range.style.setProperty("--pct", pctFill+"%");
+
+  const bigEl = document.getElementById("sim-bigpnl-"+uid);
+  const noteEl= document.getElementById("sim-note-"+uid);
+  const dEl   = document.getElementById("sim-slide-d-"+uid);
+  const pctEl = document.getElementById("sim-slide-pct-"+uid);
+  const lblEl = document.getElementById("sim-sc-lbl-"+uid);
+  const col   = total > 100 ? "#00c896" : total > 0 ? "#4de8b8" : total > -200 ? "#ffd166" : "#ff6b6b";
+
+  if (bigEl) {{ bigEl.style.color=col; bigEl.textContent=(total>=0?"+":"")+"₹"+Math.abs(Math.round(total)).toLocaleString("en-IN"); }}
+  if (noteEl) noteEl.textContent = move>0?`Nifty up ${{move}} pts`:move<0?`Nifty down ${{Math.abs(move)}} pts`:"Flat — theta drag only";
+  if (dEl) {{ dEl.style.color=dPnl>=0?"#00c896":"#ff6b6b"; dEl.textContent=(dPnl>=0?"+":"")+"₹"+Math.abs(dPnl).toLocaleString("en-IN"); }}
+  if (pctEl) {{ pctEl.style.color=total>=0?"#00c896":"#ff9090"; pctEl.textContent=(total>=0?"+":"")+pct+"%"; }}
+  if (lblEl) lblEl.textContent="Spot: ₹"+cur.toLocaleString("en-IN");
+
+  // Update delta bar + val in Greeks tab too
+  const dbEl = document.getElementById("sim-db-"+uid);
+  const dvEl = document.getElementById("sim-dv-"+uid);
+  const dpEl = document.getElementById("sim-dp-"+uid);
+  const absMax = Math.max(Math.abs(thetaDay), Math.abs(dPnl), 1);
+  if (dbEl) dbEl.style.width = Math.round(Math.abs(dPnl)/absMax*100)+"%";
+  if (dvEl) {{ dvEl.style.color=dPnl>=0?"#00c896":"#ff6b6b"; dvEl.textContent=(dPnl>=0?"+₹":"-₹")+Math.abs(dPnl).toLocaleString("en-IN"); }}
+  if (dpEl) {{ dpEl.style.color=dPnl>=0?"#00c896":"#ff9090"; dpEl.textContent=(dPnl>=0?"+₹":"−₹")+Math.abs(dPnl).toLocaleString("en-IN"); }}
 }}
 
 function populatePayoffSel() {{
@@ -2338,9 +2385,10 @@ function selectPayoff(name) {{
 }}
 
 // ═══════════════════════════════════════════════════════════
-// RICH PAYOFF CHART
+// RICH PAYOFF CHART — BSM Today line + Expiry line + OI bars
 // ═══════════════════════════════════════════════════════════
 
+// BSM option price at a given spot & time
 function bsmPrice(S, K, T, r, sigma, type) {{
   if (T <= 0 || sigma <= 0) {{
     return type === "CE" ? Math.max(0, S - K) : Math.max(0, K - S);
@@ -2351,11 +2399,12 @@ function bsmPrice(S, K, T, r, sigma, type) {{
   return Math.max(0, K * Math.exp(-r * T) * normCdf(-d2) - S * normCdf(-d1));
 }}
 
+// Compute P&L for a strategy at a given spot price and time T
 function stratPnlAtSpot(legs, spotPrice, T) {{
   let pnl = 0;
   legs.forEach(l => {{
     const sigma   = (l.iv || 15) / 100;
-    const optType = l.opt_type || l.type || "CE";
+    const optType = l.opt_type || l.type || "CE";   // handle both field names
     const theoVal = bsmPrice(spotPrice, l.strike, T, RISK_FREE, sigma, optType);
     const legPnl  = l.action === "buy" ? (theoVal - l.premium) : (l.premium - theoVal);
     pnl += legPnl;
@@ -2367,25 +2416,59 @@ function drawPayoff() {{
   const name = document.getElementById("payoffSel").value;
   const s    = strategies.find(x => x.name === name);
   if (!s) return;
+
   const d          = ALL_DATA[currentExpiry];
   const underlying = d?.underlying || 0;
   const dte        = d?.dte || 7;
+
+  // ── Three time snapshots for the payoff lines ──────────────────
+  // We always show 3 lines regardless of DTE:
+  //   1. "At Entry"  — assume trade was entered at 30 DTE (or actual DTE if > 30)
+  //   2. "Today"     — actual current DTE
+  //   3. "At Expiry" — T = 0, pure intrinsic
+  //
+  // This gives meaningful visual separation even when current DTE is small
+  // because the entry line will always have more time value than today.
+
+  // Two lines only:
+  //   TODAY   = BSM at current DTE → P&L if you enter/hold right now
+  //   EXPIRY  = T=0 intrinsic      → P&L if held to expiry
+  // Gap between them = Theta decay you will lose between now and expiry
   const T_expiry = 0;
   const T_today  = Math.max(dte / 365, 0.5 / 365);
+
+  // Price range: spot ± 1500 in steps of 25
   const priceRange = [];
   for (let p = underlying - 1500; p <= underlying + 1500; p += 25) priceRange.push(p);
+
+  // Today P&L: BSM with full Greeks at current DTE
   const todayPnl  = priceRange.map(p => stratPnlAtSpot(s.legs, p, T_today));
+  // Expiry P&L: pure intrinsic (T=0) — no time value
   const expiryPnl = priceRange.map(p => stratPnlAtSpot(s.legs, p, T_expiry));
+
+  // OI data for background bars (align to priceRange)
   const allStrikes = d?.all_strikes || [];
-  const ceOiData   = priceRange.map(p => {{ const row = allStrikes.find(r => r.strike === p); return row ? Math.round(row.ce_oi / 1e3) : null; }});
-  const peOiData   = priceRange.map(p => {{ const row = allStrikes.find(r => r.strike === p); return row ? Math.round(row.pe_oi / 1e3) : null; }});
-  const netCost = Math.abs((s.netPrem||0)) * LOT_SIZE || 1;
+  const strikeSet  = new Set(priceRange);
+  const oiLabels   = priceRange;
+  const ceOiData   = priceRange.map(p => {{
+    const row = allStrikes.find(r => r.strike === p);
+    return row ? Math.round(row.ce_oi / 1e3) : null;  // in thousands
+  }});
+  const peOiData   = priceRange.map(p => {{
+    const row = allStrikes.find(r => r.strike === p);
+    return row ? Math.round(row.pe_oi / 1e3) : null;
+  }});
+
+  // Net cost of strategy (for % calculation)
+  const netCost = Math.abs(s.netPrem) * LOT_SIZE || 1;
+
+  // Current projected P&L at spot
   const projPnl  = stratPnlAtSpot(s.legs, underlying, T_today);
   const projPct  = ((projPnl / netCost) * 100).toFixed(1);
   const projCol  = projPnl >= 0 ? "var(--green)" : "var(--red)";
   const projSign = projPnl >= 0 ? "+" : "";
-  const isBEMatch = s.type === "be_match";
 
+  // ── Stats boxes ──────────────────────────────────────────────
   const statsEl = document.getElementById("payoffStats");
   const maxP    = s.maxProfit;
   const maxL    = s.maxLoss;
@@ -2400,7 +2483,7 @@ function drawPayoff() {{
       <div style="font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;">Max Loss</div>
       <div style="font-size:15px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--red);margin-top:3px;">₹${{maxL.toLocaleString("en-IN")}}</div>
     </div>
-    <div style="background:var(--bg2);border:1px solid var(--border);border-top:2px solid ${{isBEMatch?"var(--gold)":"var(--gold)"}};border-radius:10px;padding:10px 14px;">
+    <div style="background:var(--bg2);border:1px solid var(--border);border-top:2px solid var(--gold);border-radius:10px;padding:10px 14px;">
       <div style="font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;">Lower BE</div>
       <div style="font-size:15px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--gold);margin-top:3px;">${{bes[0] ? "₹" + bes[0].toLocaleString("en-IN") : "—"}}</div>
     </div>
@@ -2409,6 +2492,7 @@ function drawPayoff() {{
       <div style="font-size:15px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--gold);margin-top:3px;">${{bes[1] ? "₹" + bes[1].toLocaleString("en-IN") : bes[0] ? "₹" + bes[0].toLocaleString("en-IN") : "—"}}</div>
     </div>`;
 
+  // ── Footer with BE badges ─────────────────────────────────────
   const footerEl   = document.getElementById("payoffFooter");
   const fallbackEl = document.getElementById("projBadgeFallback");
   if (footerEl)   footerEl.style.display   = "flex";
@@ -2427,6 +2511,8 @@ function drawPayoff() {{
 
   const ctx = document.getElementById("payoffChart").getContext("2d");
   if (payoffChart) payoffChart.destroy();
+
+  // Crosshair state
   let crosshairX = null;
 
   payoffChart = new Chart(ctx, {{
@@ -2434,70 +2520,141 @@ function drawPayoff() {{
     data: {{
       labels: priceRange,
       datasets: [
+        // ── CE OI bars (green, background, secondary Y) ──
         {{
-          label: "CE OI", type: "bar", data: ceOiData,
-          backgroundColor: "rgba(0,200,150,0.18)", borderColor: "rgba(0,200,150,0.35)",
-          borderWidth: 1, yAxisID: "yOI", order: 3, barPercentage: 0.6,
+          label:           "CE OI",
+          type:            "bar",
+          data:            ceOiData,
+          backgroundColor: "rgba(0,200,150,0.18)",
+          borderColor:     "rgba(0,200,150,0.35)",
+          borderWidth:     1,
+          yAxisID:         "yOI",
+          order:           3,
+          barPercentage:   0.6,
         }},
+        // ── PE OI bars (red, background, secondary Y) ──
         {{
-          label: "PE OI", type: "bar", data: peOiData,
-          backgroundColor: "rgba(255,107,107,0.18)", borderColor: "rgba(255,107,107,0.35)",
-          borderWidth: 1, yAxisID: "yOI", order: 3, barPercentage: 0.6,
+          label:           "PE OI",
+          type:            "bar",
+          data:            peOiData,
+          backgroundColor: "rgba(255,107,107,0.18)",
+          borderColor:     "rgba(255,107,107,0.35)",
+          borderWidth:     1,
+          yAxisID:         "yOI",
+          order:           3,
+          barPercentage:   0.6,
         }},
+        // ── Today P&L (green solid) — BSM with Greeks at current DTE ──
         {{
-          label: "Today (DTE:" + dte + ")", type: "line", data: todayPnl,
-          borderColor: "#00c896", borderWidth: 2.5, pointRadius: 0,
+          label:       "Today (DTE:" + dte + ")",
+          type:        "line",
+          data:        todayPnl,
+          borderColor: "#00c896",
+          borderWidth: 2.5,
+          pointRadius: 0,
           fill: {{target: {{value: 0}}, above: "rgba(0,200,150,0.12)", below: "rgba(255,107,107,0.10)"}},
-          tension: 0.3, yAxisID: "yPnl", order: 1,
+          tension:     0.3,
+          yAxisID:     "yPnl",
+          order:       1,
         }},
+        // ── Expiry P&L (blue dashed) — pure intrinsic at T=0 ──
         {{
-          label: "At Expiry", type: "line", data: expiryPnl,
-          borderColor: "#5ba3ff", borderWidth: 2, pointRadius: 0,
-          borderDash: [5, 4], fill: false, tension: 0.1, yAxisID: "yPnl", order: 2,
+          label:       "At Expiry",
+          type:        "line",
+          data:        expiryPnl,
+          borderColor: "#5ba3ff",
+          borderWidth: 2,
+          pointRadius: 0,
+          borderDash:  [5, 4],
+          fill:        false,
+          tension:     0.1,
+          yAxisID:     "yPnl",
+          order:       2,
         }},
+        // ── Zero line ──
         {{
-          label: "Zero", type: "line", data: priceRange.map(() => 0),
-          borderColor: "rgba(255,255,255,0.10)", borderWidth: 1,
-          pointRadius: 0, fill: false, yAxisID: "yPnl", order: 4,
+          label:       "Zero",
+          type:        "line",
+          data:        priceRange.map(() => 0),
+          borderColor: "rgba(255,255,255,0.10)",
+          borderWidth: 1,
+          pointRadius: 0,
+          fill:        false,
+          yAxisID:     "yPnl",
+          order:       4,
         }},
       ]
     }},
     options: {{
-      responsive: true, maintainAspectRatio: false,
+      responsive:          true,
+      maintainAspectRatio: false,
       interaction: {{mode: "index", intersect: false, axis: "x"}},
       plugins: {{
         legend: {{
-          display: true, position: "top",
-          labels: {{color:"#6a8aaa",font:{{family:"DM Mono",size:10}},boxWidth:14,filter:item=>item.text!=="Zero"}}
+          display: true,
+          position: "top",
+          labels: {{
+            color:     "#6a8aaa",
+            font:      {{family: "DM Mono", size: 10}},
+            boxWidth:  14,
+            filter:    item => item.text !== "Zero",
+          }}
         }},
-        tooltip: {{enabled: false, mode: "index", intersect: false}},
+        tooltip: {{
+          enabled:         false,   // use custom tooltip
+          mode:            "index",
+          intersect:       false,
+        }},
+        // Spot price vertical annotation drawn via afterDraw
       }},
       scales: {{
         x: {{
-          ticks: {{color:"#2d4560",font:{{family:"DM Mono",size:9}},maxTicksLimit:12,
-                   callback:(val,idx)=>{{const price=priceRange[idx]??val;return price>=1000?Math.round(price).toLocaleString("en-IN"):price;}}}},
-          grid:{{color:"#0b1520"}},border:{{color:"#1a2535"}},
+          ticks: {{
+            color:         "#2d4560",
+            font:          {{family: "DM Mono", size: 9}},
+            maxTicksLimit: 12,
+            callback:      (val, idx) => {{
+              // val is the label value (price number) when labels are numeric array
+              const price = priceRange[idx] ?? val;
+              return price >= 1000 ? Math.round(price).toLocaleString("en-IN") : price;
+            }},
+          }},
+          grid:   {{color: "#0b1520"}},
+          border: {{color: "#1a2535"}},
         }},
         yPnl: {{
-          position:"left",
-          ticks:{{color:"#2d4560",font:{{family:"DM Mono",size:9}},callback:v=>"₹"+(Math.abs(v)>=1000?(v/1000).toFixed(0)+"K":v)}},
-          grid:{{color:"#0b1520"}},border:{{color:"#1a2535"}},
-          title:{{display:true,text:"Profit / Loss",color:"#3d5a73",font:{{size:9,family:"DM Mono"}}}},
+          position: "left",
+          ticks: {{
+            color:    "#2d4560",
+            font:     {{family: "DM Mono", size: 9}},
+            callback: v => "₹" + (Math.abs(v) >= 1000 ? (v/1000).toFixed(0)+"K" : v),
+          }},
+          grid:   {{color: "#0b1520"}},
+          border: {{color: "#1a2535"}},
+          title:  {{display:true, text:"Profit / Loss", color:"#3d5a73", font:{{size:9, family:"DM Mono"}}}},
         }},
         yOI: {{
-          position:"right",
-          ticks:{{color:"#2d4560",font:{{family:"DM Mono",size:9}},callback:v=>v>=1000?(v/1000).toFixed(0)+"L":v}},
-          grid:{{drawOnChartArea:false}},border:{{color:"#1a2535"}},
-          title:{{display:true,text:"Open Interest",color:"#3d5a73",font:{{size:9,family:"DM Mono"}}}},
+          position: "right",
+          ticks: {{
+            color:    "#2d4560",
+            font:     {{family: "DM Mono", size: 9}},
+            callback: v => v >= 1000 ? (v/1000).toFixed(0)+"L" : v,
+          }},
+          grid: {{drawOnChartArea: false}},
+          border: {{color: "#1a2535"}},
+          title: {{display:true, text:"Open Interest", color:"#3d5a73", font:{{size:9, family:"DM Mono"}}}},
         }},
       }},
     }},
     plugins: [{{
+      // ── Spot line + crosshair drawn on canvas ──────────────────
       id: "crosshairSpot",
       afterDatasetsDraw(chart) {{
         const xScale = chart.scales.x;
         const yScale = chart.scales.yPnl;
         const ctx2   = chart.ctx;
+
+        // ── Spot vertical line (green) ──
         const spotIdx = priceRange.findIndex(p => p >= underlying);
         if (spotIdx >= 0) {{
           const xPx = xScale.getPixelForValue(spotIdx);
@@ -2516,17 +2673,25 @@ function drawPayoff() {{
           ctx2.fillText("▼ " + underlying.toLocaleString("en-IN"), xPx, yScale.top - 4);
           ctx2.restore();
         }}
+
+        // ── Breakeven lines (from expiry P&L zero crossings) ──────
+        // Find where expiryPnl crosses zero → these are the real breakevens
         const bePoints = [];
         for (let i = 0; i < expiryPnl.length - 1; i++) {{
           if ((expiryPnl[i] < 0) !== (expiryPnl[i+1] < 0)) {{
+            // Linear interpolation for exact crossing point
             const frac  = Math.abs(expiryPnl[i]) / (Math.abs(expiryPnl[i]) + Math.abs(expiryPnl[i+1]));
+            const beIdx = i + frac;                           // fractional index
             const bePx  = xScale.getPixelForValue(i) + frac * (xScale.getPixelForValue(i+1) - xScale.getPixelForValue(i));
             const bePrice = priceRange[i] + frac * (priceRange[i+1] - priceRange[i]);
-            bePoints.push({{ bePx, bePrice }});
+            bePoints.push({{ bePx, bePrice, beIdx }});
           }}
         }}
-        bePoints.forEach((be) => {{
+
+        bePoints.forEach((be, bi) => {{
           ctx2.save();
+
+          // Dashed vertical line (gold/orange)
           ctx2.setLineDash([4, 3]);
           ctx2.strokeStyle = "rgba(255,209,102,0.7)";
           ctx2.lineWidth   = 1.5;
@@ -2535,11 +2700,15 @@ function drawPayoff() {{
           ctx2.lineTo(be.bePx, yScale.bottom);
           ctx2.stroke();
           ctx2.setLineDash([]);
+
+          // Label pill at top
           const label    = "BE " + Math.round(be.bePrice).toLocaleString("en-IN");
           ctx2.font      = "bold 8px DM Mono,monospace";
           const tw       = ctx2.measureText(label).width + 10;
           const tx       = be.bePx - tw / 2;
           const ty       = yScale.top + 6;
+
+          // Pill background
           ctx2.fillStyle = "rgba(255,209,102,0.15)";
           ctx2.strokeStyle = "rgba(255,209,102,0.6)";
           ctx2.lineWidth = 1;
@@ -2547,9 +2716,13 @@ function drawPayoff() {{
           ctx2.roundRect(tx, ty, tw, 14, 3);
           ctx2.fill();
           ctx2.stroke();
+
+          // Pill text
           ctx2.fillStyle = "rgba(255,209,102,1)";
           ctx2.textAlign = "center";
           ctx2.fillText(label, be.bePx, ty + 10);
+
+          // Small dot at zero line
           const zeroPx = yScale.getPixelForValue(0);
           ctx2.fillStyle   = "#ffd166";
           ctx2.strokeStyle = "#060910";
@@ -2557,8 +2730,12 @@ function drawPayoff() {{
           ctx2.beginPath();
           ctx2.arc(be.bePx, zeroPx, 4, 0, Math.PI*2);
           ctx2.fill(); ctx2.stroke();
+
           ctx2.restore();
         }});
+
+        // ── Profit / Loss zone labels ──────────────────────────────
+        // Only draw if we have 2 breakevens (typical spread/strangle shape)
         if (bePoints.length >= 2) {{
           const midLossX = (bePoints[0].bePx + bePoints[bePoints.length-1].bePx) / 2;
           const zeroPx   = yScale.getPixelForValue(0);
@@ -2570,6 +2747,7 @@ function drawPayoff() {{
           ctx2.restore();
         }}
         if (bePoints.length >= 1) {{
+          // Left profit zone label
           const leftX  = (xScale.left + bePoints[0].bePx) / 2;
           const rightX = (bePoints[bePoints.length-1].bePx + xScale.right) / 2;
           const topY   = yScale.top + 28;
@@ -2581,9 +2759,15 @@ function drawPayoff() {{
           ctx2.fillText("▲ PROFIT", rightX, topY);
           ctx2.restore();
         }}
+
+        // ── Crosshair line + dots ──
         if (crosshairX === null) return;
+        // Use index-based pixel position (matches how Chart.js places points)
         const nearXPx  = xScale.getPixelForValue(crosshairX);
         if (isNaN(nearXPx)) return;
+        const todayVal = todayPnl[crosshairX];
+        const expVal   = expiryPnl[crosshairX];
+
         ctx2.save();
         ctx2.setLineDash([3,3]);
         ctx2.strokeStyle = "rgba(255,255,255,0.18)";
@@ -2593,12 +2777,16 @@ function drawPayoff() {{
         ctx2.lineTo(nearXPx, yScale.bottom);
         ctx2.stroke();
         ctx2.setLineDash([]);
+
+        // Today dot (green)
         ctx2.fillStyle   = "#00c896";
         ctx2.strokeStyle = "#060910";
         ctx2.lineWidth   = 2.5;
         ctx2.beginPath();
         ctx2.arc(nearXPx, yScale.getPixelForValue(todayPnl[crosshairX]), 5, 0, Math.PI*2);
         ctx2.fill(); ctx2.stroke();
+
+        // Expiry dot (blue)
         ctx2.fillStyle   = "#5ba3ff";
         ctx2.strokeStyle = "#060910";
         ctx2.lineWidth   = 2;
@@ -2607,9 +2795,11 @@ function drawPayoff() {{
         ctx2.fill(); ctx2.stroke();
         ctx2.restore();
       }},
+
     }}],
   }});
 
+  // ── Attach native canvas events (reliable in Chart.js 4.x) ──
   const canvas = document.getElementById("payoffChart");
   const tt     = document.getElementById("payoffTooltip");
 
@@ -2617,15 +2807,32 @@ function drawPayoff() {{
     const rect   = canvas.getBoundingClientRect();
     const xScale = payoffChart.scales.x;
     const yScale = payoffChart.scales.yPnl;
+
+    // Chart.js scales use CSS pixels — direct subtraction, no devicePixelRatio
     const canvasX = clientX - rect.left;
+
     if (canvasX < xScale.left || canvasX > xScale.right) {{
-      crosshairX = null; tt.style.display = "none"; payoffChart.draw(); return;
+      crosshairX = null;
+      tt.style.display = "none";
+      payoffChart.draw();
+      return;
     }}
-    const chartLeft  = xScale.left, chartRight = xScale.right, chartW = chartRight - chartLeft;
-    const ratio      = (canvasX - chartLeft) / chartW;
-    const rawIdx     = ratio * (priceRange.length - 1);
+
+    // Chart.js with label array: getPixelForValue needs the INDEX not the value
+    // We also do a simple linear interpolation as fallback
+    const chartLeft  = xScale.left;
+    const chartRight = xScale.right;
+    const chartW     = chartRight - chartLeft;
+    const ratio      = (canvasX - chartLeft) / chartW;            // 0..1 across chart
+    const rawIdx     = ratio * (priceRange.length - 1);           // float index
     const bestIdx    = Math.max(0, Math.min(priceRange.length - 1, Math.round(rawIdx)));
-    if (crosshairX !== bestIdx) {{ crosshairX = bestIdx; payoffChart.draw(); }}
+
+    if (crosshairX !== bestIdx) {{
+      crosshairX = bestIdx;
+      payoffChart.draw();
+    }}
+
+    // ── Build tooltip HTML ──
     const price    = priceRange[bestIdx];
     const pctChg   = (((price - underlying) / underlying) * 100).toFixed(1);
     const sign     = parseFloat(pctChg) >= 0 ? "+" : "";
@@ -2638,13 +2845,15 @@ function drawPayoff() {{
     const eCol     = expVal   >= 0 ? "#00c896" : "#ff6b6b";
     const tPct     = ((todayVal / netCost) * 100).toFixed(1);
     const ePct     = ((expVal   / netCost) * 100).toFixed(1);
+
     tt.innerHTML = `
       <div style="font-size:9px;color:#6a8aaa;margin-bottom:5px;letter-spacing:1px;">WHEN PRICE IS AT</div>
       <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:10px;">
         <span style="font-size:16px;font-weight:800;color:#ddeeff;font-family:'DM Mono',monospace;">&#8377;${{price.toLocaleString("en-IN")}}</span>
-        <span style="font-size:11px;font-weight:700;color:${{pCol}};font-family:'DM Mono',monospace;">${{sign}}${{pctChg}}%&nbsp;(${{sign}}${{(price-underlying).toLocaleString("en-IN")}})</span>
+        <span style="font-size:11px;font-weight:700;color:${{pCol}};font-family:'DM Mono',monospace;">${{sign}}${{pctChg}}%&nbsp;(${{sign}}${{(price - underlying).toLocaleString("en-IN")}})</span>
       </div>
       <div style="height:1px;background:rgba(255,255,255,0.07);margin-bottom:10px;"></div>
+
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;">
         <span style="font-size:9px;color:#6a8aaa;display:flex;align-items:center;gap:6px;">
           <span style="width:9px;height:9px;border-radius:50%;background:#00c896;display:inline-block;"></span>
@@ -2655,6 +2864,7 @@ function drawPayoff() {{
           <span style="font-size:9px;opacity:.8;"> (${{tSign}}${{tPct}}%)</span>
         </span>
       </div>
+
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <span style="font-size:9px;color:#6a8aaa;display:flex;align-items:center;gap:6px;">
           <span style="width:9px;height:9px;border-radius:50%;background:#5ba3ff;display:inline-block;"></span>
@@ -2665,23 +2875,42 @@ function drawPayoff() {{
           <span style="font-size:9px;opacity:.8;"> (${{eSign}}${{ePct}}%)</span>
         </span>
       </div>
+
       <div style="margin-top:9px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.06);font-size:9px;color:#3d5a73;">
         Theta loss by expiry:
-        <span style="color:${{(todayVal-expVal)>0?"#ff6b6b":"#00c896"}};font-weight:700;">
-          ${{(todayVal-expVal)>=0?"-":"+"}}&#8377;${{Math.abs(Math.round(todayVal-expVal)).toLocaleString("en-IN")}}
+        <span style="color:${{(todayVal - expVal) > 0 ? "#ff6b6b" : "#00c896"}};font-weight:700;">
+          ${{(todayVal - expVal) >= 0 ? "-" : "+"}}&#8377;${{Math.abs(Math.round(todayVal - expVal)).toLocaleString("en-IN")}}
         </span>
       </div>`;
-    const ttW=268,ttH=140;
-    let fixedL=clientX+18, fixedT=clientY-ttH/2;
-    if(fixedL+ttW>window.innerWidth-10) fixedL=clientX-ttW-18;
-    if(fixedT<8) fixedT=8;
-    if(fixedT+ttH>window.innerHeight-10) fixedT=window.innerHeight-ttH-10;
-    tt.style.left=fixedL+"px"; tt.style.top=fixedT+"px"; tt.style.display="block";
+
+    // ── Position tooltip fixed on viewport ──
+    const ttW     = 268, ttH = 140;
+    let fixedL    = clientX + 18;
+    let fixedT    = clientY - ttH / 2;
+    if (fixedL + ttW > window.innerWidth  - 10) fixedL = clientX - ttW - 18;
+    if (fixedT < 8)                              fixedT = 8;
+    if (fixedT + ttH > window.innerHeight - 10)  fixedT = window.innerHeight - ttH - 10;
+    tt.style.left    = fixedL + "px";
+    tt.style.top     = fixedT + "px";
+    tt.style.display = "block";
   }}
-  function hideTooltip() {{ crosshairX=null; tt.style.display="none"; payoffChart.draw(); }}
+
+  function hideTooltip() {{
+    crosshairX = null;
+    tt.style.display = "none";
+    payoffChart.draw();
+  }}
+
+  // Mouse events
   canvas.addEventListener("mousemove",  e => showTooltip(e.clientX, e.clientY));
   canvas.addEventListener("mouseleave", hideTooltip);
-  canvas.addEventListener("touchmove", e => {{ e.preventDefault(); const t=e.touches[0]; showTooltip(t.clientX,t.clientY); }}, {{passive:false}});
+
+  // Touch events
+  canvas.addEventListener("touchmove", e => {{
+    e.preventDefault();
+    const t = e.touches[0];
+    showTooltip(t.clientX, t.clientY);
+  }}, {{passive: false}});
   canvas.addEventListener("touchend", hideTooltip);
 }}
 </script>
@@ -2700,19 +2929,26 @@ def main():
     print("  Nifty Options Analyzer — GitHub Actions Runner")
     print(f"  Started: {now_ist_str()}")
     print("=" * 60)
+
     nse = NSEOptionChain()
+
     print("\n[1/3] Warming up NSE session & fetching expiries...")
     result, session, headers = nse.fetch()
+
     print("\n[2/3] Fetching all expiries...")
     all_expiry_data, expiry_list = nse.fetch_multiple_expiries(session, headers, n=7)
+
     if not all_expiry_data:
         print("ERROR: No data fetched. Exiting.")
         return
+
     print(f"\n[3/3] Generating index.html with {len(all_expiry_data)} expiries...")
     html = build_html(all_expiry_data, expiry_list, now_ist_str())
+
     out_path = os.path.join(os.path.dirname(__file__), "index.html")
     with open(out_path, "w", encoding="utf-8") as f:
         f.write(html)
+
     print(f"\n  index.html written → {out_path}")
     print(f"  Expiries baked in: {expiry_list}")
     print(f"  Done: {now_ist_str()}")
