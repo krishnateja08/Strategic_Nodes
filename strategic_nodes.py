@@ -959,6 +959,45 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 .score-lbl{{font-size:9px;color:var(--text3);font-family:'DM Mono',monospace;}}
 .score-num{{font-size:11px;font-weight:700;color:var(--cyan);font-family:'DM Mono',monospace;}}
 
+/* ── INTRADAY P&L SIMULATOR ── */
+.intraday-sim{{border-top:2px solid rgba(255,209,102,.22);background:linear-gradient(135deg,rgba(245,197,24,.03),rgba(200,155,10,.015));}}
+.sim-tabs{{display:flex;border-bottom:1px solid rgba(255,255,255,.06);}}
+.sim-tab{{flex:1;padding:8px 4px;font-family:'DM Mono',monospace;font-size:8.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;text-align:center;color:rgba(255,255,255,.28);border:none;background:transparent;transition:all .2s;border-bottom:2px solid transparent;margin-bottom:-1px;}}
+.sim-tab.active{{color:#ffd166;border-bottom-color:#ffd166;background:rgba(245,197,24,.06);}}
+.sim-tab:hover:not(.active){{color:rgba(255,255,255,.55);background:rgba(255,255,255,.03);}}
+.sim-hdr{{display:flex;align-items:center;justify-content:space-between;padding:8px 10px 6px;}}
+.sim-icon{{width:20px;height:20px;border-radius:5px;background:rgba(245,197,24,.15);border:1px solid rgba(245,197,24,.3);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;}}
+.sim-title{{font-size:9px;font-weight:700;color:rgba(255,209,102,.9);letter-spacing:.8px;text-transform:uppercase;}}
+.sim-subtitle{{font-size:8px;color:rgba(255,255,255,.28);margin-top:1px;}}
+.sim-tbl{{width:100%;border-collapse:collapse;}}
+.sim-tbl thead tr{{background:rgba(255,255,255,.03);}}
+.sim-tbl th{{padding:5px 8px;font-size:7.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.28);text-align:center;border-bottom:1px solid rgba(255,255,255,.06);}}
+.sim-tbl th:first-child{{text-align:left;}}
+.sim-tbl td{{padding:6px 8px;font-family:'DM Mono',monospace;font-size:10px;text-align:center;border-bottom:1px solid rgba(255,255,255,.03);transition:background .12s;}}
+.sim-tbl td:first-child{{text-align:left;}}
+.sim-tbl tr:last-child td{{border-bottom:none;}}
+.sim-tbl tr:hover td{{background:rgba(255,255,255,.025);}}
+.sim-tbl tr.sim-flat td{{background:rgba(245,197,24,.06);border-left:2px solid rgba(245,197,24,.35);}}
+.sim-move-lbl{{font-size:9px;font-weight:700;padding:2px 6px;border-radius:5px;display:inline-block;}}
+.sim-pnl-val{{font-weight:700;font-size:11px;}}
+.sim-live-pnl{{display:flex;align-items:center;justify-content:center;gap:8px;padding:10px;flex-wrap:wrap;border-bottom:1px solid rgba(255,255,255,.05);}}
+.slpb{{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 12px;border-radius:9px;min-width:90px;}}
+.slpb-lbl{{font-size:7.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.28);}}
+.slpb-num{{font-family:'DM Mono',monospace;font-size:16px;font-weight:700;line-height:1;}}
+.slpb-sub{{font-size:8px;color:rgba(255,255,255,.25);}}
+.cbar-row{{display:flex;align-items:center;gap:6px;margin-bottom:5px;}}
+.cbar-lbl{{font-family:'DM Mono',monospace;font-size:9px;font-weight:700;width:44px;flex-shrink:0;}}
+.cbar-track{{flex:1;height:4px;background:rgba(255,255,255,.07);border-radius:2px;overflow:hidden;}}
+.cbar-fill{{height:100%;border-radius:2px;transition:width .4s;}}
+.cbar-val{{font-family:'DM Mono',monospace;font-size:9px;font-weight:700;min-width:58px;text-align:right;}}
+.sim-note{{margin:0 10px 10px;padding:7px 10px;background:rgba(255,107,107,.05);border:1px solid rgba(255,107,107,.13);border-radius:7px;font-size:9px;color:rgba(255,150,150,.65);display:flex;align-items:flex-start;gap:6px;line-height:1.5;}}
+.sim-slide-wrap{{padding:0 10px 10px;}}
+.sim-slide-labels{{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;}}
+.sim-slide-cur{{font-family:'DM Mono',monospace;font-size:10px;font-weight:700;color:#ffd166;background:rgba(245,197,24,.1);border:1px solid rgba(245,197,24,.28);border-radius:5px;padding:2px 8px;}}
+.sim-slide-edge{{font-size:8px;color:rgba(255,255,255,.25);}}
+input.sim-range{{width:100%;height:4px;border-radius:2px;outline:none;border:none;-webkit-appearance:none;cursor:pointer;background:linear-gradient(90deg,#ffd166 var(--pct,50%),rgba(255,255,255,.09) var(--pct,50%));}}
+input.sim-range::-webkit-slider-thumb{{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#ffd166;border:2px solid var(--bg);box-shadow:0 0 6px rgba(245,197,24,.45);cursor:pointer;}}
+
 /* ── PAYOFF ── */
 .payoff-wrap{{position:relative;height:320px;padding:16px;background:var(--bg2);border-radius:0 0 11px 11px;}}
 canvas#payoffChart{{width:100%!important;height:288px!important;}}
@@ -1899,8 +1938,282 @@ function renderStrategies() {{
         <div class="score-bar-track"><div class="score-bar-fill" style="width:${{sw}}%"></div></div>
         <span class="score-num">${{s.score}}</span>
       </div>
+
+      <!-- ── INTRADAY P&L SIMULATOR ── -->
+      ${{buildIntradaySim(s, i)}}
+
     </div>`;
   }}).join("");
+}}
+
+// ── Build Intraday P&L Simulator HTML for a strategy card ────────
+function buildIntradaySim(s, cardIdx) {{
+  const d         = ALL_DATA[currentExpiry];
+  if (!d) return "";
+  const underlying = d.underlying;
+  const dte        = d.dte;
+  const uid        = cardIdx; // unique per card
+
+  // ── Net Greeks across all legs ────────────────────────────────
+  // delta: +for buy, -for sell; theta: always negative cost for net long position
+  let netDelta = 0, netTheta = 0, netVega = 0;
+  s.legs.forEach(l => {{
+    const st   = d.all_strikes.find(x => x.strike === l.strike);
+    if (!st) return;
+    const isCE = (l.opt_type || l.type) === "CE";
+    const mult = l.action === "buy" ? 1 : -1;
+    netDelta += mult * (isCE ? (st.ce_delta||0) : Math.abs(st.pe_delta||0));
+    netTheta += mult * (isCE ? (st.ce_theta||0) : (st.pe_theta||0));
+    netVega  += mult * (isCE ? (st.ce_vega||0)  : (st.pe_vega||0));
+  }});
+  const thetaDay  = Math.round(netTheta * LOT_SIZE);    // ₹ per day
+  const deltaPerPt= netDelta * LOT_SIZE;                // ₹ per 1 point move
+  const vegaPerIV = netVega  * LOT_SIZE;               // ₹ per 1% IV change
+  const maxP      = s.maxProfit;
+  const maxL      = s.maxLoss;
+
+  // ── Scenario rows ─────────────────────────────────────────────
+  const moves = [
+    {{label:"+300 pts", pts:300, cls:"bull"}},
+    {{label:"+200 pts", pts:200, cls:"bull"}},
+    {{label:"+150 pts", pts:150, cls:"bull"}},
+    {{label:"+100 pts", pts:100, cls:"bull"}},
+    {{label: "+50 pts", pts: 50, cls:"bull"}},
+    {{label:    "Flat", pts:  0, cls:"flat"}},
+    {{label: "−50 pts", pts:-50, cls:"bear"}},
+    {{label:"−100 pts", pts:-100,cls:"bear"}},
+    {{label:"−150 pts", pts:-150,cls:"bear"}},
+  ];
+
+  const scenarioRows = moves.map(m => {{
+    const dPnl = Math.round(m.pts * deltaPerPt);
+    const raw  = dPnl + thetaDay;
+    const total= Math.max(-maxL, Math.min(maxP * 0.92, raw));
+    const pct  = maxP > 0 ? ((total/maxP)*100).toFixed(0) : "—";
+    const spot = Math.round(underlying + m.pts);
+    const pCol = total > 0 ? "#00c896" : total < 0 ? "#ff6b6b" : "#6480ff";
+    const mBg  = m.cls==="bull"?"rgba(0,200,150,.12)":m.cls==="bear"?"rgba(255,107,107,.12)":"rgba(245,197,24,.1)";
+    const mTxt = m.cls==="bull"?"#00c896":m.cls==="bear"?"#ff6b6b":"#ffd166";
+    const isFlat = m.pts === 0 ? 'class="sim-flat"' : '';
+
+    // Per-leg value estimates via delta approx
+    const legCols = s.legs.map(l => {{
+      const st  = d.all_strikes.find(x => x.strike === l.strike);
+      const isCE= (l.opt_type||l.type)==="CE";
+      const ltp = isCE ? (st?.ce_ltp||l.premium) : (st?.pe_ltp||l.premium);
+      const dlt = isCE ? (st?.ce_delta||0) : Math.abs(st?.pe_delta||0);
+      const tht = isCE ? (st?.ce_theta||0) : (st?.pe_theta||0);
+      const est = Math.max(0, ltp + dlt * m.pts + tht).toFixed(0);
+      const col = l.action === "buy" ? "#00c8e0" : "#ff9090";
+      return `<td style="color:${{col}};font-size:9px;">₹${{est}}</td>`;
+    }}).join("");
+
+    return `<tr ${{isFlat}}>
+      <td><span class="sim-move-lbl" style="background:${{mBg}};color:${{mTxt}};">${{m.label}}</span></td>
+      <td style="color:rgba(255,255,255,.4);font-size:9px;">₹${{spot.toLocaleString("en-IN")}}</td>
+      ${{legCols}}
+      <td><span class="sim-pnl-val" style="color:${{pCol}};">${{total>=0?"+":""}}₹${{Math.abs(Math.round(total)).toLocaleString("en-IN")}}</span><span style="font-size:8px;opacity:.55;margin-left:3px;">${{total>=0?"+":""}}${{pct}}%</span></td>
+    </tr>`;
+  }}).join("");
+
+  // Dynamic leg column headers
+  const legHeaders = s.legs.map(l =>
+    `<th style="color:${{l.action==="buy"?"rgba(0,200,220,.7)":"rgba(255,144,144,.7)"}};font-size:7.5px;">${{l.action.toUpperCase()}} ${{l.strike}}</th>`
+  ).join("");
+
+  // Greeks contribution bar widths (relative to max abs)
+  const absMax   = Math.max(Math.abs(thetaDay), Math.abs(Math.round(deltaPerPt*100)), Math.abs(Math.round(vegaPerIV)), 1);
+  const dBar     = Math.round(Math.abs(thetaDay)/absMax*100);
+  const tBar     = 100; // theta is base
+  const vBar     = Math.round(Math.abs(Math.round(vegaPerIV))/absMax*100);
+
+  // Greeks summary note
+  const netDSign = netDelta >= 0 ? "+" : "";
+  const thetaStr = thetaDay >= 0 ? `+₹${{thetaDay}}` : `−₹${{Math.abs(thetaDay)}}`;
+  const vegaStr  = vegaPerIV >= 0 ? `~+₹${{Math.round(Math.abs(vegaPerIV))}}` : `~−₹${{Math.round(Math.abs(vegaPerIV))}}`;
+
+  const sliderMin = Math.round(underlying - 400);
+  const sliderMax = Math.round(underlying + 400);
+  const sliderMid = underlying;
+  const sliderPct = 50; // start at current spot
+
+  return `
+  <div class="intraday-sim" onclick="event.stopPropagation()">
+
+    <!-- Tabs -->
+    <div class="sim-tabs">
+      <button class="sim-tab active" onclick="simTab(${{uid}},'sc',this)">📊 Scenarios</button>
+      <button class="sim-tab"        onclick="simTab(${{uid}},'gr',this)">🔬 Greeks</button>
+      <button class="sim-tab"        onclick="simTab(${{uid}},'sl',this)">🎚 Slider</button>
+    </div>
+
+    <!-- TAB 1: Scenarios -->
+    <div id="sim-sc-${{uid}}">
+      <div class="sim-hdr">
+        <div style="display:flex;align-items:center;gap:7px;">
+          <div class="sim-icon">📅</div>
+          <div><div class="sim-title">TODAY'S P&L SCENARIOS</div><div class="sim-subtitle">Exit before market close — Delta + Theta estimate</div></div>
+        </div>
+        <div style="font-family:'DM Mono',monospace;font-size:8px;color:rgba(255,255,255,.22);">DTE: ${{dte}}</div>
+      </div>
+      <div style="overflow-x:auto;padding:0 10px 10px;">
+        <table class="sim-tbl">
+          <thead><tr><th>Nifty Move</th><th>Spot</th>${{legHeaders}}<th style="color:rgba(255,255,255,.55);">Today P&L</th></tr></thead>
+          <tbody>${{scenarioRows}}</tbody>
+        </table>
+      </div>
+      <div class="sim-note">
+        <span style="flex-shrink:0;">⏱</span>
+        <span>Formula: <strong style="color:#ffd166;">Delta × move + Theta/day</strong>. Actual P&L may vary with IV. Max profit of ₹${{maxP.toLocaleString("en-IN")}} is only achievable <strong>at expiry</strong>.</span>
+      </div>
+    </div>
+
+    <!-- TAB 2: Greeks -->
+    <div id="sim-gr-${{uid}}" style="display:none;">
+      <div class="sim-hdr">
+        <div style="display:flex;align-items:center;gap:7px;">
+          <div class="sim-icon">🔬</div>
+          <div><div class="sim-title">GREEKS BREAKDOWN</div><div class="sim-subtitle">P&L contribution from each Greek (flat market)</div></div>
+        </div>
+      </div>
+      <div class="sim-live-pnl">
+        <div class="slpb" style="background:rgba(0,200,150,.07);border:1px solid rgba(0,200,150,.18);">
+          <div class="slpb-lbl">Δ Delta P&L</div>
+          <div class="slpb-num" style="color:#00c896;" id="sim-dp-${{uid}}">+₹0</div>
+          <div class="slpb-sub">flat = ₹0</div>
+        </div>
+        <div class="slpb" style="background:rgba(255,107,107,.07);border:1px solid rgba(255,107,107,.18);">
+          <div class="slpb-lbl">Θ Theta Cost</div>
+          <div class="slpb-num" style="color:#ff9090;">${{thetaStr}}/day</div>
+          <div class="slpb-sub">time decay</div>
+        </div>
+        <div class="slpb" style="background:rgba(138,160,255,.07);border:1px solid rgba(138,160,255,.18);">
+          <div class="slpb-lbl">ν Vega ±1%</div>
+          <div class="slpb-num" style="color:#8aa0ff;">${{vegaStr}}</div>
+          <div class="slpb-sub">per 1% IV move</div>
+        </div>
+        <div class="slpb" style="background:rgba(245,197,24,.07);border:1px solid rgba(245,197,24,.18);">
+          <div class="slpb-lbl">Net (Flat)</div>
+          <div class="slpb-num" style="color:#ffd166;">${{thetaStr}}</div>
+          <div class="slpb-sub">just theta drag</div>
+        </div>
+      </div>
+      <div style="padding:10px 10px 0;">
+        <div style="font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.22);margin-bottom:8px;">Greek contribution bars</div>
+        <div class="cbar-row">
+          <div class="cbar-lbl" style="color:#00c896;">Δ Delta</div>
+          <div class="cbar-track"><div class="cbar-fill" style="width:${{dBar}}%;background:#00c896;" id="sim-db-${{uid}}"></div></div>
+          <div class="cbar-val" style="color:#00c896;" id="sim-dv-${{uid}}">₹0 (flat)</div>
+        </div>
+        <div class="cbar-row">
+          <div class="cbar-lbl" style="color:#ff9090;">Θ Theta</div>
+          <div class="cbar-track"><div class="cbar-fill" style="width:${{tBar}}%;background:#ff6b6b;"></div></div>
+          <div class="cbar-val" style="color:#ff9090;">${{thetaStr}}/day</div>
+        </div>
+        <div class="cbar-row">
+          <div class="cbar-lbl" style="color:#8aa0ff;">ν Vega</div>
+          <div class="cbar-track"><div class="cbar-fill" style="width:${{vBar}}%;background:#8aa0ff;"></div></div>
+          <div class="cbar-val" style="color:#8aa0ff;">${{vegaStr}}</div>
+        </div>
+      </div>
+      <div style="margin:10px 10px 12px;padding:9px 11px;background:rgba(0,0,0,.18);border-radius:8px;font-size:9px;color:rgba(255,255,255,.35);line-height:1.8;">
+        <strong style="color:rgba(255,255,255,.55);">Net Delta:</strong> ${{netDSign}}${{netDelta.toFixed(3)}} per point &nbsp;→&nbsp;
+        <strong style="color:#00c896;">₹${{deltaPerPt.toFixed(1)}} per Nifty point</strong><br>
+        <strong style="color:rgba(255,255,255,.55);">Net Theta:</strong> ${{thetaStr}} per trading day<br>
+        <em style="color:rgba(255,255,255,.2);">Delta profit offsets theta drag only when Nifty moves in your favour.</em>
+      </div>
+    </div>
+
+    <!-- TAB 3: Slider -->
+    <div id="sim-sl-${{uid}}" style="display:none;">
+      <div class="sim-hdr">
+        <div style="display:flex;align-items:center;gap:7px;">
+          <div class="sim-icon">🎚</div>
+          <div><div class="sim-title">LIVE SCENARIO SLIDER</div><div class="sim-subtitle">Drag to see today's estimated exit P&L</div></div>
+        </div>
+      </div>
+      <div class="sim-slide-wrap">
+        <div class="sim-slide-labels">
+          <span class="sim-slide-edge">₹${{sliderMin.toLocaleString("en-IN")}}</span>
+          <span class="sim-slide-cur" id="sim-sc-lbl-${{uid}}">Spot: ₹${{sliderMid.toLocaleString("en-IN")}}</span>
+          <span class="sim-slide-edge">₹${{sliderMax.toLocaleString("en-IN")}}</span>
+        </div>
+        <input class="sim-range" type="range"
+          id="sim-range-${{uid}}"
+          min="${{sliderMin}}" max="${{sliderMax}}"
+          value="${{sliderMid}}" step="25"
+          style="--pct:${{sliderPct}}%"
+          oninput="simSlide(${{uid}},${{underlying}},${{deltaPerPt}},${{thetaDay}},${{maxP}},${{maxL}},this.value)">
+      </div>
+      <div style="padding:0 10px 14px;">
+        <div style="background:rgba(0,0,0,.25);border-radius:10px;padding:14px;text-align:center;border:1px solid rgba(255,255,255,.06);">
+          <div style="font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.22);margin-bottom:6px;">ESTIMATED EXIT P&L TODAY</div>
+          <div style="font-family:'DM Mono',monospace;font-size:28px;font-weight:700;" id="sim-bigpnl-${{uid}}">${{thetaStr}}</div>
+          <div style="font-size:9px;color:rgba(255,255,255,.28);margin-top:4px;" id="sim-note-${{uid}}">Theta drag only (flat market)</div>
+          <div style="display:flex;gap:12px;justify-content:center;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.05);">
+            <div style="text-align:center;">
+              <div style="font-size:7.5px;color:rgba(255,255,255,.28);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;">Delta P&L</div>
+              <div style="font-family:'DM Mono',monospace;font-size:12px;font-weight:700;color:#00c896;" id="sim-slide-d-${{uid}}">₹0</div>
+            </div>
+            <div style="text-align:center;">
+              <div style="font-size:7.5px;color:rgba(255,255,255,.28);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;">Theta Cost</div>
+              <div style="font-family:'DM Mono',monospace;font-size:12px;font-weight:700;color:#ff9090;">${{thetaStr}}</div>
+            </div>
+            <div style="text-align:center;">
+              <div style="font-size:7.5px;color:rgba(255,255,255,.28);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;">% of Max</div>
+              <div style="font-family:'DM Mono',monospace;font-size:12px;font-weight:700;color:#ffd166;" id="sim-slide-pct-${{uid}}">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>`;
+}}
+
+// ── Intraday sim tab switcher ─────────────────────────────────────
+function simTab(uid, tab, btn) {{
+  ["sc","gr","sl"].forEach(t => {{
+    const el = document.getElementById("sim-"+t+"-"+uid);
+    if (el) el.style.display = (t===tab) ? "block" : "none";
+  }});
+  btn.closest(".intraday-sim").querySelectorAll(".sim-tab").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+}}
+
+// ── Intraday sim slider update ────────────────────────────────────
+function simSlide(uid, spot, dPerPt, thetaDay, maxP, maxL, val) {{
+  const cur    = parseInt(val);
+  const move   = cur - spot;
+  const dPnl   = Math.round(move * dPerPt);
+  const total  = Math.max(-maxL, Math.min(maxP * 0.92, dPnl + thetaDay));
+  const pct    = maxP > 0 ? ((total/maxP)*100).toFixed(1) : "—";
+  const range  = document.getElementById("sim-range-"+uid);
+  const sliderMin = parseInt(range.min), sliderMax = parseInt(range.max);
+  const pctFill = ((cur - sliderMin)/(sliderMax - sliderMin)*100).toFixed(1);
+  range.style.setProperty("--pct", pctFill+"%");
+
+  const bigEl = document.getElementById("sim-bigpnl-"+uid);
+  const noteEl= document.getElementById("sim-note-"+uid);
+  const dEl   = document.getElementById("sim-slide-d-"+uid);
+  const pctEl = document.getElementById("sim-slide-pct-"+uid);
+  const lblEl = document.getElementById("sim-sc-lbl-"+uid);
+  const col   = total > 100 ? "#00c896" : total > 0 ? "#4de8b8" : total > -200 ? "#ffd166" : "#ff6b6b";
+
+  if (bigEl) {{ bigEl.style.color=col; bigEl.textContent=(total>=0?"+":"")+"₹"+Math.abs(Math.round(total)).toLocaleString("en-IN"); }}
+  if (noteEl) noteEl.textContent = move>0?`Nifty up ${{move}} pts`:move<0?`Nifty down ${{Math.abs(move)}} pts`:"Flat — theta drag only";
+  if (dEl) {{ dEl.style.color=dPnl>=0?"#00c896":"#ff6b6b"; dEl.textContent=(dPnl>=0?"+":"")+"₹"+Math.abs(dPnl).toLocaleString("en-IN"); }}
+  if (pctEl) {{ pctEl.style.color=total>=0?"#00c896":"#ff9090"; pctEl.textContent=(total>=0?"+":"")+pct+"%"; }}
+  if (lblEl) lblEl.textContent="Spot: ₹"+cur.toLocaleString("en-IN");
+
+  // Update delta bar + val in Greeks tab too
+  const dbEl = document.getElementById("sim-db-"+uid);
+  const dvEl = document.getElementById("sim-dv-"+uid);
+  const dpEl = document.getElementById("sim-dp-"+uid);
+  const absMax = Math.max(Math.abs(thetaDay), Math.abs(dPnl), 1);
+  if (dbEl) dbEl.style.width = Math.round(Math.abs(dPnl)/absMax*100)+"%";
+  if (dvEl) {{ dvEl.style.color=dPnl>=0?"#00c896":"#ff6b6b"; dvEl.textContent=(dPnl>=0?"+₹":"-₹")+Math.abs(dPnl).toLocaleString("en-IN"); }}
+  if (dpEl) {{ dpEl.style.color=dPnl>=0?"#00c896":"#ff9090"; dpEl.textContent=(dPnl>=0?"+₹":"−₹")+Math.abs(dPnl).toLocaleString("en-IN"); }}
 }}
 
 function populatePayoffSel() {{
