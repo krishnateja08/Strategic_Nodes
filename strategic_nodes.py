@@ -496,15 +496,33 @@ LOT_SIZE    = 65
 RISK_FREE_R = 0.065
 
 
-def _strategy_pop(legs, underlying, T, r=RISK_FREE_R):
-    """Estimate probability of profit using BSM for each leg."""
+def _strategy_pop(legs, underlying, T, r=RISK_FREE_R, breakevens=None, strategy_type=None):
+    """Estimate probability of profit using BSM for each leg.
+    For long volatility strategies (straddle/strangle), use breakeven-based probability.
+    """
+    is_long_vol = (
+        strategy_type in ("straddle", "strangle")
+        and all(l["action"] == "buy" for l in legs)
+    )
+    if is_long_vol and breakevens:
+        lower_be = breakevens[0]
+        upper_be = breakevens[1] if len(breakevens) >= 2 else None
+        sigma    = legs[0]["iv"] / 100
+        bs_lower = black_scholes(underlying, lower_be, T, r, sigma, "PE")
+        prob_below = bs_lower.get("prob_profit", 0.25)
+        prob_above = 0
+        if upper_be:
+            bs_upper   = black_scholes(underlying, upper_be, T, r, sigma, "CE")
+            prob_above = 1 - bs_upper.get("prob_profit", 0.75)
+        return round(min((prob_below + prob_above) * 100, 99), 1)
+
     total_pop = 0
     for leg in legs:
         sigma = leg["iv"] / 100
         bs    = black_scholes(underlying, leg["strike"], T, r, sigma, leg["opt_type"])
         pop   = bs.get("prob_profit", 0.5)
         total_pop += (pop if leg["action"] == "sell" else 1 - pop)
-    return round((total_pop / len(legs)) * 100, 1)
+    return round(min((total_pop / len(legs)) * 100, 99), 1)
 
 
 def _payoff_at_expiry(legs, price_range):
@@ -597,8 +615,9 @@ def build_strategies(oc_analysis, support_levels, resistance_levels, bias="neutr
         # RR ratio
         rr_ratio = round(abs(max_profit / max_loss), 2) if max_loss != 0 else 0
 
-        # PoP via BSM
-        pop = _strategy_pop(legs, underlying, T)
+        # PoP via BSM — breakeven-aware for long vol strategies
+        pop = _strategy_pop(legs, underlying, T,
+                            breakevens=breakevens, strategy_type=strategy_type)
 
         # Score: 40% PoP + 35% RR + 25% max profit normalised
         score = round(pop * 0.40 + min(rr_ratio * 35, 35) + min(max_profit / 5000 * 25, 25), 1)
@@ -1765,13 +1784,30 @@ function analyze() {{
       }}
     }}
 
-    // PoP via BSM average
+    // PoP via BSM — strategy-type aware
+    // For long vol (straddle/strangle): need price to move past a breakeven → use BE-based prob
+    // For debit spreads (directional): probability the bought leg expires ITM
+    // For credit spreads: probability all sold legs expire OTM (classic seller's PoP)
     let popSum=0;
-    legs.forEach(l=>{{
-      const b=bsm(underlying,l.strike,T,RISK_FREE,l.iv/100,l.opt_type||l.type);
-      popSum+= l.action==="sell"?b.pop:(1-b.pop);
-    }});
-    const pop=Math.round(popSum/legs.length*100*10)/10;
+    const isLongVol = (sType==="straddle"||sType==="strangle") && legs.every(l=>l.action==="buy");
+    if (isLongVol && bes.length >= 1) {{
+      // PoP = prob(spot < lower BE) + prob(spot > upper BE)
+      // i.e. 1 - prob(spot stays between breakevens)
+      const lowerBE = bes[0];
+      const upperBE = bes.length >= 2 ? bes[1] : null;
+      const bLower  = bsm(underlying, lowerBE,  T, RISK_FREE, (legs[0].iv||15)/100, "PE");
+      const probBelowLower = bLower.pop;  // prob spot < lowerBE at expiry
+      const probAboveUpper = upperBE
+        ? (1 - bsm(underlying, upperBE, T, RISK_FREE, (legs[0].iv||15)/100, "CE").pop)
+        : 0;
+      popSum = (probBelowLower + probAboveUpper) * legs.length; // normalise back for avg
+    }} else {{
+      legs.forEach(l=>{{
+        const b=bsm(underlying,l.strike,T,RISK_FREE,l.iv/100,l.opt_type||l.type);
+        popSum+= l.action==="sell"?b.pop:(1-b.pop);
+      }});
+    }}
+    const pop=Math.round(Math.min(popSum/legs.length*100, 99)*10)/10;
 
     const rr   = maxL!==0?Math.round(Math.abs(maxP/maxL)*100)/100:0;
     const score= Math.round(pop*0.40+Math.min(rr*35,35)+Math.min(maxP/5000*25,25)*10)/10;
