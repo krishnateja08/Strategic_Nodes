@@ -1997,9 +1997,11 @@ function buildIntradaySim(s, cardIdx) {{
     {{label:"+100 pts", pts:100, cls:"bull"}},
     {{label: "+50 pts", pts: 50, cls:"bull"}},
     {{label:    "Flat", pts:  0, cls:"flat"}},
-    {{label: "−50 pts", pts:-50, cls:"bear"}},
-    {{label:"−100 pts", pts:-100,cls:"bear"}},
-    {{label:"−150 pts", pts:-150,cls:"bear"}},
+    {{label: "−50 pts", pts: -50, cls:"bear"}},
+    {{label:"−100 pts", pts:-100, cls:"bear"}},
+    {{label:"−150 pts", pts:-150, cls:"bear"}},
+    {{label:"−200 pts", pts:-200, cls:"bear"}},
+    {{label:"−300 pts", pts:-300, cls:"bear"}},
   ];
 
   const scenarioRows = moves.map(m => {{
