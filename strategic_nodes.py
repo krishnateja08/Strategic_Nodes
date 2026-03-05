@@ -2062,9 +2062,9 @@ function buildIntradaySim(s, uid) {{
 
     <!-- Tabs -->
     <div class="sim-tabs">
-      <button class="sim-tab active" onclick="simTab(${{uid}},'sc',this)">📊 Scenarios</button>
-      <button class="sim-tab"        onclick="simTab(${{uid}},'gr',this)">🔬 Greeks</button>
-      <button class="sim-tab"        onclick="simTab(${{uid}},'sl',this)">🎚 Slider</button>
+      <button class="sim-tab active" onclick="simTab('${{uid}}','sc',this)">📊 Scenarios</button>
+      <button class="sim-tab"        onclick="simTab('${{uid}}','gr',this)">🔬 Greeks</button>
+      <button class="sim-tab"        onclick="simTab('${{uid}}','sl',this)">🎚 Slider</button>
     </div>
 
     <!-- TAB 1: Scenarios -->
@@ -2163,7 +2163,7 @@ function buildIntradaySim(s, uid) {{
           min="${{sliderMin}}" max="${{sliderMax}}"
           value="${{sliderMid}}" step="25"
           style="--pct:${{sliderPct}}%"
-          oninput="simSlide(${{uid}},${{underlying}},${{deltaPerPt}},${{thetaDay}},${{maxP}},${{maxL}},this.value)">
+          oninput="simSlide('${{uid}}',${{underlying}},${{deltaPerPt}},${{thetaDay}},${{maxP}},${{maxL}},this.value)">
       </div>
       <div style="padding:0 10px 14px;">
         <div style="background:rgba(0,0,0,.25);border-radius:10px;padding:14px;text-align:center;border:1px solid rgba(255,255,255,.06);">
@@ -2197,6 +2197,24 @@ function toggleSim(uid, btn) {{
   const arrow = document.getElementById("sim-arrow-" + uid);
   if (!wrap) return;
   const isOpen = wrap.style.display !== "none";
+
+  // Close ALL other open simulators first
+  document.querySelectorAll('[id^="sim-wrap-"]').forEach(el => {{
+    if (el.id !== "sim-wrap-" + uid && el.style.display !== "none") {{
+      el.style.display = "none";
+      const otherId    = el.id.replace("sim-wrap-", "");
+      const otherArrow = document.getElementById("sim-arrow-" + otherId);
+      if (otherArrow) otherArrow.style.transform = "rotate(0deg)";
+      // Reset button style — walk up to find the button
+      const otherBtn = el.previousElementSibling?.querySelector("button");
+      if (otherBtn) {{
+        otherBtn.style.background  = "rgba(245,197,24,.07)";
+        otherBtn.style.borderColor = "rgba(245,197,24,.2)";
+      }}
+    }}
+  }});
+
+  // Toggle this one
   wrap.style.display   = isOpen ? "none" : "block";
   if (arrow) arrow.style.transform = isOpen ? "rotate(0deg)" : "rotate(180deg)";
   btn.style.background  = isOpen ? "rgba(245,197,24,.07)" : "rgba(245,197,24,.13)";
