@@ -1939,8 +1939,25 @@ function renderStrategies() {{
         <span class="score-num">${{s.score}}</span>
       </div>
 
-      <!-- ── INTRADAY P&L SIMULATOR ── -->
-      ${{buildIntradaySim(s, i)}}
+      <!-- ── INTRADAY SIMULATOR TOGGLE BUTTON ── -->
+      <div style="padding:8px 12px;border-top:1px solid rgba(255,255,255,.05);" onclick="event.stopPropagation()">
+        <button
+          onclick="toggleSim(${{i}},this)"
+          style="width:100%;background:rgba(245,197,24,.07);border:1px solid rgba(245,197,24,.2);border-radius:8px;
+                 padding:7px 12px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;
+                 font-family:'DM Mono',monospace;font-size:9.5px;font-weight:700;color:rgba(255,209,102,.8);
+                 letter-spacing:.8px;text-transform:uppercase;transition:all .2s;">
+          <span style="display:flex;align-items:center;gap:7px;">
+            <span style="font-size:12px;">📊</span> Intraday P&L Simulator
+          </span>
+          <span id="sim-arrow-${{i}}" style="font-size:11px;transition:transform .25s;">▼</span>
+        </button>
+      </div>
+
+      <!-- ── INTRADAY P&L SIMULATOR (collapsed by default) ── -->
+      <div id="sim-wrap-${{i}}" style="display:none;overflow:hidden;">
+        ${{buildIntradaySim(s, i)}}
+      </div>
 
     </div>`;
   }}).join("");
@@ -2169,6 +2186,18 @@ function buildIntradaySim(s, cardIdx) {{
     </div>
 
   </div>`;
+}}
+
+// ── Intraday sim toggle (collapse/expand) ────────────────────────
+function toggleSim(uid, btn) {{
+  const wrap  = document.getElementById("sim-wrap-" + uid);
+  const arrow = document.getElementById("sim-arrow-" + uid);
+  if (!wrap) return;
+  const isOpen = wrap.style.display !== "none";
+  wrap.style.display  = isOpen ? "none" : "block";
+  if (arrow) arrow.style.transform = isOpen ? "rotate(0deg)" : "rotate(180deg)";
+  btn.style.background   = isOpen ? "rgba(245,197,24,.07)" : "rgba(245,197,24,.13)";
+  btn.style.borderColor  = isOpen ? "rgba(245,197,24,.2)"  : "rgba(245,197,24,.4)";
 }}
 
 // ── Intraday sim tab switcher ─────────────────────────────────────
