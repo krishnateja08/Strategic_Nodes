@@ -1914,6 +1914,8 @@ function renderStrategies() {{
     const beStr   = s.breakevens.length ? s.breakevens.map(b=>"₹"+b.toLocaleString("en-IN")).join(" / ") : "—";
     const netDisp = s.isDebit ? `<span class="down">-₹${{Math.abs(s.netPrem).toFixed(2)}}</span>` : `<span class="up">+₹${{s.netPrem.toFixed(2)}}</span>`;
     const legTags = s.legs.map(l=>`<span class="leg-tag leg-${{l.action}}">${{l.action.toUpperCase()}} ${{l.strike}} ${{l.opt_type||l.type}} @${{l.premium.toFixed(2)}}</span>`).join("");
+    // Stable unique ID based on strategy name — never changes with sort order
+    const uid = s.name.replace(/[^a-zA-Z0-9]/g,"_");
 
     return `<div class="strat-card" style="--cc:${{cc}};animation-delay:${{i*0.05}}s" onclick="selectPayoff('${{s.name}}')">
       <div class="sc-top">
@@ -1942,7 +1944,7 @@ function renderStrategies() {{
       <!-- ── INTRADAY SIMULATOR TOGGLE BUTTON ── -->
       <div style="padding:8px 12px;border-top:1px solid rgba(255,255,255,.05);" onclick="event.stopPropagation()">
         <button
-          onclick="toggleSim(${{i}},this)"
+          onclick="toggleSim('${{uid}}',this)"
           style="width:100%;background:rgba(245,197,24,.07);border:1px solid rgba(245,197,24,.2);border-radius:8px;
                  padding:7px 12px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;
                  font-family:'DM Mono',monospace;font-size:9.5px;font-weight:700;color:rgba(255,209,102,.8);
@@ -1950,13 +1952,13 @@ function renderStrategies() {{
           <span style="display:flex;align-items:center;gap:7px;">
             <span style="font-size:12px;">📊</span> Intraday P&L Simulator
           </span>
-          <span id="sim-arrow-${{i}}" style="font-size:11px;transition:transform .25s;">▼</span>
+          <span id="sim-arrow-${{uid}}" style="font-size:11px;transition:transform .25s;">▼</span>
         </button>
       </div>
 
       <!-- ── INTRADAY P&L SIMULATOR (collapsed by default) ── -->
-      <div id="sim-wrap-${{i}}" style="display:none;overflow:hidden;">
-        ${{buildIntradaySim(s, i)}}
+      <div id="sim-wrap-${{uid}}" style="display:none;overflow:hidden;">
+        ${{buildIntradaySim(s, uid)}}
       </div>
 
     </div>`;
@@ -1964,12 +1966,11 @@ function renderStrategies() {{
 }}
 
 // ── Build Intraday P&L Simulator HTML for a strategy card ────────
-function buildIntradaySim(s, cardIdx) {{
+function buildIntradaySim(s, uid) {{
   const d         = ALL_DATA[currentExpiry];
   if (!d) return "";
   const underlying = d.underlying;
   const dte        = d.dte;
-  const uid        = cardIdx; // unique per card
 
   // ── Net Greeks across all legs ────────────────────────────────
   // delta: +for buy, -for sell; theta: always negative cost for net long position
@@ -2196,10 +2197,10 @@ function toggleSim(uid, btn) {{
   const arrow = document.getElementById("sim-arrow-" + uid);
   if (!wrap) return;
   const isOpen = wrap.style.display !== "none";
-  wrap.style.display  = isOpen ? "none" : "block";
+  wrap.style.display   = isOpen ? "none" : "block";
   if (arrow) arrow.style.transform = isOpen ? "rotate(0deg)" : "rotate(180deg)";
-  btn.style.background   = isOpen ? "rgba(245,197,24,.07)" : "rgba(245,197,24,.13)";
-  btn.style.borderColor  = isOpen ? "rgba(245,197,24,.2)"  : "rgba(245,197,24,.4)";
+  btn.style.background  = isOpen ? "rgba(245,197,24,.07)" : "rgba(245,197,24,.13)";
+  btn.style.borderColor = isOpen ? "rgba(245,197,24,.2)"  : "rgba(245,197,24,.4)";
 }}
 
 // ── Intraday sim tab switcher ─────────────────────────────────────
