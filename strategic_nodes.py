@@ -529,16 +529,36 @@ def build_strategies(oc_analysis, support_levels, resistance_levels, bias="neutr
         return min(strikes, key=lambda x: abs(x - val))
     def get(strike, field, default=0):
         return strike_map.get(strike, {}).get(field, default)
-    avg_support    = sum(support_levels)    / len(support_levels)    if support_levels    else underlying - 300
-    avg_resistance = sum(resistance_levels) / len(resistance_levels) if resistance_levels else underlying + 300
-    sr_range       = avg_resistance - avg_support
+    # ── Support: closest level to current price (aggressive) or lowest (conservative)
+    if support_levels:
+        closest_support    = min(support_levels, key=lambda x: abs(x - underlying))
+        conservative_support = min(support_levels)
+        # Use closest if it's below spot, else fall back to conservative
+        best_support = closest_support if closest_support < underlying else conservative_support
+    else:
+        best_support = underlying - 300
+
+    # ── Resistance: closest level above spot, or highest as fallback
+    if resistance_levels:
+        above_res = [r for r in resistance_levels if r > underlying]
+        best_resistance = min(above_res, key=lambda x: abs(x - underlying)) if above_res else max(resistance_levels)
+    else:
+        best_resistance = underlying + 300
+
+    # ── ATR-based wing width (use ~1.5× daily ATR as minimum wing)
+    atm_iv    = (get(atm_strike, "ce_iv", 15) + get(atm_strike, "pe_iv", 15)) / 2
+    daily_atr = round(underlying * (atm_iv / 100) * math.sqrt(1 / 365), 0)
+    atr_wing  = max(int(daily_atr * 1.5 / 50) * 50, 100)   # minimum 100 pts, rounded to 50
+
+    sr_range  = best_resistance - best_support
     atm  = atm_strike
-    s_st = nearest(avg_support)
-    r_st = nearest(avg_resistance)
+    s_st = nearest(best_support)
+    r_st = nearest(best_resistance)
     otm_c = nearest(underlying + sr_range * 0.3)
     otm_p = nearest(underlying - sr_range * 0.3)
-    far_c = nearest(avg_resistance + 150)
-    far_p = nearest(avg_support    - 150)
+    far_c = nearest(best_resistance + atr_wing)
+    far_p = nearest(best_support    - atr_wing)
+    # (avg_support/avg_resistance aliases removed — using best_support/best_resistance directly)
     atm_iv = (get(atm, "ce_iv", 15) + get(atm, "pe_iv", 15)) / 2
     exp_move = round(underlying * (atm_iv / 100) * math.sqrt(T), 0)
     raw = []
@@ -562,7 +582,15 @@ def build_strategies(oc_analysis, support_levels, resistance_levels, bias="neutr
         rr_ratio = round(abs(max_profit / max_loss), 2) if max_loss != 0 else 0
         pop = _strategy_pop(legs, underlying, T,
                             breakevens=breakevens, strategy_type=strategy_type)
-        score = round(pop * 0.40 + min(rr_ratio * 35, 35) + min(max_profit / 5000 * 25, 25), 1)
+        rr_norm   = min(rr_ratio, 5.0) / 5.0          # normalize RR to 0-1 (cap at 5:1)
+        rr_adj    = rr_norm * pop / 100                # penalise high-RR/low-PoP combos
+        efficiency = min(abs(max_profit) / max(abs(max_loss), 1), 5.0) / 5.0
+        score = round(
+            (pop / 100) * 0.40 * 100 +
+            rr_adj       * 0.35 * 100 +
+            efficiency   * 0.25 * 100,
+            1,
+        )
         margin_est = abs(max_loss)
         return {
             "name":          name,
@@ -606,7 +634,7 @@ def build_strategies(oc_analysis, support_levels, resistance_levels, bias="neutr
             if s: raw.append(s)
     if bias != "bearish":
         sell_st = s_st
-        buy_st  = nearest(avg_support - 150)
+        buy_st  = nearest(best_support - atr_wing)
         if sell_st != buy_st:
             s = make_strategy("Bull Put Spread", [
                 {"action": "sell", "strike": sell_st, "opt_type": "PE",
@@ -617,7 +645,7 @@ def build_strategies(oc_analysis, support_levels, resistance_levels, bias="neutr
             if s: raw.append(s)
     if bias != "bullish":
         sell_st = r_st
-        buy_st  = nearest(avg_resistance + 150)
+        buy_st  = nearest(best_resistance + atr_wing)
         if sell_st != buy_st:
             s = make_strategy("Bear Call Spread", [
                 {"action": "sell", "strike": sell_st, "opt_type": "CE",
@@ -1851,11 +1879,20 @@ function analyze() {{
   const nearest=val=>allSt.reduce((a,b)=>Math.abs(b-val)<Math.abs(a-val)?b:a);
   const get=(st,field,def=0)=>(smap[st]||{{}})[field]||def;
 
-  const avgSup=supports.reduce((a,b)=>a+b,0)/supports.length;
-  const avgRes=ress.reduce((a,b)=>a+b,0)/ress.length;
-  const srRange=avgRes-avgSup;
-  const s_st=nearest(avgSup),r_st=nearest(avgRes);
-  const far_c=nearest(avgRes+150),far_p=nearest(avgSup-150);
+  // ── Proximity-based support: closest level below spot (aggressive), or lowest (conservative)
+  const supBelow=supports.filter(v=>v<underlying);
+  const bestSup=supBelow.length>0?supBelow.reduce((a,b)=>Math.abs(b-underlying)<Math.abs(a-underlying)?b:a):Math.min(...supports);
+  // ── Proximity-based resistance: closest level above spot, or highest as fallback
+  const resAbove=ress.filter(v=>v>underlying);
+  const bestRes=resAbove.length>0?resAbove.reduce((a,b)=>Math.abs(b-underlying)<Math.abs(a-underlying)?b:a):Math.max(...ress);
+  // ── ATR-based wing width (~1.5× daily ATR, min 100, snapped to 50)
+  const atmIV=(get(atm,"ce_iv",15)+get(atm,"pe_iv",15))/2;
+  const dailyATR=underlying*(atmIV/100)*Math.sqrt(1/365);
+  const atrWing=Math.max(Math.round(dailyATR*1.5/50)*50,100);
+
+  const srRange=bestRes-bestSup;
+  const s_st=nearest(bestSup),r_st=nearest(bestRes);
+  const far_c=nearest(bestRes+atrWing),far_p=nearest(bestSup-atrWing);
   const otm_c=nearest(underlying+srRange*0.3),otm_p=nearest(underlying-srRange*0.3);
 
   const raw=[];
@@ -1875,7 +1912,10 @@ function analyze() {{
     }}
     const rr=maxL!==0?Math.round(Math.abs(maxP/maxL)*100)/100:0;
     const pop=Math.max(calcPoP(legs,underlying,T,bes,sType),1);
-    const score=Math.round(pop*0.40+Math.min(rr*35,35)+Math.min(maxP/5000*25,25)*10)/10;
+    const rrNorm=Math.min(rr,5.0)/5.0;
+    const rrAdj=rrNorm*(pop/100);
+    const efficiency=Math.min(Math.abs(maxP)/Math.max(Math.abs(maxL),1),5.0)/5.0;
+    const score=Math.round(((pop/100)*0.40*100+rrAdj*0.35*100+efficiency*0.25*100)*10)/10;
     return {{name,biasTag,sType,legs,netPrem:Math.round(netPrem*100)/100,isDebit:netPrem<0,
              maxProfit:Math.round(maxP*100)/100,maxLoss:Math.round(Math.abs(maxL)*100)/100,
              breakevens:bes,rr,pop,score,margin:Math.round(Math.abs(maxL)*100)/100,
@@ -1998,7 +2038,10 @@ function analyzeBE() {{
     }}
     const rr    = maxL!==0?Math.round(Math.abs(maxP/maxL)*100)/100:0;
     const pop   = Math.max(calcPoP(legs, underlying, T, bes, sType), 1);
-    const score = Math.round(pop*0.40 + Math.min(rr*35,35) + Math.min(maxP/5000*25,25)*10)/10;
+    const rrNorm2=Math.min(rr,5.0)/5.0;
+    const rrAdj2=rrNorm2*(pop/100);
+    const eff2=Math.min(Math.abs(maxP)/Math.max(Math.abs(maxL),1),5.0)/5.0;
+    const score = Math.round(((pop/100)*0.40*100+rrAdj2*0.35*100+eff2*0.25*100)*10)/10;
     // Fit: compare strategy's computed BEs against user's EXACT input values
     const fit   = calcBEFit(bes, hasLo ? lo : null, hasHi ? hi : null);
     // BE accuracy: show user how far actual BEs are from their targets
