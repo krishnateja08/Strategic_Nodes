@@ -191,8 +191,8 @@ class NSEOptionChain:
                     return None
                 underlying  = json_data.get("records", {}).get("underlyingValue", 0)
                 atm_strike  = round(underlying / 50) * 50
-                lower_bound = underlying - 600
-                upper_bound = underlying + 600
+                lower_bound = underlying - 2000   # FIX: widened from 600 → 2000 so far-OTM BE targets are always in range
+                upper_bound = underlying + 2000   # FIX: widened from 600 → 2000
                 rows = []
                 for item in data:
                     strike = item.get("strikePrice")
@@ -1924,15 +1924,15 @@ function analyzeBE() {{
   const nearest = val => allSt.reduce((a,b) => Math.abs(b-val)<Math.abs(a-val)?b:a);
   const get = (st, field, def=0) => (smap[st]||{{}})[field] || def;
 
-  // ── wingDist: dynamic — scales with distance from spot to target BE ──
+  // wingDist: dynamic — scales with distance from spot to target BE
   // For two-sided: 25% of lo→hi range (min 100)
   // For one-sided: 25% of |spot - BE| so wings always reach far enough
   //   e.g. BE=26341, spot=24765 → dist=1576 → wingDist=400 (not hardcoded 200)
   const wingDist = (hasLo && hasHi)
     ? Math.max(Math.round((hi - lo) * 0.25 / 50) * 50, 100)
     : hasHi
-      ? Math.max(Math.round(Math.abs(hi  - d.underlying) * 0.25 / 50) * 50, 200)
-      : Math.max(Math.round(Math.abs(lo  - d.underlying) * 0.25 / 50) * 50, 200);
+      ? Math.max(Math.round(Math.abs(hi - d.underlying) * 0.25 / 50) * 50, 200)
+      : Math.max(Math.round(Math.abs(lo - d.underlying) * 0.25 / 50) * 50, 200);
 
   // ── ✅ FIXED: Finder functions now account for BOTH legs (net credit not gross) ──
   // OLD bug: findSellCEStrikeForBE used K + ce_ltp(K) — ignored buy wing premium
@@ -2154,7 +2154,7 @@ function analyzeBE() {{
 
     // Bear Put Spread — reverse-engineer buy strike so natural BE ≈ user's exact hi input
     // FIX: Old code used ATM blindly → BE was 1000+ pts from user input.
-    // ALSO FIX: wingDist was hardcoded 200 → too small when BE is far above spot.
+    // FIX: wingDist was hardcoded 200 → too small when BE is far above spot.
     // NEW: iterate all strikes as buy leg, pair with sell leg wingDist below,
     //      compute impliedBE = buyStrike - netDebit, pick closest to user's hi.
     (function() {{
@@ -2162,29 +2162,29 @@ function analyzeBE() {{
       allSt.forEach(buyK => {{
         const peBuy = get(buyK, "pe_ltp", 0);
         if (peBuy <= 0) return;
-        const sellK  = nearest(buyK - wingDist);
-        if (sellK >= buyK) return;               // sell leg must be strictly below buy
+        const sellK = nearest(buyK - wingDist);
+        if (sellK >= buyK) return;
         const peSell = get(sellK, "pe_ltp", 0);
         if (peSell <= 0) return;
         const netDebit  = peBuy - peSell;
-        if (netDebit <= 0) return;               // must cost money (debit spread)
-        const impliedBE = buyK - netDebit;       // BE formula: BuyStrike - NetDebit
+        if (netDebit <= 0) return;
+        const impliedBE = buyK - netDebit;  // BE = BuyStrike - NetDebit
         const diff      = Math.abs(impliedBE - hi);
         if (diff < bestDiff) {{ bestDiff = diff; bestBuy = buyK; bestSell = sellK; }}
       }});
       if (bestBuy && bestSell && bestBuy !== bestSell) {{
-        const netD    = get(bestBuy,"pe_ltp",0) - get(bestSell,"pe_ltp",0);
+        const netD     = get(bestBuy,"pe_ltp",0) - get(bestSell,"pe_ltp",0);
         const actualBE = Math.round(bestBuy - netD);
         const diffPts  = actualBE - hi;
         const s = makeStratBE("Bear Put Spread", [
           {{action:"buy", strike:bestBuy,  type:"PE",opt_type:"PE",
-            premium:get(bestBuy, "pe_ltp"), iv:get(bestBuy, "pe_iv",15),
-            why:`BUY PE ₹${{bestBuy.toLocaleString("en-IN")}} — strike chosen so BE ≈ your target ₹${{hi.toLocaleString("en-IN")}} (actual BE ₹${{actualBE.toLocaleString("en-IN")}})`}},
+            premium:get(bestBuy,"pe_ltp"),  iv:get(bestBuy,"pe_iv",15),
+            why:`BUY PE ₹${{bestBuy.toLocaleString("en-IN")}} — chosen so BE ≈ your target ₹${{hi.toLocaleString("en-IN")}} (actual BE ₹${{actualBE.toLocaleString("en-IN")}})`}},
           {{action:"sell",strike:bestSell, type:"PE",opt_type:"PE",
             premium:get(bestSell,"pe_ltp"), iv:get(bestSell,"pe_iv",15),
             why:`SELL PE ₹${{bestSell.toLocaleString("en-IN")}} — reduces net debit, caps max profit below this strike`}},
         ], "bearish", "debit_spread",
-        `Strikes chosen to match your Upper BE ₹${{hi.toLocaleString("en-IN")}}. Actual BE ≈ ₹${{actualBE.toLocaleString("en-IN")}} (diff: ${{diffPts>=0?"+":""}}${{diffPts}} pts). Profits if Nifty falls below buy strike at expiry.`);
+        `Strikes chosen to match your Upper BE ₹${{hi.toLocaleString("en-IN")}}. Actual BE ≈ ₹${{actualBE.toLocaleString("en-IN")}} (diff: ${{diffPts>=0?"+":""}}${{diffPts}} pts).`);
         if (s) raw.push(s);
       }}
     }})();
