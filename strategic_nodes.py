@@ -1924,9 +1924,53 @@ function analyzeBE() {{
   const nearest = val => allSt.reduce((a,b) => Math.abs(b-val)<Math.abs(a-val)?b:a);
   const get = (st, field, def=0) => (smap[st]||{{}})[field] || def;
 
-  // Nearest strikes to BE levels
-  const lo_st = hasLo ? nearest(lo) : null;
-  const hi_st = hasHi ? nearest(hi) : null;
+  // ── KEY FIX: Reverse-engineer sell strikes so BEs land EXACTLY on user's input ──
+  // For Short Strangle / Iron Condor:
+  //   Actual BE_lower = sell_PE_strike  - net_credit
+  //   Actual BE_upper = sell_CE_strike  + net_credit
+  //   net_credit = PE_premium(sell_PE) + CE_premium(sell_CE)
+  //
+  // We can't solve this analytically in one step (it's circular),
+  // so we iterate: for each candidate PE strike, estimate net_credit ≈ PE_ltp + CE_ltp
+  // at some CE strike, then check if resulting BE ≈ user input.
+  //
+  // Simplified 2-pass approach:
+  //   Pass 1: for each PE strike K_p, compute BE_p = K_p - pe_ltp(K_p)
+  //           pick K_p where BE_p is closest to lo
+  //   Pass 2: for each CE strike K_c, compute BE_c = K_c + ce_ltp(K_c)
+  //           pick K_c where BE_c is closest to hi
+  //   This works because in a strangle net_credit ≈ pe_ltp + ce_ltp,
+  //   but each side's BE is dominated by that side's own premium.
+
+  function findSellPEStrikeForBE(targetBE) {{
+    // Find PE strike K where K - pe_ltp(K) ≈ targetBE
+    let best = allSt[0], bestDiff = Infinity;
+    allSt.forEach(k => {{
+      const pe = get(k, "pe_ltp", 0);
+      if (pe <= 0) return;
+      const impliedBE = k - pe;
+      const diff = Math.abs(impliedBE - targetBE);
+      if (diff < bestDiff) {{ bestDiff = diff; best = k; }}
+    }});
+    return best;
+  }}
+
+  function findSellCEStrikeForBE(targetBE) {{
+    // Find CE strike K where K + ce_ltp(K) ≈ targetBE
+    let best = allSt[0], bestDiff = Infinity;
+    allSt.forEach(k => {{
+      const ce = get(k, "ce_ltp", 0);
+      if (ce <= 0) return;
+      const impliedBE = k + ce;
+      const diff = Math.abs(impliedBE - targetBE);
+      if (diff < bestDiff) {{ bestDiff = diff; best = k; }}
+    }});
+    return best;
+  }}
+
+  // Sell strikes derived from user BEs
+  const lo_st = hasLo ? findSellPEStrikeForBE(lo) : null;
+  const hi_st = hasHi ? findSellCEStrikeForBE(hi) : null;
 
   // Wing distances: 25% of the range, or 200pts if single-sided
   const wingDist = (hasLo && hasHi) ? Math.max(Math.round((hi-lo)*0.25/50)*50, 100) : 200;
@@ -1953,13 +1997,26 @@ function analyzeBE() {{
     const rr    = maxL!==0?Math.round(Math.abs(maxP/maxL)*100)/100:0;
     const pop   = Math.max(calcPoP(legs, underlying, T, bes, sType), 1);
     const score = Math.round(pop*0.40 + Math.min(rr*35,35) + Math.min(maxP/5000*25,25)*10)/10;
-    // Fit: how close are strategy BEs to user-input BEs
-    const fit   = calcBEFit(bes, hasLo?lo_st:null, hasHi?hi_st:null);
+    // Fit: compare strategy's computed BEs against user's EXACT input values
+    const fit   = calcBEFit(bes, hasLo ? lo : null, hasHi ? hi : null);
+    // BE accuracy: show user how far actual BEs are from their targets
+    const beAccuracy = [];
+    if (hasLo && bes.length > 0) {{
+      const diff = bes[0] - lo;
+      beAccuracy.push({{ side:"Lower", target:lo, actual:bes[0], diff:Math.round(diff), close: Math.abs(diff) <= 50 }});
+    }}
+    if (hasHi && bes.length > 1) {{
+      const diff = bes[bes.length-1] - hi;
+      beAccuracy.push({{ side:"Upper", target:hi, actual:bes[bes.length-1], diff:Math.round(diff), close: Math.abs(diff) <= 50 }});
+    }} else if (hasHi && bes.length > 0 && !hasLo) {{
+      const diff = bes[0] - hi;
+      beAccuracy.push({{ side:"Upper", target:hi, actual:bes[0], diff:Math.round(diff), close: Math.abs(diff) <= 50 }});
+    }}
     return {{
       name, biasTag, sType, legs,
       netPrem: Math.round(netPrem*100)/100, isDebit: netPrem < 0,
       maxProfit: Math.round(maxP*100)/100, maxLoss: Math.round(Math.abs(maxL)*100)/100,
-      breakevens: bes, rr, pop, score, fit,
+      breakevens: bes, rr, pop, score, fit, beAccuracy,
       margin: Math.round(Math.abs(maxL)*100)/100,
       payoffs: po.vals, priceRange: po.range,
       isBEMode: true, beInsight,
@@ -1967,13 +2024,16 @@ function analyzeBE() {{
   }}
 
   function calcBEFit(stratBes, targetLo, targetHi) {{
+    // Compare strategy's actual computed BEs against user's EXACT input values
     const range = (targetHi && targetLo) ? (targetHi - targetLo) : 500;
     let err = 0, n = 0;
     if (targetLo && stratBes.length > 0) {{ err += Math.abs(stratBes[0] - targetLo) / range; n++; }}
     if (targetHi && stratBes.length > 1) {{ err += Math.abs(stratBes[stratBes.length-1] - targetHi) / range; n++; }}
     else if (targetHi && stratBes.length > 0) {{ err += Math.abs(stratBes[0] - targetHi) / range; n++; }}
-    return n ? Math.round(Math.max(10, Math.min(98, 100 - err*80))) : 55;
+    return n ? Math.round(Math.max(10, Math.min(99, 100 - err * 60))) : 55;
   }}
+
+  // Use exact user inputs (lo, hi) — NOT lo_st/hi_st — for fit calculation
 
   // ══ BOTH BE LOWER + BE UPPER ══════════════════════════════════
   if (hasLo && hasHi) {{
@@ -2156,6 +2216,41 @@ function renderStrategies() {{
 
     // ── BE mode: show detailed leg reasons + fit bar ──
     const beModeTop = s.isBEMode ? `<div class="be-mode-bar">🎯 BE STRATEGY &nbsp;·&nbsp; FIT: <b style="color:var(--gold);">${{s.fit||"—"}}%</b></div>` : "";
+
+    // ── BE accuracy panel: shows YOUR INPUT vs ACTUAL BE side by side ──
+    const beAccuracyPanel = (s.isBEMode && s.beAccuracy && s.beAccuracy.length) ? `
+      <div style="margin:0;padding:8px 14px;background:rgba(6,10,18,.6);border-bottom:1px solid var(--border);">
+        <div style="font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:6px;">🎯 YOUR INPUT vs ACTUAL BREAKEVENS</div>
+        <div style="display:grid;grid-template-columns:${{s.beAccuracy.length>1?"1fr 1fr":"1fr"}};gap:8px;">
+          ${{s.beAccuracy.map(a=>{{
+            const sign = a.diff >= 0 ? "+" : "";
+            const col  = Math.abs(a.diff) <= 30 ? "var(--green)" : Math.abs(a.diff) <= 80 ? "var(--gold)" : "var(--red)";
+            const icon = Math.abs(a.diff) <= 30 ? "✅" : Math.abs(a.diff) <= 80 ? "⚠️" : "❌";
+            return `<div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:7px;padding:7px 10px;">
+              <div style="font-size:8px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:4px;">${{icon}} ${{a.side.toUpperCase()}} BE</div>
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
+                <div style="text-align:center;">
+                  <div style="font-size:7px;color:var(--text3);font-family:'DM Mono',monospace;">YOUR INPUT</div>
+                  <div style="font-size:12px;font-weight:800;font-family:'DM Mono',monospace;color:var(--gold);">₹${{a.target.toLocaleString("en-IN")}}</div>
+                </div>
+                <div style="color:var(--text3);font-size:10px;">→</div>
+                <div style="text-align:center;">
+                  <div style="font-size:7px;color:var(--text3);font-family:'DM Mono',monospace;">ACTUAL BE</div>
+                  <div style="font-size:12px;font-weight:800;font-family:'DM Mono',monospace;color:${{col}};">₹${{a.actual.toLocaleString("en-IN")}}</div>
+                </div>
+                <div style="text-align:center;">
+                  <div style="font-size:7px;color:var(--text3);font-family:'DM Mono',monospace;">DIFF</div>
+                  <div style="font-size:11px;font-weight:700;font-family:'DM Mono',monospace;color:${{col}};">${{sign}}${{a.diff}}</div>
+                </div>
+              </div>
+            </div>`;
+          }}).join("")}}
+        </div>
+        <div style="margin-top:6px;font-size:8.5px;color:var(--text3);font-family:'DM Mono',monospace;line-height:1.6;">
+          ℹ️ Diff = (Sell Strike ± actual premium collected) vs your input. Small diff = sell strikes were well-chosen.
+        </div>
+      </div>` : "";
+
     const fitBar    = s.isBEMode ? `
       <div class="fit-bar-wrap">
         <div class="fit-bar-hdr"><span>Breakeven Fit Score</span><span style="color:${{s.fit>=80?"var(--green)":s.fit>=60?"var(--gold)":"var(--red)"}};">${{s.fit}}%</span></div>
@@ -2194,6 +2289,7 @@ function renderStrategies() {{
         <div class="pop-pill" style="background:${{popBg}};color:${{popCol}};border:1px solid ${{popCol}}33;">${{s.pop}}%<br><span style="font-size:8px;font-weight:400;">PoP</span></div>
       </div>
       ${{fitBar}}
+      ${{beAccuracyPanel}}
       <div class="sc-fields">
         <div class="sc-field"><span class="sc-field-lbl">Strike Price</span><span class="sc-field-val" style="color:var(--cyan);">ATM ₹${{ALL_DATA[currentExpiry]?.atm_strike?.toLocaleString("en-IN")||"—"}}</span></div>
         <div class="sc-field"><span class="sc-field-lbl">Max Profit</span><span class="sc-field-val up">₹${{s.maxProfit.toLocaleString("en-IN")}}</span></div>
