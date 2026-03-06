@@ -2493,6 +2493,7 @@ function renderStrategies() {{
         <div class="sc-field"><span class="sc-field-lbl">Breakevens</span><span class="sc-field-val" style="font-size:10px;color:var(--text2);">${{beStr}}</span></div>
         <div class="sc-field"><span class="sc-field-lbl">Net Credit/Debit</span><span class="sc-field-val">${{netDisp}}</span></div>
         <div class="sc-field" style="grid-column:1/-1"><span class="sc-field-lbl">Est. Margin / Premium</span><span class="sc-field-val" style="color:var(--purple);">₹${{s.margin.toLocaleString("en-IN")}}</span></div>
+        ${{s.srInfo ? ("<div class=\"sc-field\" style=\"grid-column:1/-1\"><span class=\"sc-field-lbl\">S/R Used &middot; Wing</span><span class=\"sc-field-val\" style=\"font-size:9px;color:var(--text2)\">SUP ₹" + s.srInfo.chosenSup.toLocaleString("en-IN") + " &middot; RES ₹" + s.srInfo.chosenRes.toLocaleString("en-IN") + " &middot; Wing " + s.srInfo.wing + "pts @ IV " + s.srInfo.atm_iv + "%</span></div>") : "" }}
         ${{s.srInfo?`<div class="sc-field" style="grid-column:1/-1"><span class="sc-field-lbl">S/R Used · Wing</span><span class="sc-field-val" style="font-size:9px;color:var(--text2);">SUP ₹${{s.srInfo.chosenSup.toLocaleString("en-IN")}} · RES ₹${{s.srInfo.chosenRes.toLocaleString("en-IN")}} · Wing ${{s.srInfo.wing}}pts @ IV ${{s.srInfo.atm_iv}}%</span></div>`:"" }}
       </div>
       ${{legsSection}}
