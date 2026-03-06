@@ -109,27 +109,89 @@ class NSEOptionChain:
         self.symbol = "NIFTY"
         self._cached_expiry_list = []
 
-    def _make_session(self):
-        from curl_cffi import requests as curl_requests
-        headers = {
-            "authority":         "www.nseindia.com",
-            "accept":            "application/json, text/plain, */*",
-            "user-agent":        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                                 "AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
-            "referer":           "https://www.nseindia.com/option-chain",
-            "accept-language":   "en-US,en;q=0.9",
+    # ── rotate through UA strings to reduce bot-detection ──────
+    _UA_LIST = [
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 Edg/124.0.0.0",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    ]
+    _ua_idx = 0
+
+    def _next_ua(self):
+        ua = self._UA_LIST[self._ua_idx % len(self._UA_LIST)]
+        self._ua_idx += 1
+        return ua
+
+    def _make_headers(self):
+        return {
+            "authority":          "www.nseindia.com",
+            "accept":             "application/json, text/plain, */*",
+            "accept-encoding":    "gzip, deflate, br",
+            "accept-language":    "en-US,en;q=0.9",
+            "cache-control":      "no-cache",
+            "pragma":             "no-cache",
+            "sec-ch-ua":          '"Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"',
+            "sec-ch-ua-mobile":   "?0",
+            "sec-ch-ua-platform": '"Windows"',
+            "sec-fetch-dest":     "empty",
+            "sec-fetch-mode":     "cors",
+            "sec-fetch-site":     "same-origin",
+            "user-agent":         self._next_ua(),
+            "referer":            "https://www.nseindia.com/option-chain",
+            "x-requested-with":   "XMLHttpRequest",
         }
-        session = curl_requests.Session()
-        try:
-            session.get("https://www.nseindia.com/", headers=headers,
-                        impersonate="chrome", timeout=15)
-            time.sleep(1.5)
-            session.get("https://www.nseindia.com/option-chain", headers=headers,
-                        impersonate="chrome", timeout=15)
-            time.sleep(1.0)
-        except Exception as e:
-            print(f"  WARNING  Session warm-up: {e}")
-        return session, headers
+
+    def _make_session(self):
+        """
+        Warm up an NSE session with thorough cookie harvesting.
+        NSE checks: homepage cookie → market-data page → option-chain page
+        Each step plants cookies that the API endpoint validates.
+        Retries up to 3 times with different UA strings.
+        """
+        from curl_cffi import requests as curl_requests
+
+        for attempt in range(1, 4):
+            print(f"  Session warm-up attempt {attempt}/3 ...")
+            headers = self._make_headers()
+            session = curl_requests.Session()
+            try:
+                # Step 1 — homepage (plants initial cookies)
+                r1 = session.get("https://www.nseindia.com/",
+                                 headers=headers, impersonate="chrome124", timeout=20)
+                print(f"    Homepage: {r1.status_code} | cookies: {len(session.cookies)}")
+                time.sleep(2.0)
+
+                # Step 2 — market-data page (required by newer NSE bot checks)
+                r2 = session.get("https://www.nseindia.com/market-data/live-equity-market",
+                                 headers=headers, impersonate="chrome124", timeout=20)
+                print(f"    Market-data: {r2.status_code} | cookies: {len(session.cookies)}")
+                time.sleep(1.5)
+
+                # Step 3 — option-chain page (primes the API cookie)
+                r3 = session.get("https://www.nseindia.com/option-chain",
+                                 headers=headers, impersonate="chrome124", timeout=20)
+                print(f"    Option-chain: {r3.status_code} | cookies: {len(session.cookies)}")
+                time.sleep(2.0)
+
+                # Step 4 — quick probe of API to confirm session is live
+                probe = session.get(
+                    "https://www.nseindia.com/api/option-chain-v3?type=Indices&symbol=NIFTY",
+                    headers=headers, impersonate="chrome124", timeout=20)
+                print(f"    API probe: {probe.status_code}")
+                if probe.status_code == 200:
+                    print("    ✓ Session is live")
+                    return session, headers
+                # 401/403 → NSE blocked this attempt; rotate UA and retry
+                print(f"    ✗ API probe failed ({probe.status_code}), rotating UA...")
+                time.sleep(5)
+            except Exception as e:
+                print(f"    WARNING attempt {attempt}: {e}")
+                time.sleep(5)
+
+        # Return last session anyway — fetch_for_expiry will handle failures
+        print("  WARNING: Could not confirm live session; proceeding anyway...")
+        return session, self._make_headers()
 
     def _current_or_next_tuesday_ist(self):
         today = today_ist()
@@ -156,7 +218,7 @@ class NSEOptionChain:
         try:
             url  = (f"https://www.nseindia.com/api/option-chain-v3"
                     f"?type=Indices&symbol={self.symbol}")
-            resp = session.get(url, headers=headers, impersonate="chrome", timeout=20)
+            resp = session.get(url, headers=headers, impersonate="chrome124", timeout=20)
             if resp.status_code == 200:
                 expiries = resp.json().get("records", {}).get("expiryDates", [])
                 today    = today_ist()
@@ -174,66 +236,97 @@ class NSEOptionChain:
             print(f"  WARNING  Expiry fetch: {e}")
         return None
 
+    def _parse_chain_response(self, resp, expiry):
+        """Parse a successful NSE API response into structured data."""
+        json_data  = resp.json()
+        data       = json_data.get("records", {}).get("data", [])
+        if not data:
+            return None
+        underlying  = json_data.get("records", {}).get("underlyingValue", 0)
+        atm_strike  = round(underlying / 50) * 50
+        lower_bound = underlying - 2000
+        upper_bound = underlying + 2000
+        rows = []
+        for item in data:
+            strike = item.get("strikePrice")
+            if strike is None or not (lower_bound <= strike <= upper_bound):
+                continue
+            ce = item.get("CE", {})
+            pe = item.get("PE", {})
+            rows.append({
+                "Strike":       strike,
+                "CE_LTP":       ce.get("lastPrice",            0),
+                "CE_OI":        ce.get("openInterest",         0),
+                "CE_Vol":       ce.get("totalTradedVolume",    0),
+                "CE_OI_Change": ce.get("changeinOpenInterest", 0),
+                "CE_IV":        ce.get("impliedVolatility",    0),
+                "CE_Delta":     ce.get("delta",                0),
+                "CE_Theta":     ce.get("theta",                0),
+                "CE_Gamma":     ce.get("gamma",                0),
+                "CE_Vega":      ce.get("vega",                 0),
+                "PE_LTP":       pe.get("lastPrice",            0),
+                "PE_OI":        pe.get("openInterest",         0),
+                "PE_Vol":       pe.get("totalTradedVolume",    0),
+                "PE_OI_Change": pe.get("changeinOpenInterest", 0),
+                "PE_IV":        pe.get("impliedVolatility",    0),
+                "PE_Delta":     pe.get("delta",                0),
+                "PE_Theta":     pe.get("theta",                0),
+                "PE_Gamma":     pe.get("gamma",                0),
+                "PE_Vega":      pe.get("vega",                 0),
+            })
+        df = pd.DataFrame(rows).sort_values("Strike").reset_index(drop=True)
+        print(f"    OK {len(df)} strikes | Spot={underlying:.0f} ATM={atm_strike}")
+        return {"expiry": expiry, "df": df, "underlying": underlying, "atm_strike": atm_strike}
+
     def _fetch_for_expiry(self, session, headers, expiry):
+        """
+        Fetch one expiry with up to 5 attempts + exponential backoff.
+        On 401/403 (session cookie expired): re-warms session once then retries.
+        On 429 (rate-limit): backs off longer.
+        """
         api_url = (f"https://www.nseindia.com/api/option-chain-v3"
                    f"?type=Indices&symbol={self.symbol}&expiry={expiry}")
-        for attempt in range(1, 4):
+        rewarm_done = False
+        for attempt in range(1, 6):
             try:
                 resp = session.get(api_url, headers=headers,
-                                   impersonate="chrome", timeout=30)
-                if resp.status_code != 200:
-                    print(f"    HTTP {resp.status_code} on attempt {attempt}")
-                    time.sleep(2)
+                                   impersonate="chrome124", timeout=30)
+                print(f"    [{expiry}] Attempt {attempt}: HTTP {resp.status_code}")
+
+                if resp.status_code == 200:
+                    result = self._parse_chain_response(resp, expiry)
+                    if result:
+                        return result
+                    print("    Empty data, retrying...")
+
+                elif resp.status_code in (401, 403) and not rewarm_done:
+                    print("    Cookie expired. Re-warming session...")
+                    rewarm_done = True
+                    try:
+                        headers = self._make_headers()
+                        session.get("https://www.nseindia.com/",
+                                    headers=headers, impersonate="chrome124", timeout=20)
+                        time.sleep(2.5)
+                        session.get("https://www.nseindia.com/option-chain",
+                                    headers=headers, impersonate="chrome124", timeout=20)
+                        time.sleep(2.5)
+                        print("    Re-warm done.")
+                        continue  # retry immediately after re-warm
+                    except Exception as we:
+                        print(f"    Re-warm failed: {we}")
+
+                elif resp.status_code == 429:
+                    wait = attempt * 10
+                    print(f"    Rate limited. Waiting {wait}s...")
+                    time.sleep(wait)
                     continue
-                json_data   = resp.json()
-                data        = json_data.get("records", {}).get("data", [])
-                if not data:
-                    return None
-                underlying  = json_data.get("records", {}).get("underlyingValue", 0)
-                atm_strike  = round(underlying / 50) * 50
-                lower_bound = underlying - 2000   # FIX: widened from 600 → 2000 so far-OTM BE targets are always in range
-                upper_bound = underlying + 2000   # FIX: widened from 600 → 2000
-                rows = []
-                for item in data:
-                    strike = item.get("strikePrice")
-                    if strike is None or not (lower_bound <= strike <= upper_bound):
-                        continue
-                    ce = item.get("CE", {})
-                    pe = item.get("PE", {})
-                    rows.append({
-                        "Strike":       strike,
-                        "CE_LTP":       ce.get("lastPrice",            0),
-                        "CE_OI":        ce.get("openInterest",         0),
-                        "CE_Vol":       ce.get("totalTradedVolume",    0),
-                        "CE_OI_Change": ce.get("changeinOpenInterest", 0),
-                        "CE_IV":        ce.get("impliedVolatility",    0),
-                        "CE_Delta":     ce.get("delta",                0),
-                        "CE_Theta":     ce.get("theta",                0),
-                        "CE_Gamma":     ce.get("gamma",                0),
-                        "CE_Vega":      ce.get("vega",                 0),
-                        "PE_LTP":       pe.get("lastPrice",            0),
-                        "PE_OI":        pe.get("openInterest",         0),
-                        "PE_Vol":       pe.get("totalTradedVolume",    0),
-                        "PE_OI_Change": pe.get("changeinOpenInterest", 0),
-                        "PE_IV":        pe.get("impliedVolatility",    0),
-                        "PE_Delta":     pe.get("delta",                0),
-                        "PE_Theta":     pe.get("theta",                0),
-                        "PE_Gamma":     pe.get("gamma",                0),
-                        "PE_Vega":      pe.get("vega",                 0),
-                    })
-                df = (pd.DataFrame(rows)
-                        .sort_values("Strike")
-                        .reset_index(drop=True))
-                print(f"    OK {len(df)} strikes | Spot={underlying:.0f} ATM={atm_strike}")
-                return {
-                    "expiry":     expiry,
-                    "df":         df,
-                    "underlying": underlying,
-                    "atm_strike": atm_strike,
-                }
+
             except Exception as e:
-                print(f"    FAIL Attempt {attempt}: {e}")
-                time.sleep(2)
+                print(f"    Exception attempt {attempt}: {e}")
+
+            time.sleep(attempt * 2)  # exponential backoff: 2, 4, 6, 8s
+
+        print(f"    FAILED all attempts for {expiry}")
         return None
 
     def fetch_multiple_expiries(self, session, headers, n=7):
@@ -241,7 +334,7 @@ class NSEOptionChain:
         try:
             url  = (f"https://www.nseindia.com/api/option-chain-v3"
                     f"?type=Indices&symbol={self.symbol}")
-            resp = session.get(url, headers=headers, impersonate="chrome", timeout=20)
+            resp = session.get(url, headers=headers, impersonate="chrome124", timeout=20)
             if resp.status_code == 200:
                 all_exp = resp.json().get("records", {}).get("expiryDates", [])
                 today   = today_ist()
@@ -279,7 +372,7 @@ class NSEOptionChain:
                 results[exp] = data
             else:
                 print(f"      SKIP: {exp}")
-            time.sleep(0.8)
+            time.sleep(1.5)  # polite gap between expiry fetches
         print(f"  Fetched {len(results)}/{len(expiry_list)} expiries")
         return results, expiry_list
 
@@ -298,7 +391,7 @@ class NSEOptionChain:
         try:
             url  = (f"https://www.nseindia.com/api/option-chain-v3"
                     f"?type=Indices&symbol={self.symbol}")
-            resp = session.get(url, headers=headers, impersonate="chrome", timeout=20)
+            resp = session.get(url, headers=headers, impersonate="chrome120", timeout=20)
             if resp.status_code == 200:
                 all_exp = resp.json().get("records", {}).get("expiryDates", [])
                 today   = today_ist()
@@ -2846,7 +2939,29 @@ def main():
     all_expiry_data, expiry_list = nse.fetch_multiple_expiries(session, headers, n=7)
 
     if not all_expiry_data:
-        print("ERROR: No data fetched. Exiting.")
+        print("ERROR: No data fetched from NSE. Writing error page...")
+        # Write a visible error page so the site shows WHY it failed
+        # instead of serving stale blank data
+        error_html = f"""<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Nifty Analyzer — Fetch Error</title>
+<style>body{{background:#07090f;color:#ff6b6b;font-family:monospace;display:flex;
+align-items:center;justify-content:center;min-height:100vh;margin:0;}}
+.box{{background:#0d1117;border:1px solid #ff6b6b33;border-radius:12px;padding:40px;max-width:600px;text-align:center;}}
+h1{{color:#ffd166;margin-bottom:16px;}} p{{color:#6a8aaa;margin:8px 0;}} code{{color:#00d4ff;}}</style>
+</head><body><div class="box">
+<h1>⚠ NSE Data Fetch Failed</h1>
+<p>Could not fetch live data from NSE at <code>{now_ist_str()}</code></p>
+<p>NSE may be blocking the runner IP, or markets may be closed.</p>
+<p>The workflow will retry on the next scheduled run.</p>
+<p style="margin-top:24px;font-size:11px;color:#2d4560;">
+  If this keeps happening, check the GitHub Actions log for HTTP status codes.<br>
+  Common cause: NSE rate-limiting cloud IPs during off-market hours.
+</p>
+</div></body></html>"""
+        out_path = os.path.join(os.path.dirname(__file__), "index.html")
+        with open(out_path, "w", encoding="utf-8") as f:
+            f.write(error_html)
+        print(f"  Error page written → {out_path}")
         return
 
     print(f"\n[3/3] Generating index.html with {len(all_expiry_data)} expiries...")
