@@ -2146,18 +2146,41 @@ function analyzeBE() {{
       if (s) raw.push(s);
     }}
 
-    // Bear Put Spread — buy ATM put, sell put at lower level
-    if (atm !== hi_st) {{
-      const sellP = nearest(hi - (hi - underlying) * 0.5);
-      if (atm !== sellP) {{
+    // Bear Put Spread — reverse-engineer buy strike so BE ≈ user's exact hi input
+    // FIX: Old code used ATM blindly → BE was 1000+ pts away from user input.
+    // NEW logic: iterate every strike as the BUY leg, pair it with a sell leg
+    // 200 pts below (wingDist), compute the natural BE = buyStrike - netDebit,
+    // and pick whichever buy strike lands closest to the user's target BE (hi).
+    (function() {{
+      let bestBuyStrike = null, bestSellStrike = null, bestDiff = Infinity;
+      allSt.forEach(buyK => {{
+        const peBuy = get(buyK, "pe_ltp", 0);
+        if (peBuy <= 0) return;
+        const sellK   = nearest(buyK - wingDist);
+        if (sellK >= buyK) return;                      // sell must be below buy
+        const peSell  = get(sellK, "pe_ltp", 0);
+        if (peSell <= 0) return;
+        const netDebit   = peBuy - peSell;
+        if (netDebit <= 0) return;                      // must be a debit spread
+        const impliedBE  = buyK - netDebit;             // natural BE of this spread
+        const diff       = Math.abs(impliedBE - hi);
+        if (diff < bestDiff) {{
+          bestDiff        = diff;
+          bestBuyStrike   = buyK;
+          bestSellStrike  = sellK;
+        }}
+      }});
+      if (bestBuyStrike && bestSellStrike && bestBuyStrike !== bestSellStrike) {{
+        const actualNetDebit = get(bestBuyStrike,"pe_ltp",0) - get(bestSellStrike,"pe_ltp",0);
+        const actualBE       = Math.round(bestBuyStrike - actualNetDebit);
         const s = makeStratBE("Bear Put Spread", [
-          {{action:"buy", strike:atm,   type:"PE",opt_type:"PE",premium:get(atm,"pe_ltp"),  iv:get(atm,"pe_iv",15),  why:`BUY ATM PE ₹${{atm.toLocaleString("en-IN")}} — long position, profits as Nifty falls`}},
-          {{action:"sell",strike:sellP, type:"PE",opt_type:"PE",premium:get(sellP,"pe_ltp"),iv:get(sellP,"pe_iv",15), why:`SELL PE at ₹${{sellP.toLocaleString("en-IN")}} — reduces cost, caps max profit`}},
+          {{action:"buy", strike:bestBuyStrike,  type:"PE",opt_type:"PE",premium:get(bestBuyStrike, "pe_ltp"),  iv:get(bestBuyStrike, "pe_iv",15),  why:`BUY PE ₹${{bestBuyStrike.toLocaleString("en-IN")}} — chosen so natural BE ≈ your target ₹${{hi.toLocaleString("en-IN")}} (actual BE ₹${{actualBE.toLocaleString("en-IN")}})`}},
+          {{action:"sell",strike:bestSellStrike, type:"PE",opt_type:"PE",premium:get(bestSellStrike,"pe_ltp"),  iv:get(bestSellStrike,"pe_iv",15),  why:`SELL PE ₹${{bestSellStrike.toLocaleString("en-IN")}} — reduces debit cost, caps max profit below this strike`}},
         ], "bearish", "debit_spread",
-        `Directional play using your upper BE as conviction that Nifty will face resistance here. Buy ATM put, sell lower put.`);
+        `Strikes selected to match your Upper BE of ₹${{hi.toLocaleString("en-IN")}}. Actual BE ≈ ₹${{actualBE.toLocaleString("en-IN")}} (diff: ${{actualBE - hi >= 0 ? "+" : ""}}${{actualBE - hi}} pts). Profits if Nifty falls below buy strike by expiry.`);
         if (s) raw.push(s);
       }}
-    }}
+    }})();
 
     // Bear Call Spread (Tight)
     if (hi_st && bias !== "bullish") {{
