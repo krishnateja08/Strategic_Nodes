@@ -1924,31 +1924,26 @@ function analyzeBE() {{
   const nearest = val => allSt.reduce((a,b) => Math.abs(b-val)<Math.abs(a-val)?b:a);
   const get = (st, field, def=0) => (smap[st]||{{}})[field] || def;
 
-  // ── KEY FIX: Reverse-engineer sell strikes so BEs land EXACTLY on user's input ──
-  // For Short Strangle / Iron Condor:
-  //   Actual BE_lower = sell_PE_strike  - net_credit
-  //   Actual BE_upper = sell_CE_strike  + net_credit
-  //   net_credit = PE_premium(sell_PE) + CE_premium(sell_CE)
-  //
-  // We can't solve this analytically in one step (it's circular),
-  // so we iterate: for each candidate PE strike, estimate net_credit ≈ PE_ltp + CE_ltp
-  // at some CE strike, then check if resulting BE ≈ user input.
-  //
-  // Simplified 2-pass approach:
-  //   Pass 1: for each PE strike K_p, compute BE_p = K_p - pe_ltp(K_p)
-  //           pick K_p where BE_p is closest to lo
-  //   Pass 2: for each CE strike K_c, compute BE_c = K_c + ce_ltp(K_c)
-  //           pick K_c where BE_c is closest to hi
-  //   This works because in a strangle net_credit ≈ pe_ltp + ce_ltp,
-  //   but each side's BE is dominated by that side's own premium.
+  // ── ✅ FIXED: wingDist defined FIRST — finder functions depend on it ──
+  // Wing distances: 25% of the range, or 200pts if single-sided
+  const wingDist = (hasLo && hasHi) ? Math.max(Math.round((hi-lo)*0.25/50)*50, 100) : 200;
+
+  // ── ✅ FIXED: Finder functions now account for BOTH legs (net credit not gross) ──
+  // OLD bug: findSellCEStrikeForBE used K + ce_ltp(K) — ignored buy wing premium
+  //          This caused actual BE to be hundreds of points away from user input
+  // NEW fix: uses K + (ce_ltp_sell - ce_ltp_buy) = net credit per spread
 
   function findSellPEStrikeForBE(targetBE) {{
-    // Find PE strike K where K - pe_ltp(K) ≈ targetBE
+    // BE of Bull Put Spread = sell_PE - (pe_ltp_sell - pe_ltp_buy)
     let best = allSt[0], bestDiff = Infinity;
     allSt.forEach(k => {{
-      const pe = get(k, "pe_ltp", 0);
-      if (pe <= 0) return;
-      const impliedBE = k - pe;
+      const peSell = get(k, "pe_ltp", 0);
+      if (peSell <= 0) return;
+      const buyStrike = nearest(k - wingDist);
+      const peBuy = get(buyStrike, "pe_ltp", 0);
+      const netCredit = peSell - peBuy;
+      if (netCredit <= 0) return;
+      const impliedBE = k - netCredit;  // ✅ accounts for wing
       const diff = Math.abs(impliedBE - targetBE);
       if (diff < bestDiff) {{ bestDiff = diff; best = k; }}
     }});
@@ -1956,24 +1951,25 @@ function analyzeBE() {{
   }}
 
   function findSellCEStrikeForBE(targetBE) {{
-    // Find CE strike K where K + ce_ltp(K) ≈ targetBE
+    // BE of Bear Call Spread = sell_CE + (ce_ltp_sell - ce_ltp_buy)
     let best = allSt[0], bestDiff = Infinity;
     allSt.forEach(k => {{
-      const ce = get(k, "ce_ltp", 0);
-      if (ce <= 0) return;
-      const impliedBE = k + ce;
+      const ceSell = get(k, "ce_ltp", 0);
+      if (ceSell <= 0) return;
+      const buyStrike = nearest(k + wingDist);
+      const ceBuy = get(buyStrike, "ce_ltp", 0);
+      const netCredit = ceSell - ceBuy;
+      if (netCredit <= 0) return;
+      const impliedBE = k + netCredit;  // ✅ accounts for wing
       const diff = Math.abs(impliedBE - targetBE);
       if (diff < bestDiff) {{ bestDiff = diff; best = k; }}
     }});
     return best;
   }}
 
-  // Sell strikes derived from user BEs
+  // Sell strikes derived from user BEs — now correctly accounts for wing premiums
   const lo_st = hasLo ? findSellPEStrikeForBE(lo) : null;
   const hi_st = hasHi ? findSellCEStrikeForBE(hi) : null;
-
-  // Wing distances: 25% of the range, or 200pts if single-sided
-  const wingDist = (hasLo && hasHi) ? Math.max(Math.round((hi-lo)*0.25/50)*50, 100) : 200;
   const lo_wing  = hasLo ? nearest(lo_st - wingDist) : null;
   const hi_wing  = hasHi ? nearest(hi_st + wingDist) : null;
   const atm      = d.atm_strike;
