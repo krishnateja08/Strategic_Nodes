@@ -514,76 +514,158 @@ def _payoff_at_expiry(legs, price_range):
     return payoffs
 
 
-def build_strategies(oc_analysis, support_levels, resistance_levels, bias="neutral"):
+
+def _iv_wing(underlying, atm_iv_pct, dte, sigma_multiplier=0.5):
+    """
+    Dynamic wing width derived from IV — no hardcoding.
+    wing = spot × (IV/100) × √(DTE/365) × sigma_multiplier
+    Rounded to nearest 50, minimum 100.
+    """
+    import math
+    sigma = atm_iv_pct / 100
+    T     = max(dte / 365.0, 1 / 365.0)
+    raw   = underlying * sigma * math.sqrt(T) * sigma_multiplier
+    return max(int(round(raw / 50)) * 50, 100)
+
+
+def _select_support(support_levels, underlying, mode="closest"):
+    """
+    mode='closest'      → support nearest to (but below) spot  [aggressive]
+    mode='conservative' → furthest-down support                 [conservative]
+    """
+    valid = [s for s in support_levels if s < underlying]
+    pool  = valid if valid else support_levels
+    if not pool:
+        return underlying - 300
+    return max(pool) if mode == "closest" else min(pool)
+
+
+def _select_resistance(resistance_levels, underlying, mode="closest"):
+    """
+    mode='closest'      → resistance nearest to (but above) spot  [aggressive]
+    mode='conservative' → furthest-up resistance                   [conservative]
+    """
+    valid = [r for r in resistance_levels if r > underlying]
+    pool  = valid if valid else resistance_levels
+    if not pool:
+        return underlying + 300
+    return min(pool) if mode == "closest" else max(pool)
+
+
+def build_strategies(oc_analysis, support_levels, resistance_levels,
+                     bias="neutral", sr_mode="closest"):
+    """
+    sr_mode='closest'      — use S/R level closest to current spot (aggressive)
+    sr_mode='conservative' — use outermost S/R levels (conservative)
+    """
     if not oc_analysis:
         return []
+
     all_strikes = oc_analysis["all_strikes"]
     underlying  = oc_analysis["underlying"]
     atm_strike  = oc_analysis["atm_strike"]
     expiry_str  = oc_analysis["expiry"]
     dte         = oc_analysis["dte"]
     T           = max(dte / 365.0, 0.001)
+
     strike_map = {s["strike"]: s for s in all_strikes}
     strikes    = sorted(strike_map.keys())
+
     def nearest(val):
         return min(strikes, key=lambda x: abs(x - val))
+
     def get(strike, field, default=0):
         return strike_map.get(strike, {}).get(field, default)
-    avg_support    = sum(support_levels)    / len(support_levels)    if support_levels    else underlying - 300
-    avg_resistance = sum(resistance_levels) / len(resistance_levels) if resistance_levels else underlying + 300
-    sr_range       = avg_resistance - avg_support
-    atm  = atm_strike
-    s_st = nearest(avg_support)
-    r_st = nearest(avg_resistance)
-    otm_c = nearest(underlying + sr_range * 0.3)
-    otm_p = nearest(underlying - sr_range * 0.3)
-    far_c = nearest(avg_resistance + 150)
-    far_p = nearest(avg_support    - 150)
-    atm_iv = (get(atm, "ce_iv", 15) + get(atm, "pe_iv", 15)) / 2
+
+    # ── 1. SMART S/R SELECTION (no averaging) ───────────────────
+    chosen_support    = _select_support(support_levels,    underlying, mode=sr_mode)
+    chosen_resistance = _select_resistance(resistance_levels, underlying, mode=sr_mode)
+    s_st = nearest(chosen_support)
+    r_st = nearest(chosen_resistance)
+
+    # ── 2. IV-BASED DYNAMIC WING WIDTH ──────────────────────────
+    atm_iv = (get(atm_strike, "ce_iv", 15) + get(atm_strike, "pe_iv", 15)) / 2
+    wing   = _iv_wing(underlying, atm_iv, dte, sigma_multiplier=0.5)
+    far_c  = nearest(r_st + wing)
+    far_p  = nearest(s_st - wing)
+
+    # OTM strikes for strangles = 0.3σ from spot
+    sigma_move = round(underlying * (atm_iv / 100) * math.sqrt(T) * 0.3 / 50) * 50
+    otm_c = nearest(underlying + max(sigma_move, 50))
+    otm_p = nearest(underlying - max(sigma_move, 50))
+
+    atm      = atm_strike
     exp_move = round(underlying * (atm_iv / 100) * math.sqrt(T), 0)
-    raw = []
+    raw      = []
+
     def make_strategy(name, legs, bias_tag, strategy_type):
-        net_premium  = sum(
+        net_premium = sum(
             (-l["premium"] if l["action"] == "buy" else l["premium"]) for l in legs
         )
-        is_debit     = net_premium < 0
-        net_premium  = round(net_premium, 2)
-        price_range  = list(range(int(underlying - 1500), int(underlying + 1500), 25))
-        payoffs      = _payoff_at_expiry(legs, price_range)
-        max_profit   = max(payoffs)
-        max_loss     = min(payoffs)
+        is_debit    = net_premium < 0
+        net_premium = round(net_premium, 2)
+
+        price_range = list(range(int(underlying - 1500), int(underlying + 1500), 25))
+        payoffs     = _payoff_at_expiry(legs, price_range)
+        max_profit  = max(payoffs)
+        max_loss    = min(payoffs)
         if max_profit <= 0:
             return None
+
         breakevens = []
         for i in range(len(payoffs) - 1):
             if (payoffs[i] < 0) != (payoffs[i + 1] < 0):
-                be = price_range[i] + (price_range[i + 1] - price_range[i]) * abs(payoffs[i]) / (abs(payoffs[i]) + abs(payoffs[i + 1]))
+                be = price_range[i] + (
+                    (price_range[i + 1] - price_range[i])
+                    * abs(payoffs[i]) / (abs(payoffs[i]) + abs(payoffs[i + 1]))
+                )
                 breakevens.append(round(be, 0))
-        rr_ratio = round(abs(max_profit / max_loss), 2) if max_loss != 0 else 0
-        pop = _strategy_pop(legs, underlying, T,
-                            breakevens=breakevens, strategy_type=strategy_type)
-        score = round(pop * 0.40 + min(rr_ratio * 35, 35) + min(max_profit / 5000 * 25, 25), 1)
+
+        rr_ratio   = round(abs(max_profit / max_loss), 2) if max_loss != 0 else 0
+        pop        = _strategy_pop(legs, underlying, T,
+                                   breakevens=breakevens, strategy_type=strategy_type)
         margin_est = abs(max_loss)
+
+        # ── ROC = max_profit / margin (how hard money works) ────
+        roc = (max_profit / margin_est * 100) if margin_est > 0 else 0
+
+        # ── Effective RR penalises low-PoP lottery trades ───────
+        effective_rr = rr_ratio * (pop / 100)
+
+        # ── Score: PoP(40%) + eff_RR(35%) + ROC(25%) ────────────
+        score = round(
+            pop * 0.40
+            + min(effective_rr * 35, 35)
+            + min(roc / 100 * 25, 25),
+            1
+        )
+
         return {
-            "name":          name,
-            "type":          strategy_type,
-            "bias":          bias_tag,
-            "legs":          legs,
-            "net_premium":   net_premium,
-            "is_debit":      is_debit,
-            "max_profit":    round(max_profit, 2),
-            "max_loss":      round(abs(max_loss), 2),
-            "breakevens":    breakevens,
-            "rr_ratio":      rr_ratio,
-            "pop":           pop,
-            "score":         score,
-            "margin_est":    round(margin_est, 2),
-            "payoffs":       payoffs,
-            "price_range":   price_range,
-            "expiry":        expiry_str,
-            "dte":           dte,
-            "exp_move":      exp_move,
+            "name":              name,
+            "type":              strategy_type,
+            "bias":              bias_tag,
+            "legs":              legs,
+            "net_premium":       net_premium,
+            "is_debit":          is_debit,
+            "max_profit":        round(max_profit, 2),
+            "max_loss":          round(abs(max_loss), 2),
+            "breakevens":        breakevens,
+            "rr_ratio":          rr_ratio,
+            "effective_rr":      round(effective_rr, 3),
+            "roc":               round(roc, 1),
+            "pop":               pop,
+            "score":             score,
+            "margin_est":        round(margin_est, 2),
+            "payoffs":           payoffs,
+            "price_range":       price_range,
+            "expiry":            expiry_str,
+            "dte":               dte,
+            "exp_move":          exp_move,
+            "chosen_support":    chosen_support,
+            "chosen_resistance": chosen_resistance,
+            "wing_pts":          wing,
         }
+
     if bias != "bearish":
         buy_st, sell_st = atm, r_st
         if buy_st != sell_st:
@@ -594,6 +676,7 @@ def build_strategies(oc_analysis, support_levels, resistance_levels, bias="neutr
                  "premium": get(sell_st, "ce_ltp"), "iv": get(sell_st, "ce_iv", 15)},
             ], "bullish", "debit_spread")
             if s: raw.append(s)
+
     if bias != "bullish":
         buy_st, sell_st = atm, s_st
         if buy_st != sell_st:
@@ -604,9 +687,9 @@ def build_strategies(oc_analysis, support_levels, resistance_levels, bias="neutr
                  "premium": get(sell_st, "pe_ltp"), "iv": get(sell_st, "pe_iv", 15)},
             ], "bearish", "debit_spread")
             if s: raw.append(s)
+
     if bias != "bearish":
-        sell_st = s_st
-        buy_st  = nearest(avg_support - 150)
+        sell_st, buy_st = s_st, far_p
         if sell_st != buy_st:
             s = make_strategy("Bull Put Spread", [
                 {"action": "sell", "strike": sell_st, "opt_type": "PE",
@@ -615,9 +698,9 @@ def build_strategies(oc_analysis, support_levels, resistance_levels, bias="neutr
                  "premium": get(buy_st,  "pe_ltp"), "iv": get(buy_st,  "pe_iv", 15)},
             ], "bullish", "credit_spread")
             if s: raw.append(s)
+
     if bias != "bullish":
-        sell_st = r_st
-        buy_st  = nearest(avg_resistance + 150)
+        sell_st, buy_st = r_st, far_c
         if sell_st != buy_st:
             s = make_strategy("Bear Call Spread", [
                 {"action": "sell", "strike": sell_st, "opt_type": "CE",
@@ -626,6 +709,7 @@ def build_strategies(oc_analysis, support_levels, resistance_levels, bias="neutr
                  "premium": get(buy_st,  "ce_ltp"), "iv": get(buy_st,  "ce_iv", 15)},
             ], "bearish", "credit_spread")
             if s: raw.append(s)
+
     sell_ce, buy_ce = r_st, far_c
     sell_pe, buy_pe = s_st, far_p
     if len({sell_ce, buy_ce, sell_pe, buy_pe}) == 4:
@@ -640,10 +724,10 @@ def build_strategies(oc_analysis, support_levels, resistance_levels, bias="neutr
              "premium": get(buy_pe,  "pe_ltp"), "iv": get(buy_pe,  "pe_iv", 15)},
         ], "neutral", "iron_condor")
         if s: raw.append(s)
-    wing = int(sr_range * 0.4 / 50) * 50
-    wing = max(wing, 100)
-    buy_c_ibf = nearest(atm + wing)
-    buy_p_ibf = nearest(atm - wing)
+
+    ibf_wing  = max(int(round(wing * 0.5 / 50)) * 50, 100)
+    buy_c_ibf = nearest(atm + ibf_wing)
+    buy_p_ibf = nearest(atm - ibf_wing)
     if len({atm, buy_c_ibf, buy_p_ibf}) == 3:
         s = make_strategy("Iron Butterfly", [
             {"action": "sell", "strike": atm,       "opt_type": "CE",
@@ -656,6 +740,7 @@ def build_strategies(oc_analysis, support_levels, resistance_levels, bias="neutr
              "premium": get(buy_p_ibf, "pe_ltp"), "iv": get(buy_p_ibf, "pe_iv", 15)},
         ], "neutral", "iron_butterfly")
         if s: raw.append(s)
+
     s = make_strategy("Long Straddle", [
         {"action": "buy", "strike": atm, "opt_type": "CE",
          "premium": get(atm, "ce_ltp"), "iv": get(atm, "ce_iv", 15)},
@@ -663,6 +748,7 @@ def build_strategies(oc_analysis, support_levels, resistance_levels, bias="neutr
          "premium": get(atm, "pe_ltp"), "iv": get(atm, "pe_iv", 15)},
     ], "volatile", "straddle")
     if s: raw.append(s)
+
     if bias == "neutral":
         s = make_strategy("Short Straddle", [
             {"action": "sell", "strike": atm, "opt_type": "CE",
@@ -671,6 +757,7 @@ def build_strategies(oc_analysis, support_levels, resistance_levels, bias="neutr
              "premium": get(atm, "pe_ltp"), "iv": get(atm, "pe_iv", 15)},
         ], "neutral", "straddle")
         if s: raw.append(s)
+
     s = make_strategy("Long Strangle", [
         {"action": "buy", "strike": otm_c, "opt_type": "CE",
          "premium": get(otm_c, "ce_ltp"), "iv": get(otm_c, "ce_iv", 15)},
@@ -678,6 +765,7 @@ def build_strategies(oc_analysis, support_levels, resistance_levels, bias="neutr
          "premium": get(otm_p, "pe_ltp"), "iv": get(otm_p, "pe_iv", 15)},
     ], "volatile", "strangle")
     if s: raw.append(s)
+
     if bias == "neutral":
         s = make_strategy("Short Strangle", [
             {"action": "sell", "strike": otm_c, "opt_type": "CE",
@@ -686,8 +774,10 @@ def build_strategies(oc_analysis, support_levels, resistance_levels, bias="neutr
              "premium": get(otm_p, "pe_ltp"), "iv": get(otm_p, "pe_iv", 15)},
         ], "neutral", "strangle")
         if s: raw.append(s)
+
     raw.sort(key=lambda x: x["score"], reverse=True)
     return raw
+
 
 
 # =================================================================
@@ -1105,6 +1195,24 @@ canvas#payoffChart{{width:100%!important;height:288px!important;}}
            SR MODE CONTENT
       ══════════════════════════════ -->
       <div id="srContent" class="mode-anim">
+        <!-- STRIKE SELECTION MODE -->
+        <div class="form-grp">
+          <label class="form-lbl">Strike Selection Mode</label>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;">
+            <button class="bias-btn" id="btnAggressive"
+              onclick="setSRMode('closest')"
+              style="border-color:var(--cyan);background:rgba(0,212,255,.08);color:var(--cyan);">
+              ⚡ Aggressive<br>
+              <span style="font-size:8px;opacity:.7;font-weight:400;">Closest S/R to spot</span>
+            </button>
+            <button class="bias-btn" id="btnConservative"
+              onclick="setSRMode('conservative')">
+              🛡 Conservative<br>
+              <span style="font-size:8px;opacity:.7;font-weight:400;">Outermost S/R levels</span>
+            </button>
+          </div>
+          <input type="hidden" id="srModeToggle" value="closest"/>
+        </div>
         <div class="form-grp">
           <label class="form-lbl">Support Levels</label>
           <div id="supContainer">
@@ -1555,6 +1663,21 @@ function updateGreeksForStrike(strike) {{
 }}
 
 // ── Bias ──────────────────────────────────────────────────────
+
+function setSRMode(mode) {
+  document.getElementById("srModeToggle").value = mode;
+  const aBtn = document.getElementById("btnAggressive");
+  const cBtn = document.getElementById("btnConservative");
+  if (mode === "closest") {
+    aBtn.style.borderColor = "var(--cyan)";   aBtn.style.background = "rgba(0,212,255,.08)"; aBtn.style.color = "var(--cyan)";
+    cBtn.style.borderColor = "";              cBtn.style.background = "";                    cBtn.style.color = "";
+  } else {
+    cBtn.style.borderColor = "var(--purple)"; cBtn.style.background = "rgba(138,160,255,.08)"; cBtn.style.color = "var(--purple)";
+    aBtn.style.borderColor = "";              aBtn.style.background = "";                       aBtn.style.color = "";
+  }
+  saveUserState();
+}
+
 function setBias(b) {{
   marketBias=b;
   document.getElementById("btnBull").className="bias-btn"+(b==="bullish"?" bias-bull":"");
@@ -1833,71 +1956,116 @@ function calcPoP(legs, underlying, T, bes, sType) {{
   return Math.round(Math.min(s/legs.length*100,99)*10)/10;
 }}
 
-// ═══════════════════════════════════════════════════════
-// SR MODE ANALYZE — identical logic to original script
-// ═══════════════════════════════════════════════════════
-function analyze() {{
-  const d=ALL_DATA[currentExpiry];
-  if(!d){{ alert("No data loaded for this expiry."); return; }}
-  const supports=getSupports(), ress=getResistances();
-  if(!supports.length||!ress.length){{ alert("Please enter at least one support and one resistance level."); return; }}
-
+function analyze() {
+  const d = ALL_DATA[currentExpiry];
+  if (!d) { alert("No data loaded for this expiry."); return; }
+  const supports = getSupports(), ress = getResistances();
+  if (!supports.length || !ress.length) {
+    alert("Please enter at least one support and one resistance level.");
+    return;
+  }
   renderChain();
+  const underlying = d.underlying, atm = d.atm_strike;
+  const dte = d.dte, T = Math.max(dte / 365, 0.001);
+  const strikes = d.all_strikes;
+  const smap = {};
+  strikes.forEach(s => { smap[s.strike] = s; });
+  const allSt = strikes.map(s => s.strike).sort((a, b) => a - b);
+  const nearest = val => allSt.reduce((a, b) => Math.abs(b - val) < Math.abs(a - val) ? b : a);
+  const get = (st, field, def = 0) => (smap[st] || {})[field] || def;
 
-  const underlying=d.underlying, atm=d.atm_strike, dte=d.dte, T=Math.max(dte/365,0.001);
-  const strikes=d.all_strikes; const smap={{}};
-  strikes.forEach(s=>{{ smap[s.strike]=s; }});
-  const allSt=strikes.map(s=>s.strike).sort((a,b)=>a-b);
-  const nearest=val=>allSt.reduce((a,b)=>Math.abs(b-val)<Math.abs(a-val)?b:a);
-  const get=(st,field,def=0)=>(smap[st]||{{}})[field]||def;
+  // ATM IV
+  const atmRow = d.all_strikes.find(s => s.is_atm) || {};
+  const atm_iv = ((atmRow.ce_iv || 15) + (atmRow.pe_iv || 15)) / 2;
 
-  const avgSup=supports.reduce((a,b)=>a+b,0)/supports.length;
-  const avgRes=ress.reduce((a,b)=>a+b,0)/ress.length;
-  const srRange=avgRes-avgSup;
-  const s_st=nearest(avgSup),r_st=nearest(avgRes);
-  const far_c=nearest(avgRes+150),far_p=nearest(avgSup-150);
-  const otm_c=nearest(underlying+srRange*0.3),otm_p=nearest(underlying-srRange*0.3);
+  // 1. SMART S/R SELECTION
+  const srMode = document.getElementById("srModeToggle")?.value || "closest";
+  function selectSupport(levels, spot, mode) {
+    const valid = levels.filter(s => s < spot);
+    const pool  = valid.length ? valid : levels;
+    if (!pool.length) return spot - 300;
+    return mode === "conservative" ? Math.min(...pool) : Math.max(...pool);
+  }
+  function selectResistance(levels, spot, mode) {
+    const valid = levels.filter(r => r > spot);
+    const pool  = valid.length ? valid : levels;
+    if (!pool.length) return spot + 300;
+    return mode === "conservative" ? Math.max(...pool) : Math.min(...pool);
+  }
+  const chosenSup = selectSupport(supports, underlying, srMode);
+  const chosenRes = selectResistance(ress,   underlying, srMode);
+  const s_st = nearest(chosenSup);
+  const r_st = nearest(chosenRes);
 
-  const raw=[];
-  const bias=marketBias;
+  // 2. IV-BASED DYNAMIC WING WIDTH
+  const rawWing = underlying * (atm_iv / 100) * Math.sqrt(T) * 0.5;
+  const wing    = Math.max(Math.round(rawWing / 50) * 50, 100);
+  const far_c   = nearest(r_st + wing);
+  const far_p   = nearest(s_st - wing);
 
-  function makeStrat(name,legs,biasTag,sType) {{
-    const netPrem=legs.reduce((a,l)=>a+(l.action==="sell"?l.premium:-l.premium),0);
-    const po=payoffsFor(legs,underlying);
-    const maxP=Math.max(...po.vals), maxL=Math.min(...po.vals);
-    if(maxP<=0) return null;
-    const bes=[];
-    for(let i=0;i<po.vals.length-1;i++){{
-      if((po.vals[i]<0)!==(po.vals[i+1]<0)){{
-        const be=po.range[i]+(po.range[i+1]-po.range[i])*Math.abs(po.vals[i])/(Math.abs(po.vals[i])+Math.abs(po.vals[i+1]));
+  // OTM for strangles = 0.3σ from spot
+  const sigmaPts = Math.round(underlying * (atm_iv / 100) * Math.sqrt(T) * 0.3 / 50) * 50;
+  const otm_c = nearest(underlying + Math.max(sigmaPts, 50));
+  const otm_p = nearest(underlying - Math.max(sigmaPts, 50));
+
+  const raw = [];
+  const bias = marketBias;
+
+  // 3. makeStrat with ROC scoring
+  function makeStrat(name, legs, biasTag, sType) {
+    const netPrem = legs.reduce((a, l) => a + (l.action === "sell" ? l.premium : -l.premium), 0);
+    const po = payoffsFor(legs, underlying);
+    const maxP = Math.max(...po.vals), maxL = Math.min(...po.vals);
+    if (maxP <= 0) return null;
+    const bes = [];
+    for (let i = 0; i < po.vals.length - 1; i++) {
+      if ((po.vals[i] < 0) !== (po.vals[i + 1] < 0)) {
+        const be = po.range[i] + (po.range[i + 1] - po.range[i]) *
+          Math.abs(po.vals[i]) / (Math.abs(po.vals[i]) + Math.abs(po.vals[i + 1]));
         bes.push(Math.round(be));
-      }}
-    }}
-    const rr=maxL!==0?Math.round(Math.abs(maxP/maxL)*100)/100:0;
-    const pop=Math.max(calcPoP(legs,underlying,T,bes,sType),1);
-    const score=Math.round(pop*0.40+Math.min(rr*35,35)+Math.min(maxP/5000*25,25)*10)/10;
-    return {{name,biasTag,sType,legs,netPrem:Math.round(netPrem*100)/100,isDebit:netPrem<0,
-             maxProfit:Math.round(maxP*100)/100,maxLoss:Math.round(Math.abs(maxL)*100)/100,
-             breakevens:bes,rr,pop,score,margin:Math.round(Math.abs(maxL)*100)/100,
-             payoffs:po.vals,priceRange:po.range,isBEMode:false}};
-  }}
+      }
+    }
+    const rr     = maxL !== 0 ? Math.round(Math.abs(maxP / maxL) * 100) / 100 : 0;
+    const pop    = Math.max(calcPoP(legs, underlying, T, bes, sType), 1);
+    const margin = Math.abs(maxL);
+    const roc    = margin > 0 ? (maxP / margin) * 100 : 0;
+    const effectiveRR = rr * (pop / 100);
+    const score  = Math.round(
+      (pop * 0.40 + Math.min(effectiveRR * 35, 35) + Math.min(roc / 100 * 25, 25)) * 10
+    ) / 10;
+    return {
+      name, biasTag, sType, legs,
+      netPrem:      Math.round(netPrem * 100) / 100,
+      isDebit:      netPrem < 0,
+      maxProfit:    Math.round(maxP * 100) / 100,
+      maxLoss:      Math.round(Math.abs(maxL) * 100) / 100,
+      breakevens:   bes, rr,
+      effectiveRR:  Math.round(effectiveRR * 1000) / 1000,
+      roc:          Math.round(roc * 10) / 10,
+      pop, score,
+      margin:       Math.round(margin * 100) / 100,
+      payoffs:      po.vals, priceRange: po.range,
+      isBEMode:     false,
+      srInfo: { chosenSup, chosenRes, s_st, r_st, wing, atm_iv: Math.round(atm_iv * 10) / 10 },
+    };
+  }
 
-  if(bias!=="bearish"){{ const s=makeStrat("Bull Call Spread",[{{action:"buy",strike:atm,type:"CE",opt_type:"CE",premium:get(atm,"ce_ltp"),iv:get(atm,"ce_iv",15)}},{{action:"sell",strike:r_st,type:"CE",opt_type:"CE",premium:get(r_st,"ce_ltp"),iv:get(r_st,"ce_iv",15)}}],"bullish","debit_spread"); if(s) raw.push(s); }}
-  if(bias!=="bullish"){{ const s=makeStrat("Bear Put Spread",[{{action:"buy",strike:atm,type:"PE",opt_type:"PE",premium:get(atm,"pe_ltp"),iv:get(atm,"pe_iv",15)}},{{action:"sell",strike:s_st,type:"PE",opt_type:"PE",premium:get(s_st,"pe_ltp"),iv:get(s_st,"pe_iv",15)}}],"bearish","debit_spread"); if(s) raw.push(s); }}
-  if(bias!=="bearish"){{ const s=makeStrat("Bull Put Spread",[{{action:"sell",strike:s_st,type:"PE",opt_type:"PE",premium:get(s_st,"pe_ltp"),iv:get(s_st,"pe_iv",15)}},{{action:"buy",strike:far_p,type:"PE",opt_type:"PE",premium:get(far_p,"pe_ltp"),iv:get(far_p,"pe_iv",15)}}],"bullish","credit_spread"); if(s) raw.push(s); }}
-  if(bias!=="bullish"){{ const s=makeStrat("Bear Call Spread",[{{action:"sell",strike:r_st,type:"CE",opt_type:"CE",premium:get(r_st,"ce_ltp"),iv:get(r_st,"ce_iv",15)}},{{action:"buy",strike:far_c,type:"CE",opt_type:"CE",premium:get(far_c,"ce_ltp"),iv:get(far_c,"ce_iv",15)}}],"bearish","credit_spread"); if(s) raw.push(s); }}
-  {{ const s=makeStrat("Iron Condor",[{{action:"sell",strike:r_st,type:"CE",opt_type:"CE",premium:get(r_st,"ce_ltp"),iv:get(r_st,"ce_iv",15)}},{{action:"buy",strike:far_c,type:"CE",opt_type:"CE",premium:get(far_c,"ce_ltp"),iv:get(far_c,"ce_iv",15)}},{{action:"sell",strike:s_st,type:"PE",opt_type:"PE",premium:get(s_st,"pe_ltp"),iv:get(s_st,"pe_iv",15)}},{{action:"buy",strike:far_p,type:"PE",opt_type:"PE",premium:get(far_p,"pe_ltp"),iv:get(far_p,"pe_iv",15)}}],"neutral","iron_condor"); if(s) raw.push(s); }}
-  {{ const wing=Math.max(Math.round(srRange*0.4/50)*50,100),bc=nearest(atm+wing),bp=nearest(atm-wing);
-     const s=makeStrat("Iron Butterfly",[{{action:"sell",strike:atm,type:"CE",opt_type:"CE",premium:get(atm,"ce_ltp"),iv:get(atm,"ce_iv",15)}},{{action:"sell",strike:atm,type:"PE",opt_type:"PE",premium:get(atm,"pe_ltp"),iv:get(atm,"pe_iv",15)}},{{action:"buy",strike:bc,type:"CE",opt_type:"CE",premium:get(bc,"ce_ltp"),iv:get(bc,"ce_iv",15)}},{{action:"buy",strike:bp,type:"PE",opt_type:"PE",premium:get(bp,"pe_ltp"),iv:get(bp,"pe_iv",15)}}],"neutral","iron_butterfly"); if(s) raw.push(s); }}
-  {{ const s=makeStrat("Long Straddle",[{{action:"buy",strike:atm,type:"CE",opt_type:"CE",premium:get(atm,"ce_ltp"),iv:get(atm,"ce_iv",15)}},{{action:"buy",strike:atm,type:"PE",opt_type:"PE",premium:get(atm,"pe_ltp"),iv:get(atm,"pe_iv",15)}}],"volatile","straddle"); if(s) raw.push(s); }}
-  if(bias==="neutral"){{ const s=makeStrat("Short Straddle",[{{action:"sell",strike:atm,type:"CE",opt_type:"CE",premium:get(atm,"ce_ltp"),iv:get(atm,"ce_iv",15)}},{{action:"sell",strike:atm,type:"PE",opt_type:"PE",premium:get(atm,"pe_ltp"),iv:get(atm,"pe_iv",15)}}],"neutral","straddle"); if(s) raw.push(s); }}
-  {{ const s=makeStrat("Long Strangle",[{{action:"buy",strike:otm_c,type:"CE",opt_type:"CE",premium:get(otm_c,"ce_ltp"),iv:get(otm_c,"ce_iv",15)}},{{action:"buy",strike:otm_p,type:"PE",opt_type:"PE",premium:get(otm_p,"pe_ltp"),iv:get(otm_p,"pe_iv",15)}}],"volatile","strangle"); if(s) raw.push(s); }}
-  if(bias==="neutral"){{ const s=makeStrat("Short Strangle",[{{action:"sell",strike:otm_c,type:"CE",opt_type:"CE",premium:get(otm_c,"ce_ltp"),iv:get(otm_c,"ce_iv",15)}},{{action:"sell",strike:otm_p,type:"PE",opt_type:"PE",premium:get(otm_p,"pe_ltp"),iv:get(otm_p,"pe_iv",15)}}],"neutral","strangle"); if(s) raw.push(s); }}
+  if (bias !== "bearish") { const s = makeStrat("Bull Call Spread", [{ action:"buy", strike:atm, type:"CE",opt_type:"CE",premium:get(atm,"ce_ltp"),iv:get(atm,"ce_iv",15)},{ action:"sell",strike:r_st,type:"CE",opt_type:"CE",premium:get(r_st,"ce_ltp"),iv:get(r_st,"ce_iv",15)}],"bullish","debit_spread"); if(s) raw.push(s); }
+  if (bias !== "bullish") { const s = makeStrat("Bear Put Spread",  [{ action:"buy", strike:atm, type:"PE",opt_type:"PE",premium:get(atm,"pe_ltp"),iv:get(atm,"pe_iv",15)},{ action:"sell",strike:s_st,type:"PE",opt_type:"PE",premium:get(s_st,"pe_ltp"),iv:get(s_st,"pe_iv",15)}],"bearish","debit_spread"); if(s) raw.push(s); }
+  if (bias !== "bearish") { const s = makeStrat("Bull Put Spread",  [{ action:"sell",strike:s_st, type:"PE",opt_type:"PE",premium:get(s_st,"pe_ltp"),iv:get(s_st,"pe_iv",15)},{ action:"buy", strike:far_p,type:"PE",opt_type:"PE",premium:get(far_p,"pe_ltp"),iv:get(far_p,"pe_iv",15)}],"bullish","credit_spread"); if(s) raw.push(s); }
+  if (bias !== "bullish") { const s = makeStrat("Bear Call Spread", [{ action:"sell",strike:r_st, type:"CE",opt_type:"CE",premium:get(r_st,"ce_ltp"),iv:get(r_st,"ce_iv",15)},{ action:"buy", strike:far_c,type:"CE",opt_type:"CE",premium:get(far_c,"ce_ltp"),iv:get(far_c,"ce_iv",15)}],"bearish","credit_spread"); if(s) raw.push(s); }
+  { const s = makeStrat("Iron Condor", [{ action:"sell",strike:r_st, type:"CE",opt_type:"CE",premium:get(r_st,"ce_ltp"),iv:get(r_st,"ce_iv",15)},{ action:"buy",strike:far_c,type:"CE",opt_type:"CE",premium:get(far_c,"ce_ltp"),iv:get(far_c,"ce_iv",15)},{ action:"sell",strike:s_st,type:"PE",opt_type:"PE",premium:get(s_st,"pe_ltp"),iv:get(s_st,"pe_iv",15)},{ action:"buy",strike:far_p,type:"PE",opt_type:"PE",premium:get(far_p,"pe_ltp"),iv:get(far_p,"pe_iv",15)}],"neutral","iron_condor"); if(s) raw.push(s); }
+  { const ibfWing=Math.max(Math.round(wing*0.5/50)*50,100),bc=nearest(atm+ibfWing),bp=nearest(atm-ibfWing); if(new Set([atm,bc,bp]).size===3){ const s=makeStrat("Iron Butterfly",[{action:"sell",strike:atm,type:"CE",opt_type:"CE",premium:get(atm,"ce_ltp"),iv:get(atm,"ce_iv",15)},{action:"sell",strike:atm,type:"PE",opt_type:"PE",premium:get(atm,"pe_ltp"),iv:get(atm,"pe_iv",15)},{action:"buy",strike:bc,type:"CE",opt_type:"CE",premium:get(bc,"ce_ltp"),iv:get(bc,"ce_iv",15)},{action:"buy",strike:bp,type:"PE",opt_type:"PE",premium:get(bp,"pe_ltp"),iv:get(bp,"pe_iv",15)}],"neutral","iron_butterfly"); if(s) raw.push(s); } }
+  { const s = makeStrat("Long Straddle",  [{ action:"buy",strike:atm,type:"CE",opt_type:"CE",premium:get(atm,"ce_ltp"),iv:get(atm,"ce_iv",15)},{ action:"buy",strike:atm,type:"PE",opt_type:"PE",premium:get(atm,"pe_ltp"),iv:get(atm,"pe_iv",15)}],"volatile","straddle"); if(s) raw.push(s); }
+  if(bias==="neutral"){ const s=makeStrat("Short Straddle", [{action:"sell",strike:atm,type:"CE",opt_type:"CE",premium:get(atm,"ce_ltp"),iv:get(atm,"ce_iv",15)},{action:"sell",strike:atm,type:"PE",opt_type:"PE",premium:get(atm,"pe_ltp"),iv:get(atm,"pe_iv",15)}],"neutral","straddle"); if(s) raw.push(s); }
+  { const s = makeStrat("Long Strangle",  [{ action:"buy",strike:otm_c,type:"CE",opt_type:"CE",premium:get(otm_c,"ce_ltp"),iv:get(otm_c,"ce_iv",15)},{ action:"buy",strike:otm_p,type:"PE",opt_type:"PE",premium:get(otm_p,"pe_ltp"),iv:get(otm_p,"pe_iv",15)}],"volatile","strangle"); if(s) raw.push(s); }
+  if(bias==="neutral"){ const s=makeStrat("Short Strangle",[{action:"sell",strike:otm_c,type:"CE",opt_type:"CE",premium:get(otm_c,"ce_ltp"),iv:get(otm_c,"ce_iv",15)},{action:"sell",strike:otm_p,type:"PE",opt_type:"PE",premium:get(otm_p,"pe_ltp"),iv:get(otm_p,"pe_iv",15)}],"neutral","strangle"); if(s) raw.push(s); }
 
-  strategies=raw.filter(Boolean);
+  strategies = raw.filter(Boolean);
   renderStrategies();
   populatePayoffSel();
-}}
+}
+
 
 // ═══════════════════════════════════════════════════════
 // BE MODE ANALYZE — flexible: lo only / hi only / both
@@ -2320,10 +2488,12 @@ function renderStrategies() {{
         <div class="sc-field"><span class="sc-field-lbl">Strike Price</span><span class="sc-field-val" style="color:var(--cyan);">ATM ₹${{ALL_DATA[currentExpiry]?.atm_strike?.toLocaleString("en-IN")||"—"}}</span></div>
         <div class="sc-field"><span class="sc-field-lbl">Max Profit</span><span class="sc-field-val up">₹${{s.maxProfit.toLocaleString("en-IN")}}</span></div>
         <div class="sc-field"><span class="sc-field-lbl">Max Loss</span><span class="sc-field-val down">₹${{s.maxLoss.toLocaleString("en-IN")}}</span></div>
-        <div class="sc-field"><span class="sc-field-lbl">Max RR Ratio</span><span class="sc-field-val" style="color:var(--gold);">1:${{rrDisp}}</span></div>
+        <div class="sc-field"><span class="sc-field-lbl">Eff. RR (×PoP)</span><span class="sc-field-val" style="color:var(--gold);">${{s.effectiveRR!=null?s.effectiveRR.toFixed(2)+"x":rrDisp}}</span></div>
+        <div class="sc-field"><span class="sc-field-lbl">ROC</span><span class="sc-field-val" style="color:var(--purple);">${{s.roc!=null?s.roc.toFixed(1)+"%":"—"}}</span></div>
         <div class="sc-field"><span class="sc-field-lbl">Breakevens</span><span class="sc-field-val" style="font-size:10px;color:var(--text2);">${{beStr}}</span></div>
         <div class="sc-field"><span class="sc-field-lbl">Net Credit/Debit</span><span class="sc-field-val">${{netDisp}}</span></div>
         <div class="sc-field" style="grid-column:1/-1"><span class="sc-field-lbl">Est. Margin / Premium</span><span class="sc-field-val" style="color:var(--purple);">₹${{s.margin.toLocaleString("en-IN")}}</span></div>
+        ${{s.srInfo?`<div class="sc-field" style="grid-column:1/-1"><span class="sc-field-lbl">S/R Used · Wing</span><span class="sc-field-val" style="font-size:9px;color:var(--text2);">SUP ₹${{s.srInfo.chosenSup.toLocaleString("en-IN")}} · RES ₹${{s.srInfo.chosenRes.toLocaleString("en-IN")}} · Wing ${{s.srInfo.wing}}pts @ IV ${{s.srInfo.atm_iv}}%</span></div>`:"" }}
       </div>
       ${{legsSection}}
       <div class="sc-score">
