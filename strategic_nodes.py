@@ -1664,19 +1664,19 @@ function updateGreeksForStrike(strike) {{
 
 // ── Bias ──────────────────────────────────────────────────────
 
-function setSRMode(mode) {
+function setSRMode(mode) {{
   document.getElementById("srModeToggle").value = mode;
   const aBtn = document.getElementById("btnAggressive");
   const cBtn = document.getElementById("btnConservative");
-  if (mode === "closest") {
+  if (mode === "closest") {{
     aBtn.style.borderColor = "var(--cyan)";   aBtn.style.background = "rgba(0,212,255,.08)"; aBtn.style.color = "var(--cyan)";
     cBtn.style.borderColor = "";              cBtn.style.background = "";                    cBtn.style.color = "";
-  } else {
+  }} else {{
     cBtn.style.borderColor = "var(--purple)"; cBtn.style.background = "rgba(138,160,255,.08)"; cBtn.style.color = "var(--purple)";
     aBtn.style.borderColor = "";              aBtn.style.background = "";                       aBtn.style.color = "";
-  }
+  }}
   saveUserState();
-}
+}}
 
 function setBias(b) {{
   marketBias=b;
@@ -1956,42 +1956,42 @@ function calcPoP(legs, underlying, T, bes, sType) {{
   return Math.round(Math.min(s/legs.length*100,99)*10)/10;
 }}
 
-function analyze() {
+function analyze() {{
   const d = ALL_DATA[currentExpiry];
-  if (!d) { alert("No data loaded for this expiry."); return; }
+  if (!d) {{ alert("No data loaded for this expiry."); return; }}
   const supports = getSupports(), ress = getResistances();
-  if (!supports.length || !ress.length) {
+  if (!supports.length || !ress.length) {{
     alert("Please enter at least one support and one resistance level.");
     return;
-  }
+  }}
   renderChain();
   const underlying = d.underlying, atm = d.atm_strike;
   const dte = d.dte, T = Math.max(dte / 365, 0.001);
   const strikes = d.all_strikes;
-  const smap = {};
-  strikes.forEach(s => { smap[s.strike] = s; });
+  const smap = {{}};
+  strikes.forEach(s => {{ smap[s.strike] = s; }});
   const allSt = strikes.map(s => s.strike).sort((a, b) => a - b);
   const nearest = val => allSt.reduce((a, b) => Math.abs(b - val) < Math.abs(a - val) ? b : a);
-  const get = (st, field, def = 0) => (smap[st] || {})[field] || def;
+  const get = (st, field, def = 0) => (smap[st] || {{}})[field] || def;
 
   // ATM IV
-  const atmRow = d.all_strikes.find(s => s.is_atm) || {};
+  const atmRow = d.all_strikes.find(s => s.is_atm) || {{}};
   const atm_iv = ((atmRow.ce_iv || 15) + (atmRow.pe_iv || 15)) / 2;
 
   // 1. SMART S/R SELECTION
   const srMode = document.getElementById("srModeToggle")?.value || "closest";
-  function selectSupport(levels, spot, mode) {
+  function selectSupport(levels, spot, mode) {{
     const valid = levels.filter(s => s < spot);
     const pool  = valid.length ? valid : levels;
     if (!pool.length) return spot - 300;
     return mode === "conservative" ? Math.min(...pool) : Math.max(...pool);
-  }
-  function selectResistance(levels, spot, mode) {
+  }}
+  function selectResistance(levels, spot, mode) {{
     const valid = levels.filter(r => r > spot);
     const pool  = valid.length ? valid : levels;
     if (!pool.length) return spot + 300;
     return mode === "conservative" ? Math.max(...pool) : Math.min(...pool);
-  }
+  }}
   const chosenSup = selectSupport(supports, underlying, srMode);
   const chosenRes = selectResistance(ress,   underlying, srMode);
   const s_st = nearest(chosenSup);
@@ -2012,19 +2012,19 @@ function analyze() {
   const bias = marketBias;
 
   // 3. makeStrat with ROC scoring
-  function makeStrat(name, legs, biasTag, sType) {
+  function makeStrat(name, legs, biasTag, sType) {{
     const netPrem = legs.reduce((a, l) => a + (l.action === "sell" ? l.premium : -l.premium), 0);
     const po = payoffsFor(legs, underlying);
     const maxP = Math.max(...po.vals), maxL = Math.min(...po.vals);
     if (maxP <= 0) return null;
     const bes = [];
-    for (let i = 0; i < po.vals.length - 1; i++) {
-      if ((po.vals[i] < 0) !== (po.vals[i + 1] < 0)) {
+    for (let i = 0; i < po.vals.length - 1; i++) {{
+      if ((po.vals[i] < 0) !== (po.vals[i + 1] < 0)) {{
         const be = po.range[i] + (po.range[i + 1] - po.range[i]) *
           Math.abs(po.vals[i]) / (Math.abs(po.vals[i]) + Math.abs(po.vals[i + 1]));
         bes.push(Math.round(be));
-      }
-    }
+      }}
+    }}
     const rr     = maxL !== 0 ? Math.round(Math.abs(maxP / maxL) * 100) / 100 : 0;
     const pop    = Math.max(calcPoP(legs, underlying, T, bes, sType), 1);
     const margin = Math.abs(maxL);
@@ -2033,7 +2033,7 @@ function analyze() {
     const score  = Math.round(
       (pop * 0.40 + Math.min(effectiveRR * 35, 35) + Math.min(roc / 100 * 25, 25)) * 10
     ) / 10;
-    return {
+    return {{
       name, biasTag, sType, legs,
       netPrem:      Math.round(netPrem * 100) / 100,
       isDebit:      netPrem < 0,
@@ -2046,25 +2046,25 @@ function analyze() {
       margin:       Math.round(margin * 100) / 100,
       payoffs:      po.vals, priceRange: po.range,
       isBEMode:     false,
-      srInfo: { chosenSup, chosenRes, s_st, r_st, wing, atm_iv: Math.round(atm_iv * 10) / 10 },
-    };
-  }
+      srInfo: {{ chosenSup, chosenRes, s_st, r_st, wing, atm_iv: Math.round(atm_iv * 10) / 10 }},
+    }};
+  }}
 
-  if (bias !== "bearish") { const s = makeStrat("Bull Call Spread", [{ action:"buy", strike:atm, type:"CE",opt_type:"CE",premium:get(atm,"ce_ltp"),iv:get(atm,"ce_iv",15)},{ action:"sell",strike:r_st,type:"CE",opt_type:"CE",premium:get(r_st,"ce_ltp"),iv:get(r_st,"ce_iv",15)}],"bullish","debit_spread"); if(s) raw.push(s); }
-  if (bias !== "bullish") { const s = makeStrat("Bear Put Spread",  [{ action:"buy", strike:atm, type:"PE",opt_type:"PE",premium:get(atm,"pe_ltp"),iv:get(atm,"pe_iv",15)},{ action:"sell",strike:s_st,type:"PE",opt_type:"PE",premium:get(s_st,"pe_ltp"),iv:get(s_st,"pe_iv",15)}],"bearish","debit_spread"); if(s) raw.push(s); }
-  if (bias !== "bearish") { const s = makeStrat("Bull Put Spread",  [{ action:"sell",strike:s_st, type:"PE",opt_type:"PE",premium:get(s_st,"pe_ltp"),iv:get(s_st,"pe_iv",15)},{ action:"buy", strike:far_p,type:"PE",opt_type:"PE",premium:get(far_p,"pe_ltp"),iv:get(far_p,"pe_iv",15)}],"bullish","credit_spread"); if(s) raw.push(s); }
-  if (bias !== "bullish") { const s = makeStrat("Bear Call Spread", [{ action:"sell",strike:r_st, type:"CE",opt_type:"CE",premium:get(r_st,"ce_ltp"),iv:get(r_st,"ce_iv",15)},{ action:"buy", strike:far_c,type:"CE",opt_type:"CE",premium:get(far_c,"ce_ltp"),iv:get(far_c,"ce_iv",15)}],"bearish","credit_spread"); if(s) raw.push(s); }
-  { const s = makeStrat("Iron Condor", [{ action:"sell",strike:r_st, type:"CE",opt_type:"CE",premium:get(r_st,"ce_ltp"),iv:get(r_st,"ce_iv",15)},{ action:"buy",strike:far_c,type:"CE",opt_type:"CE",premium:get(far_c,"ce_ltp"),iv:get(far_c,"ce_iv",15)},{ action:"sell",strike:s_st,type:"PE",opt_type:"PE",premium:get(s_st,"pe_ltp"),iv:get(s_st,"pe_iv",15)},{ action:"buy",strike:far_p,type:"PE",opt_type:"PE",premium:get(far_p,"pe_ltp"),iv:get(far_p,"pe_iv",15)}],"neutral","iron_condor"); if(s) raw.push(s); }
-  { const ibfWing=Math.max(Math.round(wing*0.5/50)*50,100),bc=nearest(atm+ibfWing),bp=nearest(atm-ibfWing); if(new Set([atm,bc,bp]).size===3){ const s=makeStrat("Iron Butterfly",[{action:"sell",strike:atm,type:"CE",opt_type:"CE",premium:get(atm,"ce_ltp"),iv:get(atm,"ce_iv",15)},{action:"sell",strike:atm,type:"PE",opt_type:"PE",premium:get(atm,"pe_ltp"),iv:get(atm,"pe_iv",15)},{action:"buy",strike:bc,type:"CE",opt_type:"CE",premium:get(bc,"ce_ltp"),iv:get(bc,"ce_iv",15)},{action:"buy",strike:bp,type:"PE",opt_type:"PE",premium:get(bp,"pe_ltp"),iv:get(bp,"pe_iv",15)}],"neutral","iron_butterfly"); if(s) raw.push(s); } }
-  { const s = makeStrat("Long Straddle",  [{ action:"buy",strike:atm,type:"CE",opt_type:"CE",premium:get(atm,"ce_ltp"),iv:get(atm,"ce_iv",15)},{ action:"buy",strike:atm,type:"PE",opt_type:"PE",premium:get(atm,"pe_ltp"),iv:get(atm,"pe_iv",15)}],"volatile","straddle"); if(s) raw.push(s); }
-  if(bias==="neutral"){ const s=makeStrat("Short Straddle", [{action:"sell",strike:atm,type:"CE",opt_type:"CE",premium:get(atm,"ce_ltp"),iv:get(atm,"ce_iv",15)},{action:"sell",strike:atm,type:"PE",opt_type:"PE",premium:get(atm,"pe_ltp"),iv:get(atm,"pe_iv",15)}],"neutral","straddle"); if(s) raw.push(s); }
-  { const s = makeStrat("Long Strangle",  [{ action:"buy",strike:otm_c,type:"CE",opt_type:"CE",premium:get(otm_c,"ce_ltp"),iv:get(otm_c,"ce_iv",15)},{ action:"buy",strike:otm_p,type:"PE",opt_type:"PE",premium:get(otm_p,"pe_ltp"),iv:get(otm_p,"pe_iv",15)}],"volatile","strangle"); if(s) raw.push(s); }
-  if(bias==="neutral"){ const s=makeStrat("Short Strangle",[{action:"sell",strike:otm_c,type:"CE",opt_type:"CE",premium:get(otm_c,"ce_ltp"),iv:get(otm_c,"ce_iv",15)},{action:"sell",strike:otm_p,type:"PE",opt_type:"PE",premium:get(otm_p,"pe_ltp"),iv:get(otm_p,"pe_iv",15)}],"neutral","strangle"); if(s) raw.push(s); }
+  if (bias !== "bearish") {{ const s = makeStrat("Bull Call Spread", [{{ action:"buy", strike:atm, type:"CE",opt_type:"CE",premium:get(atm,"ce_ltp"),iv:get(atm,"ce_iv",15)}},{{ action:"sell",strike:r_st,type:"CE",opt_type:"CE",premium:get(r_st,"ce_ltp"),iv:get(r_st,"ce_iv",15)}}],"bullish","debit_spread"); if(s) raw.push(s); }}
+  if (bias !== "bullish") {{ const s = makeStrat("Bear Put Spread",  [{{ action:"buy", strike:atm, type:"PE",opt_type:"PE",premium:get(atm,"pe_ltp"),iv:get(atm,"pe_iv",15)}},{{ action:"sell",strike:s_st,type:"PE",opt_type:"PE",premium:get(s_st,"pe_ltp"),iv:get(s_st,"pe_iv",15)}}],"bearish","debit_spread"); if(s) raw.push(s); }}
+  if (bias !== "bearish") {{ const s = makeStrat("Bull Put Spread",  [{{ action:"sell",strike:s_st, type:"PE",opt_type:"PE",premium:get(s_st,"pe_ltp"),iv:get(s_st,"pe_iv",15)}},{{ action:"buy", strike:far_p,type:"PE",opt_type:"PE",premium:get(far_p,"pe_ltp"),iv:get(far_p,"pe_iv",15)}}],"bullish","credit_spread"); if(s) raw.push(s); }}
+  if (bias !== "bullish") {{ const s = makeStrat("Bear Call Spread", [{{ action:"sell",strike:r_st, type:"CE",opt_type:"CE",premium:get(r_st,"ce_ltp"),iv:get(r_st,"ce_iv",15)}},{{ action:"buy", strike:far_c,type:"CE",opt_type:"CE",premium:get(far_c,"ce_ltp"),iv:get(far_c,"ce_iv",15)}}],"bearish","credit_spread"); if(s) raw.push(s); }}
+  {{ const s = makeStrat("Iron Condor", [{{ action:"sell",strike:r_st, type:"CE",opt_type:"CE",premium:get(r_st,"ce_ltp"),iv:get(r_st,"ce_iv",15)}},{{ action:"buy",strike:far_c,type:"CE",opt_type:"CE",premium:get(far_c,"ce_ltp"),iv:get(far_c,"ce_iv",15)}},{{ action:"sell",strike:s_st,type:"PE",opt_type:"PE",premium:get(s_st,"pe_ltp"),iv:get(s_st,"pe_iv",15)}},{{ action:"buy",strike:far_p,type:"PE",opt_type:"PE",premium:get(far_p,"pe_ltp"),iv:get(far_p,"pe_iv",15)}}],"neutral","iron_condor"); if(s) raw.push(s); }}
+  {{ const ibfWing=Math.max(Math.round(wing*0.5/50)*50,100),bc=nearest(atm+ibfWing),bp=nearest(atm-ibfWing); if(new Set([atm,bc,bp]).size===3){{ const s=makeStrat("Iron Butterfly",[{{action:"sell",strike:atm,type:"CE",opt_type:"CE",premium:get(atm,"ce_ltp"),iv:get(atm,"ce_iv",15)}},{{action:"sell",strike:atm,type:"PE",opt_type:"PE",premium:get(atm,"pe_ltp"),iv:get(atm,"pe_iv",15)}},{{action:"buy",strike:bc,type:"CE",opt_type:"CE",premium:get(bc,"ce_ltp"),iv:get(bc,"ce_iv",15)}},{{action:"buy",strike:bp,type:"PE",opt_type:"PE",premium:get(bp,"pe_ltp"),iv:get(bp,"pe_iv",15)}}],"neutral","iron_butterfly"); if(s) raw.push(s); }} }}
+  {{ const s = makeStrat("Long Straddle",  [{{ action:"buy",strike:atm,type:"CE",opt_type:"CE",premium:get(atm,"ce_ltp"),iv:get(atm,"ce_iv",15)}},{{ action:"buy",strike:atm,type:"PE",opt_type:"PE",premium:get(atm,"pe_ltp"),iv:get(atm,"pe_iv",15)}}],"volatile","straddle"); if(s) raw.push(s); }}
+  if(bias==="neutral"){{ const s=makeStrat("Short Straddle", [{{action:"sell",strike:atm,type:"CE",opt_type:"CE",premium:get(atm,"ce_ltp"),iv:get(atm,"ce_iv",15)}},{{action:"sell",strike:atm,type:"PE",opt_type:"PE",premium:get(atm,"pe_ltp"),iv:get(atm,"pe_iv",15)}}],"neutral","straddle"); if(s) raw.push(s); }}
+  {{ const s = makeStrat("Long Strangle",  [{{ action:"buy",strike:otm_c,type:"CE",opt_type:"CE",premium:get(otm_c,"ce_ltp"),iv:get(otm_c,"ce_iv",15)}},{{ action:"buy",strike:otm_p,type:"PE",opt_type:"PE",premium:get(otm_p,"pe_ltp"),iv:get(otm_p,"pe_iv",15)}}],"volatile","strangle"); if(s) raw.push(s); }}
+  if(bias==="neutral"){{ const s=makeStrat("Short Strangle",[{{action:"sell",strike:otm_c,type:"CE",opt_type:"CE",premium:get(otm_c,"ce_ltp"),iv:get(otm_c,"ce_iv",15)}},{{action:"sell",strike:otm_p,type:"PE",opt_type:"PE",premium:get(otm_p,"pe_ltp"),iv:get(otm_p,"pe_iv",15)}}],"neutral","strangle"); if(s) raw.push(s); }}
 
   strategies = raw.filter(Boolean);
   renderStrategies();
   populatePayoffSel();
-}
+}}
 
 
 // ═══════════════════════════════════════════════════════
