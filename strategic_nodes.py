@@ -1964,60 +1964,92 @@ function analyzeBE() {{
   const nearest = val => allSt.reduce((a,b) => Math.abs(b-val)<Math.abs(a-val)?b:a);
   const get = (st, field, def=0) => (smap[st]||{{}})[field] || def;
 
-  // wingDist: dynamic — scales with distance from spot to target BE
-  // For two-sided: 25% of lo→hi range (min 100)
-  // For one-sided: 25% of |spot - BE| so wings always reach far enough
-  //   e.g. BE=26341, spot=24765 → dist=1576 → wingDist=400 (not hardcoded 200)
-  const wingDist = (hasLo && hasHi)
-    ? Math.max(Math.round((hi - lo) * 0.25 / 50) * 50, 100)
-    : hasHi
-      ? Math.max(Math.round(Math.abs(hi - d.underlying) * 0.25 / 50) * 50, 200)
-      : Math.max(Math.round(Math.abs(lo - d.underlying) * 0.25 / 50) * 50, 200);
+  // ── Strike step: inferred from actual option chain data (e.g. 50 for Nifty) ──
+  const strikeStep = (allSt.length > 1)
+    ? allSt.slice(1).reduce((min,k,i) => Math.min(min, k - allSt[i]), Infinity)
+    : 50;
 
-  // ── ✅ FIXED: Finder functions now account for BOTH legs (net credit not gross) ──
-  // OLD bug: findSellCEStrikeForBE used K + ce_ltp(K) — ignored buy wing premium
-  //          This caused actual BE to be hundreds of points away from user input
-  // NEW fix: uses K + (ce_ltp_sell - ce_ltp_buy) = net credit per spread
+  // ── Mid-price approximation: NSE API provides only LTP (no bid/ask).
+  //    We apply a half-tick slippage buffer to simulate realistic fill prices.
+  //    This prevents BE calculations from using stale "ghost" print prices.
+  const halfTick = 0.05;  // minimum NSE option tick = ₹0.05
+  function midPrice(ltp) {{
+    if (!ltp || ltp <= 0) return 0;
+    return Math.max(ltp - halfTick, halfTick);  // conservative: assume slight adverse fill
+  }}
+
+  // ── wingDist: derived from IV-based daily ATR so it scales with volatility.
+  //    Formula: 1.5 × daily_ATR, snapped to strike step, minimum = 2 × strikeStep.
+  //    For two-sided mode: also constrained to be ≤ 30% of the user's BE range.
+  const atmIV_be   = (get(d.atm_strike,"ce_iv",15) + get(d.atm_strike,"pe_iv",15)) / 2;
+  const dailyATR_be = underlying * (atmIV_be / 100) * Math.sqrt(1 / 365);
+  const atrWing_be  = Math.max(
+    Math.round(dailyATR_be * 1.5 / strikeStep) * strikeStep,
+    2 * strikeStep
+  );
+  const wingDist = (hasLo && hasHi)
+    ? Math.min(atrWing_be, Math.max(Math.round((hi - lo) * 0.30 / strikeStep) * strikeStep, 2 * strikeStep))
+    : atrWing_be;
+
+  // ── Liquidity guard: a strike is liquid if CE or PE OI > 0 ──
+  function isLiquid(strike, optType) {{
+    const oiField = optType === "CE" ? "ce_oi" : "pe_oi";
+    return get(strike, oiField, 0) > 0;
+  }}
+
+  // ── Yield-to-Risk filter threshold (max_profit / max_loss) ──
+  const MIN_YIELD_TO_RISK = 0.20;  // flag if < 1:5
+
+  // ── SOLVER: find sell strike whose net-credit-implied BE best matches target ──
+  // Resolves the circular dependency: wing width is FIXED first (atrWing_be),
+  // then we iterate sell strikes and compute impliedBE from both legs' mid-prices.
 
   function findSellPEStrikeForBE(targetBE) {{
-    // BE of Bull Put Spread = sell_PE - (pe_ltp_sell - pe_ltp_buy)
-    let best = allSt[0], bestDiff = Infinity;
+    // Bull Put Spread BE = sell_strike − (mid(pe_sell) − mid(pe_buy))
+    let best = null, bestDiff = Infinity;
     allSt.forEach(k => {{
-      const peSell = get(k, "pe_ltp", 0);
+      if (k >= underlying) return;   // sell strike must be below spot for a put spread
+      const peSell = midPrice(get(k, "pe_ltp", 0));
       if (peSell <= 0) return;
-      const buyStrike = nearest(k - wingDist);
-      const peBuy = get(buyStrike, "pe_ltp", 0);
+      const buyK   = nearest(k - wingDist);
+      if (buyK >= k) return;
+      const peBuy  = midPrice(get(buyK, "pe_ltp", 0));
       const netCredit = peSell - peBuy;
       if (netCredit <= 0) return;
-      const impliedBE = k - netCredit;  // ✅ accounts for wing
+      const impliedBE = k - netCredit;
       const diff = Math.abs(impliedBE - targetBE);
       if (diff < bestDiff) {{ bestDiff = diff; best = k; }}
     }});
-    return best;
+    return best || nearest(targetBE);
   }}
 
   function findSellCEStrikeForBE(targetBE) {{
-    // BE of Bear Call Spread = sell_CE + (ce_ltp_sell - ce_ltp_buy)
-    let best = allSt[0], bestDiff = Infinity;
+    // Bear Call Spread BE = sell_strike + (mid(ce_sell) − mid(ce_buy))
+    let best = null, bestDiff = Infinity;
     allSt.forEach(k => {{
-      const ceSell = get(k, "ce_ltp", 0);
+      if (k <= underlying) return;   // sell strike must be above spot for a call spread
+      const ceSell = midPrice(get(k, "ce_ltp", 0));
       if (ceSell <= 0) return;
-      const buyStrike = nearest(k + wingDist);
-      const ceBuy = get(buyStrike, "ce_ltp", 0);
+      const buyK   = nearest(k + wingDist);
+      if (buyK <= k) return;
+      const ceBuy  = midPrice(get(buyK, "ce_ltp", 0));
       const netCredit = ceSell - ceBuy;
       if (netCredit <= 0) return;
-      const impliedBE = k + netCredit;  // ✅ accounts for wing
+      const impliedBE = k + netCredit;
       const diff = Math.abs(impliedBE - targetBE);
       if (diff < bestDiff) {{ bestDiff = diff; best = k; }}
     }});
-    return best;
+    return best || nearest(targetBE);
   }}
 
-  // Sell strikes derived from user BEs — now correctly accounts for wing premiums
-  const lo_st = hasLo ? findSellPEStrikeForBE(lo) : null;
-  const hi_st = hasHi ? findSellCEStrikeForBE(hi) : null;
-  const lo_wing  = hasLo ? nearest(lo_st - wingDist) : null;
-  const hi_wing  = hasHi ? nearest(hi_st + wingDist) : null;
+  // Derive sell strikes (circular dependency resolved: wing is fixed before iteration)
+  const lo_st   = hasLo ? findSellPEStrikeForBE(lo) : null;
+  const hi_st   = hasHi ? findSellCEStrikeForBE(hi) : null;
+  const lo_wing = hasLo ? nearest(lo_st - wingDist) : null;
+  const hi_wing = hasHi ? nearest(hi_st + wingDist) : null;
+
+  // ── "Tight wing": half of atrWing, minimum 1 strike step ──
+  const tightWing = Math.max(Math.round(atrWing_be * 0.5 / strikeStep) * strikeStep, strikeStep);
   const atm      = d.atm_strike;
 
   const raw = [];
@@ -2057,6 +2089,11 @@ function analyzeBE() {{
       const diff = bes[0] - hi;
       beAccuracy.push({{ side:"Upper", target:hi, actual:bes[0], diff:Math.round(diff), close: Math.abs(diff) <= 50 }});
     }}
+    // ── Yield-to-Risk filter ──
+    const yieldToRisk = maxL !== 0 ? Math.abs(maxP) / Math.abs(maxL) : 0;
+    const poorValue   = yieldToRisk > 0 && yieldToRisk < MIN_YIELD_TO_RISK;
+    // ── Liquidity check: flag if any sell leg has zero OI ──
+    const lowLiquidity = legs.some(l => l.action === "sell" && !isLiquid(l.strike, l.opt_type));
     return {{
       name, biasTag, sType, legs,
       netPrem: Math.round(netPrem*100)/100, isDebit: netPrem < 0,
@@ -2065,6 +2102,7 @@ function analyzeBE() {{
       margin: Math.round(Math.abs(maxL)*100)/100,
       payoffs: po.vals, priceRange: po.range,
       isBEMode: true, beInsight,
+      poorValue, lowLiquidity, yieldToRisk: Math.round(yieldToRisk*100)/100,
     }};
   }}
 
@@ -2082,17 +2120,68 @@ function analyzeBE() {{
 
   // ══ BOTH BE LOWER + BE UPPER ══════════════════════════════════
   if (hasLo && hasHi) {{
-    // Iron Condor — sell at both BEs, buy wings
-    if (lo_st && hi_st && lo_wing && hi_wing && new Set([lo_st,hi_st,lo_wing,hi_wing]).size===4) {{
-      const s = makeStratBE("Iron Condor", [
-        {{action:"sell",strike:hi_st,  type:"CE",opt_type:"CE",premium:get(hi_st,"ce_ltp"), iv:get(hi_st,"ce_iv",15), why:`SELL CE at your Upper BE ₹${{hi_st.toLocaleString("en-IN")}}`}},
-        {{action:"buy", strike:hi_wing,type:"CE",opt_type:"CE",premium:get(hi_wing,"ce_ltp"),iv:get(hi_wing,"ce_iv",15),why:`BUY CE wing above ₹${{hi_wing.toLocaleString("en-IN")}} — defines max loss on upside`}},
-        {{action:"sell",strike:lo_st,  type:"PE",opt_type:"PE",premium:get(lo_st,"pe_ltp"), iv:get(lo_st,"pe_iv",15), why:`SELL PE at your Lower BE ₹${{lo_st.toLocaleString("en-IN")}}`}},
-        {{action:"buy", strike:lo_wing,type:"PE",opt_type:"PE",premium:get(lo_wing,"pe_ltp"),iv:get(lo_wing,"pe_iv",15),why:`BUY PE wing below ₹${{lo_wing.toLocaleString("en-IN")}} — defines max loss on downside`}},
-      ], "neutral", "iron_condor",
-      `Sell CE at upper BE ₹${{hi_st.toLocaleString("en-IN")}} + PE at lower BE ₹${{lo_st.toLocaleString("en-IN")}}. Wings cap max loss. Best if Nifty stays inside your range.`);
-      if (s) raw.push(s);
-    }}
+    // ── Iron Condor: iterative Seed → Expand → Adjust → Finalize ──────────────
+    // Step 1 (Seed): start with sell strikes closest OTM to user's ceiling/floor
+    // Step 2 (Expand): compute credit using atrWing_be-based wings
+    // Step 3 (Adjust): if actual BE is too wide → move sell inward; too narrow → outward
+    // Step 4 (Finalize): apply 25% dynamic wing rule on final sell strikes, compute fit
+    (function() {{
+      const MAX_ITER = allSt.length;
+      const ceAbove  = allSt.filter(k => k > underlying).sort((a,b) => a-b);
+      const peBelow  = allSt.filter(k => k < underlying).sort((a,b) => b-a);
+      if (!ceAbove.length || !peBelow.length) return;
+
+      // Step 1: seed — closest OTM strikes to user's BE inputs
+      let sellCE = nearest(hi), sellPE = nearest(lo);
+      let buyCE  = nearest(sellCE + wingDist), buyPE = nearest(sellPE - wingDist);
+
+      for (let iter = 0; iter < MAX_ITER; iter++) {{
+        const ceSellP = midPrice(get(sellCE, "ce_ltp", 0));
+        const ceBuyP  = midPrice(get(buyCE,  "ce_ltp", 0));
+        const peSellP = midPrice(get(sellPE, "pe_ltp", 0));
+        const peBuyP  = midPrice(get(buyPE,  "pe_ltp", 0));
+        if (ceSellP <= 0 || peSellP <= 0) break;
+        const ncCE = ceSellP - ceBuyP, ncPE = peSellP - peBuyP;
+        if (ncCE <= 0 || ncPE <= 0) break;
+        const actualHiBE = sellCE + ncCE;
+        const actualLoBE = sellPE - ncPE;
+        // Step 3: adjust — check if actual BEs match user targets
+        const hiErr = actualHiBE - hi, loErr = actualLoBE - lo;
+        const converged = Math.abs(hiErr) <= strikeStep && Math.abs(loErr) <= strikeStep;
+        if (converged) break;
+        // Move sell strikes to correct BE direction
+        const ceIdx = ceAbove.indexOf(sellCE);
+        const peIdx = peBelow.indexOf(sellPE);
+        if (hiErr > strikeStep && ceIdx > 0) {{
+          sellCE = ceAbove[ceIdx - 1];  // move inward (lower CE sell → lower BE)
+        }} else if (hiErr < -strikeStep && ceIdx < ceAbove.length - 1) {{
+          sellCE = ceAbove[ceIdx + 1];  // move outward
+        }}
+        if (loErr < -strikeStep && peIdx > 0) {{
+          sellPE = peBelow[peIdx - 1];  // move inward
+        }} else if (loErr > strikeStep && peIdx < peBelow.length - 1) {{
+          sellPE = peBelow[peIdx + 1];  // move outward
+        }}
+        // Step 4: recalculate wings at 25% of new sell-to-sell range
+        const finalWing = Math.max(
+          Math.round((sellCE - sellPE) * 0.25 / strikeStep) * strikeStep,
+          2 * strikeStep
+        );
+        buyCE = nearest(sellCE + finalWing);
+        buyPE = nearest(sellPE - finalWing);
+      }}
+
+      if (new Set([sellCE, buyCE, sellPE, buyPE]).size === 4) {{
+        const s = makeStratBE("Iron Condor", [
+          {{action:"sell",strike:sellCE, type:"CE",opt_type:"CE",premium:get(sellCE,"ce_ltp"), iv:get(sellCE,"ce_iv",15), why:`SELL CE ₹${{sellCE.toLocaleString("en-IN")}} — iteratively adjusted to match your upper BE ₹${{hi.toLocaleString("en-IN")}}`}},
+          {{action:"buy", strike:buyCE,  type:"CE",opt_type:"CE",premium:get(buyCE,"ce_ltp"),  iv:get(buyCE,"ce_iv",15),  why:`BUY CE wing ₹${{buyCE.toLocaleString("en-IN")}} — caps upside loss (25% dynamic wing)`}},
+          {{action:"sell",strike:sellPE, type:"PE",opt_type:"PE",premium:get(sellPE,"pe_ltp"), iv:get(sellPE,"pe_iv",15), why:`SELL PE ₹${{sellPE.toLocaleString("en-IN")}} — iteratively adjusted to match your lower BE ₹${{lo.toLocaleString("en-IN")}}`}},
+          {{action:"buy", strike:buyPE,  type:"PE",opt_type:"PE",premium:get(buyPE,"pe_ltp"),  iv:get(buyPE,"pe_iv",15),  why:`BUY PE wing ₹${{buyPE.toLocaleString("en-IN")}} — caps downside loss (25% dynamic wing)`}},
+        ], "neutral", "iron_condor",
+        `Sell strikes refined via iterative solver to match your BEs. Wings set at 25% of final spread width.`);
+        if (s) raw.push(s);
+      }}
+    }})();
 
     // Short Strangle — sell at both BEs, no wings
     if (lo_st && hi_st && lo_st !== hi_st) {{
@@ -2170,7 +2259,7 @@ function analyzeBE() {{
     if (lo_st && bias !== "bearish") {{
       const netPremVal = get(lo_st, "pe_ltp");
       if (netPremVal > 0) {{
-        const wing2 = nearest(lo_st - 150);
+        const wing2 = nearest(lo_st - tightWing);
         if (wing2 !== lo_st) {{
           const s = makeStratBE("Bull Put Spread (Tight)", [
             {{action:"sell",strike:lo_st,type:"PE",opt_type:"PE",premium:get(lo_st,"pe_ltp"),iv:get(lo_st,"pe_iv",15),why:`SELL PE exactly at your BE floor ₹${{lo_st.toLocaleString("en-IN")}}`}},
@@ -2234,7 +2323,7 @@ function analyzeBE() {{
 
     // Bear Call Spread (Tight)
     if (hi_st && bias !== "bullish") {{
-      const wing2 = nearest(hi_st + 150);
+      const wing2 = nearest(hi_st + tightWing);
       if (wing2 !== hi_st) {{
         const s = makeStratBE("Bear Call Spread (Tight)", [
           {{action:"sell",strike:hi_st,type:"CE",opt_type:"CE",premium:get(hi_st,"ce_ltp"),iv:get(hi_st,"ce_iv",15),why:`SELL CE exactly at your BE ceiling ₹${{hi_st.toLocaleString("en-IN")}}`}},
@@ -2283,8 +2372,16 @@ function renderStrategies() {{
     const netDisp= s.isDebit?`<span class="down">-₹${{Math.abs(s.netPrem).toFixed(2)}}</span>`:`<span class="up">+₹${{s.netPrem.toFixed(2)}}</span>`;
     const uid    = s.name.replace(/[^a-zA-Z0-9]/g,"_");
 
-    // ── BE mode: show detailed leg reasons + fit bar ──
-    const beModeTop = s.isBEMode ? `<div class="be-mode-bar">🎯 BE STRATEGY &nbsp;·&nbsp; FIT: <b style="color:var(--gold);">${{s.fit||"—"}}%</b></div>` : "";
+    // ── BE mode: show detailed leg reasons + fit bar + quality warnings ──
+    const poorValueBadge    = (s.isBEMode && s.poorValue)
+      ? `<div style="margin:0 0 2px;padding:5px 14px;background:rgba(255,107,107,.10);border-bottom:1px solid rgba(255,107,107,.25);font-size:8px;font-weight:700;color:#ff6b6b;font-family:'DM Mono',monospace;letter-spacing:.8px;">⚠️ POOR VALUE — Yield-to-Risk ${{s.yieldToRisk.toFixed(2)}}x (below 1:5 threshold). Consider a wider spread.</div>`
+      : "";
+    const lowLiquidityBadge = (s.isBEMode && s.lowLiquidity)
+      ? `<div style="margin:0 0 2px;padding:5px 14px;background:rgba(255,209,102,.08);border-bottom:1px solid rgba(255,209,102,.25);font-size:8px;font-weight:700;color:#ffd166;font-family:'DM Mono',monospace;letter-spacing:.8px;">⚠️ LOW LIQUIDITY — One or more sell legs have zero OI. Verify fills before trading.</div>`
+      : "";
+    const beModeTop = s.isBEMode
+      ? `<div class="be-mode-bar">🎯 BE STRATEGY &nbsp;·&nbsp; FIT: <b style="color:var(--gold);">${{s.fit||"—"}}%</b></div>${{poorValueBadge}}${{lowLiquidityBadge}}`
+      : "";
 
     // ── BE accuracy panel: shows YOUR INPUT vs ACTUAL BE side by side ──
     const beAccuracyPanel = (s.isBEMode && s.beAccuracy && s.beAccuracy.length) ? `
