@@ -924,13 +924,37 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 .sec-hdr{{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}}
 .sec-title{{font-size:17px;font-weight:800;display:flex;align-items:center;gap:9px;}}
 .sec-tag{{font-size:12px;font-weight:700;background:#00d4ff12;border:1px solid #00d4ff28;color:var(--cyan);padding:2px 9px;border-radius:14px;font-family:'DM Mono',monospace;letter-spacing:1px;}}
-.strat-grid{{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px;}}
-.strat-card{{background:var(--bg3);border:1px solid var(--border);border-radius:11px;overflow:hidden;transition:all .3s;cursor:pointer;}}
-.strat-card:hover{{transform:translateY(-3px);box-shadow:0 10px 32px rgba(0,0,0,.4);border-color:var(--cc,var(--cyan));}}
+.strat-grid{{display:flex;flex-direction:column;gap:8px;}}
+
+/* ── ACCORDION CARD ── */
+.strat-card{{background:var(--bg3);border:1px solid var(--border);border-radius:11px;overflow:hidden;transition:border-color .25s,box-shadow .25s;cursor:pointer;}}
+.strat-card:hover{{box-shadow:0 4px 20px rgba(0,0,0,.35);border-color:var(--cc,var(--cyan));}}
+.strat-card.sc-open{{border-color:var(--cc,var(--cyan));box-shadow:0 0 0 1px var(--cc,var(--cyan))22,0 8px 28px rgba(0,0,0,.4);}}
+
+/* Collapsed header row */
+.sc-header{{display:flex;align-items:center;gap:10px;padding:11px 14px;user-select:none;}}
+.sc-chevron{{font-size:11px;color:#6a90b8;transition:transform .25s;flex-shrink:0;margin-right:2px;}}
+.strat-card.sc-open .sc-chevron{{transform:rotate(90deg);color:var(--cc,var(--cyan));}}
+.sc-pill-bias{{font-size:9px;font-weight:800;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:4px;letter-spacing:.8px;flex-shrink:0;}}
+.sc-pill-bull{{background:rgba(0,200,150,.15);color:#00c896;border:1px solid rgba(0,200,150,.3);}}
+.sc-pill-bear{{background:rgba(255,107,107,.15);color:#ff6b6b;border:1px solid rgba(255,107,107,.3);}}
+.sc-pill-neut{{background:rgba(0,212,255,.12);color:#00d4ff;border:1px solid rgba(0,212,255,.25);}}
+.sc-pill-volt{{background:rgba(168,130,255,.15);color:#a882ff;border:1px solid rgba(168,130,255,.3);}}
+.sc-name{{font-size:15px;font-weight:800;color:#ffffff;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}}
+.sc-header-right{{display:flex;align-items:center;gap:10px;flex-shrink:0;}}
+.sc-legs-mini{{display:flex;flex-wrap:nowrap;gap:4px;}}
+.sc-leg-chip{{font-size:9px;font-weight:700;font-family:'DM Mono',monospace;padding:2px 6px;border-radius:4px;white-space:nowrap;}}
+.sc-leg-chip.sell{{background:rgba(255,107,107,.15);color:#ff8080;border:1px solid rgba(255,107,107,.25);}}
+.sc-leg-chip.buy{{background:rgba(0,200,150,.12);color:#00c896;border:1px solid rgba(0,200,150,.22);}}
+.pop-pill{{padding:4px 10px;border-radius:14px;font-size:15px;font-weight:800;font-family:'DM Mono',monospace;white-space:nowrap;flex-shrink:0;}}
+.sc-fit-badge{{font-size:9px;font-weight:800;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:4px;letter-spacing:.5px;flex-shrink:0;background:rgba(255,209,102,.12);color:#ffd166;border:1px solid rgba(255,209,102,.25);}}
+
+/* Expandable body */
+.sc-body{{display:none;border-top:1px solid var(--border);}}
+.strat-card.sc-open .sc-body{{display:block;}}
+
 .sc-top{{padding:13px 15px 10px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;}}
-.sc-name{{font-size:17px;font-weight:800;color:#ffffff;}}
 .sc-sub{{font-size:13px;color:#d8eeff;margin-top:2px;font-family:'DM Mono',monospace;}}
-.pop-pill{{padding:4px 10px;border-radius:14px;font-size:15px;font-weight:800;font-family:'DM Mono',monospace;white-space:nowrap;}}
 .sc-fields{{padding:10px 15px;display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;border-bottom:1px solid var(--border);}}
 .sc-field{{display:flex;flex-direction:column;}}
 .sc-field-lbl{{font-size:12px;font-weight:700;color:#c8dff0;text-transform:uppercase;letter-spacing:.7px;font-family:'DM Mono',monospace;}}
@@ -2342,7 +2366,21 @@ function analyzeBE() {{
   populatePayoffSel();
 }}
 
-// ── Render Strategy Cards (handles both SR & BE modes) ───────
+
+
+// ── Render Strategy Cards — accordion design ─────────────────
+function toggleCard(uid) {{
+  const card = document.getElementById("sc-card-"+uid);
+  if (!card) return;
+  const isOpen = card.classList.contains("sc-open");
+  document.querySelectorAll(".strat-card.sc-open").forEach(c=>c.classList.remove("sc-open"));
+  if (!isOpen) {{
+    card.classList.add("sc-open");
+    const nm = card.dataset.stratname;
+    if (nm) selectPayoff(nm);
+  }}
+}}
+
 function renderStrategies() {{
   const sortBy = document.getElementById("sortSel").value;
   const sorted = [...strategies].sort((a,b)=>{{
@@ -2359,131 +2397,147 @@ function renderStrategies() {{
   }}
 
   const colors={{bullish:"var(--green)",bearish:"var(--red)",neutral:"var(--cyan)",volatile:"var(--purple)"}};
-  const emojis={{bullish:"🐂",bearish:"🐻",neutral:"⚖️",volatile:"⚡"}};
+  const emojis={{bullish:"\uD83D\uDC02",bearish:"\uD83D\uDC3B",neutral:"\u2696\uFE0F",volatile:"\u26A1"}};
+  const pillCls={{bullish:"sc-pill-bull",bearish:"sc-pill-bear",neutral:"sc-pill-neut",volatile:"sc-pill-volt"}};
   const maxScore=Math.max(...sorted.map(s=>s.score));
 
   document.getElementById("stratGrid").innerHTML = sorted.map((s,i)=>{{
     const cc     = colors[s.biasTag]||"var(--cyan)";
     const popCol = s.pop>=60?"var(--green)":s.pop>=45?"var(--gold)":"var(--red)";
     const popBg  = s.pop>=60?"#00c89620":s.pop>=45?"#ffd16620":"#ff6b6b20";
-    const rrDisp = s.rr===0?"∞":s.rr.toFixed(2)+"x";
+    const rrDisp = s.rr===0?"\u221E":s.rr.toFixed(2)+"x";
     const sw     = Math.round((s.score/maxScore)*100);
-    const beStr  = s.breakevens.length ? s.breakevens.map(b=>"₹"+b.toLocaleString("en-IN")).join(" / ") : "—";
-    const netDisp= s.isDebit?`<span class="down">-₹${{Math.abs(s.netPrem).toFixed(2)}}</span>`:`<span class="up">+₹${{s.netPrem.toFixed(2)}}</span>`;
-    const uid    = s.name.replace(/[^a-zA-Z0-9]/g,"_");
+    const beStr  = s.breakevens.length ? s.breakevens.map(b=>"\u20B9"+b.toLocaleString("en-IN")).join(" / ") : "\u2014";
+    const netDisp= s.isDebit?`<span class="down">-\u20B9${{Math.abs(s.netPrem).toFixed(2)}}</span>`:`<span class="up">+\u20B9${{s.netPrem.toFixed(2)}}</span>`;
+    const uid    = (s.name+i).replace(/[^a-zA-Z0-9]/g,"_");
 
-    // ── BE mode: show detailed leg reasons + fit bar + quality warnings ──
-    const poorValueBadge    = (s.isBEMode && s.poorValue)
-      ? `<div style="margin:0 0 2px;padding:6px 14px;background:rgba(255,107,107,.15);border-bottom:1px solid rgba(255,107,107,.40);font-size:12px;font-weight:800;color:#ff8080;font-family:'DM Mono',monospace;letter-spacing:.8px;">⚠️ POOR VALUE — Yield-to-Risk ${{s.yieldToRisk.toFixed(2)}}x (below 1:5 threshold). Consider a wider spread.</div>`
+    const legChips = s.legs.map(l=>
+      `<span class="sc-leg-chip ${{l.action}}">${{l.action==="sell"?"SELL":"BUY"}} ${{l.opt_type||l.type}} ${{l.strike.toLocaleString("en-IN")}} @${{(+l.premium).toFixed(1)}}</span>`
+    ).join("");
+
+    const poorValueBadge = (s.isBEMode && s.poorValue)
+      ? `<div style="padding:6px 14px;background:rgba(255,107,107,.15);border-bottom:1px solid rgba(255,107,107,.40);font-size:12px;font-weight:800;color:#ff8080;font-family:'DM Mono',monospace;letter-spacing:.8px;">\u26A0\uFE0F POOR VALUE \u2014 Yield-to-Risk ${{s.yieldToRisk.toFixed(2)}}x (below 1:5 threshold). Consider a wider spread.</div>`
       : "";
     const lowLiquidityBadge = (s.isBEMode && s.lowLiquidity)
-      ? `<div style="margin:0 0 2px;padding:6px 14px;background:rgba(255,209,102,.14);border-bottom:1px solid rgba(255,209,102,.40);font-size:12px;font-weight:800;color:#ffd166;font-family:'DM Mono',monospace;letter-spacing:.8px;">⚠️ LOW LIQUIDITY — One or more sell legs have zero OI. Verify fills before trading.</div>`
-      : "";
-    const beModeTop = s.isBEMode
-      ? `<div class="be-mode-bar">🎯 BE STRATEGY &nbsp;·&nbsp; FIT: <b style="color:var(--gold);">${{s.fit||"—"}}%</b></div>${{poorValueBadge}}${{lowLiquidityBadge}}`
+      ? `<div style="padding:6px 14px;background:rgba(255,209,102,.14);border-bottom:1px solid rgba(255,209,102,.40);font-size:12px;font-weight:800;color:#ffd166;font-family:'DM Mono',monospace;letter-spacing:.8px;">\u26A0\uFE0F LOW LIQUIDITY \u2014 One or more sell legs have zero OI. Verify fills before trading.</div>`
       : "";
 
-    // ── BE accuracy panel: shows YOUR INPUT vs ACTUAL BE side by side ──
     const beAccuracyPanel = (s.isBEMode && s.beAccuracy && s.beAccuracy.length) ? `
-      <div style="margin:0;padding:8px 14px;background:rgba(6,10,18,.6);border-bottom:1px solid var(--border);">
-        <div style="font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;color:#d8eeff;font-family:'DM Mono',monospace;margin-bottom:6px;">🎯 YOUR INPUT vs ACTUAL BREAKEVENS</div>
+      <div style="padding:8px 14px;background:rgba(6,10,18,.6);border-bottom:1px solid var(--border);">
+        <div style="font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;color:#d8eeff;font-family:'DM Mono',monospace;margin-bottom:6px;">\uD83C\uDFAF YOUR INPUT vs ACTUAL BREAKEVENS</div>
         <div style="display:grid;grid-template-columns:${{s.beAccuracy.length>1?"1fr 1fr":"1fr"}};gap:8px;">
           ${{s.beAccuracy.map(a=>{{
-            const sign = a.diff >= 0 ? "+" : "";
-            const col  = Math.abs(a.diff) <= 30 ? "var(--green)" : Math.abs(a.diff) <= 80 ? "var(--gold)" : "var(--red)";
-            const icon = Math.abs(a.diff) <= 30 ? "✅" : Math.abs(a.diff) <= 80 ? "⚠️" : "❌";
+            const sign=a.diff>=0?"+":"";
+            const col=Math.abs(a.diff)<=30?"var(--green)":Math.abs(a.diff)<=80?"var(--gold)":"var(--red)";
+            const icon=Math.abs(a.diff)<=30?"\u2705":Math.abs(a.diff)<=80?"\u26A0\uFE0F":"\u274C";
             return `<div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:7px;padding:7px 10px;">
               <div style="font-size:11px;color:#b8d4e8;font-family:'DM Mono',monospace;margin-bottom:4px;">${{icon}} ${{a.side.toUpperCase()}} BE</div>
               <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
-                <div style="text-align:center;">
-                  <div style="font-size:11px;font-weight:700;color:#c8dff0;font-family:'DM Mono',monospace;">YOUR INPUT</div>
-                  <div style="font-size:15px;font-weight:800;font-family:'DM Mono',monospace;color:var(--gold);">₹${{a.target.toLocaleString("en-IN")}}</div>
-                </div>
-                <div style="color:#d8eeff;font-size:16px;font-weight:700;">→</div>
-                <div style="text-align:center;">
-                  <div style="font-size:11px;font-weight:700;color:#c8dff0;font-family:'DM Mono',monospace;">ACTUAL BE</div>
-                  <div style="font-size:15px;font-weight:800;font-family:'DM Mono',monospace;color:${{col}};">₹${{a.actual.toLocaleString("en-IN")}}</div>
-                </div>
-                <div style="text-align:center;">
-                  <div style="font-size:11px;font-weight:700;color:#c8dff0;font-family:'DM Mono',monospace;">DIFF</div>
-                  <div style="font-size:14px;font-weight:700;font-family:'DM Mono',monospace;color:${{col}};">${{sign}}${{a.diff}}</div>
-                </div>
+                <div style="text-align:center;"><div style="font-size:11px;font-weight:700;color:#c8dff0;font-family:'DM Mono',monospace;">YOUR INPUT</div><div style="font-size:15px;font-weight:800;font-family:'DM Mono',monospace;color:var(--gold);">\u20B9${{a.target.toLocaleString("en-IN")}}</div></div>
+                <div style="color:#d8eeff;font-size:16px;font-weight:700;">\u2192</div>
+                <div style="text-align:center;"><div style="font-size:11px;font-weight:700;color:#c8dff0;font-family:'DM Mono',monospace;">ACTUAL BE</div><div style="font-size:15px;font-weight:800;font-family:'DM Mono',monospace;color:${{col}};">\u20B9${{a.actual.toLocaleString("en-IN")}}</div></div>
+                <div style="text-align:center;"><div style="font-size:11px;font-weight:700;color:#c8dff0;font-family:'DM Mono',monospace;">DIFF</div><div style="font-size:14px;font-weight:700;font-family:'DM Mono',monospace;color:${{col}};">${{sign}}${{a.diff}}</div></div>
               </div>
             </div>`;
           }}).join("")}}
         </div>
         <div style="margin-top:6px;font-size:11px;color:#b8d4e8;font-family:'DM Mono',monospace;line-height:1.6;">
-          ℹ️ Diff = (Sell Strike ± actual premium collected) vs your input. Small diff = sell strikes were well-chosen.
+          \u2139\uFE0F Diff = (Sell Strike \u00B1 actual premium collected) vs your input. Small diff = sell strikes were well-chosen.
         </div>
       </div>` : "";
 
-    const fitBar    = s.isBEMode ? `
+    const fitBar = s.isBEMode ? `
       <div class="fit-bar-wrap">
         <div class="fit-bar-hdr"><span>Breakeven Fit Score</span><span style="color:${{s.fit>=80?"var(--green)":s.fit>=60?"var(--gold)":"var(--red)"}};">${{s.fit}}%</span></div>
         <div class="fit-bar-track"><div class="fit-bar-fill" style="width:${{s.fit}}%;background:${{s.fit>=80?"var(--green)":s.fit>=60?"var(--gold)":"var(--red)"}};box-shadow:0 0 6px ${{s.fit>=80?"var(--green)":s.fit>=60?"var(--gold)":"var(--red)"}}55;"></div></div>
       </div>` : "";
 
-    // ── BE mode: detailed leg rows with why explanations ──
     const legsSection = s.isBEMode
       ? `<div class="sc-legs-detail">
-          <div class="sc-legs-detail-title">📋 LEGS TO TRADE — HOW & WHY</div>
+          <div class="sc-legs-detail-title">\uD83D\uDCCB LEGS TO TRADE \u2014 HOW & WHY</div>
           ${{s.legs.map(l=>`
           <div class="leg-detail-row ${{l.action.toLowerCase()}}">
             <span class="leg-detail-badge ${{l.action.toLowerCase()}}">${{l.action.toUpperCase()}}</span>
             <div class="leg-detail-body">
               <div class="leg-detail-main">
                 <span class="leg-${{(l.opt_type||l.type).toLowerCase()}}">${{l.opt_type||l.type}}</span>
-                <span class="leg-stk">₹${{l.strike.toLocaleString("en-IN")}}</span>
-                <span class="leg-prem">@ ₹${{l.premium}}</span>
+                <span class="leg-stk">\u20B9${{l.strike.toLocaleString("en-IN")}}</span>
+                <span class="leg-prem">@ \u20B9${{l.premium}}</span>
               </div>
-              <div class="leg-why">↳ ${{l.why}}</div>
+              <div class="leg-why">\u21B3 ${{l.why}}</div>
             </div>
           </div>`).join("")}}
-          ${{s.beInsight ? `<div style="margin-top:8px;padding:7px 10px;background:rgba(255,209,102,.06);border:1px solid rgba(255,209,102,.15);border-radius:7px;font-size:12px;font-family:'DM Mono',monospace;color:rgba(255,209,102,.8);line-height:1.6;">💡 ${{s.beInsight}}</div>` : ""}}
+          ${{s.beInsight?`<div style="margin-top:8px;padding:7px 10px;background:rgba(255,209,102,.06);border:1px solid rgba(255,209,102,.15);border-radius:7px;font-size:12px;font-family:'DM Mono',monospace;color:rgba(255,209,102,.8);line-height:1.6;">\uD83D\uDCA1 ${{s.beInsight}}</div>`:""}}
         </div>`
       : `<div class="sc-legs">
           ${{s.legs.map(l=>`<span class="leg-tag leg-${{l.action}}">${{l.action.toUpperCase()}} ${{l.strike}} ${{l.opt_type||l.type}} @${{l.premium.toFixed(2)}}</span>`).join("")}}
         </div>`;
 
-    return `<div class="strat-card" style="--cc:${{cc}};animation-delay:${{i*0.05}}s" onclick="selectPayoff('${{s.name}}')">
-      ${{beModeTop}}
-      <div class="sc-top">
-        <div>
-          <div class="sc-name">${{emojis[s.biasTag]||"📊"}} ${{s.name}}</div>
-          <div class="sc-sub">${{s.biasTag.toUpperCase()}} · ${{s.isDebit?"DEBIT":"CREDIT"}} SPREAD · DTE:${{ALL_DATA[currentExpiry]?.dte||"—"}}</div>
+    const headerRow = `
+      <div class="sc-header" onclick="toggleCard('${{uid}}')">
+        <span class="sc-chevron">\u25BA</span>
+        <span class="sc-pill-bias ${{pillCls[s.biasTag]||"sc-pill-neut"}}">${{(s.biasTag||"NEUTRAL").toUpperCase()}}</span>
+        <span class="sc-name">${{emojis[s.biasTag]||"\uD83D\uDCCA"}} ${{s.name}}</span>
+        <div class="sc-header-right">
+          ${{s.isBEMode?`<span class="sc-fit-badge">FIT ${{s.fit||"\u2014"}}%</span>`:""}}
+          <div class="sc-legs-mini">${{legChips}}</div>
+          <div class="pop-pill" style="background:${{popBg}};color:${{popCol}};border:1px solid ${{popCol}}33;">${{s.pop}}%<br><span style="font-size:9px;font-weight:700;">PoP</span></div>
         </div>
-        <div class="pop-pill" style="background:${{popBg}};color:${{popCol}};border:1px solid ${{popCol}}33;">${{s.pop}}%<br><span style="font-size:12px;font-weight:700;">PoP</span></div>
-      </div>
-      ${{fitBar}}
-      ${{beAccuracyPanel}}
-      <div class="sc-fields">
-        <div class="sc-field"><span class="sc-field-lbl">Strike Price</span><span class="sc-field-val" style="color:var(--cyan);">ATM ₹${{ALL_DATA[currentExpiry]?.atm_strike?.toLocaleString("en-IN")||"—"}}</span></div>
-        <div class="sc-field"><span class="sc-field-lbl">Max Profit</span><span class="sc-field-val up">₹${{s.maxProfit.toLocaleString("en-IN")}}</span></div>
-        <div class="sc-field"><span class="sc-field-lbl">Max Loss</span><span class="sc-field-val down">₹${{s.maxLoss.toLocaleString("en-IN")}}</span></div>
-        <div class="sc-field"><span class="sc-field-lbl">Max RR Ratio</span><span class="sc-field-val" style="color:var(--gold);">1:${{rrDisp}}</span></div>
-        <div class="sc-field"><span class="sc-field-lbl">Breakevens</span><span class="sc-field-val" style="font-size:14px;font-weight:700;color:#d8eeff;">${{beStr}}</span></div>
-        <div class="sc-field"><span class="sc-field-lbl">Net Credit/Debit</span><span class="sc-field-val">${{netDisp}}</span></div>
-        <div class="sc-field" style="grid-column:1/-1"><span class="sc-field-lbl">Est. Margin / Premium</span><span class="sc-field-val" style="color:var(--purple);">₹${{s.margin.toLocaleString("en-IN")}}</span></div>
-      </div>
-      ${{legsSection}}
-      <div class="sc-score">
-        <span class="score-lbl">SCORE</span>
-        <div class="score-bar-track"><div class="score-bar-fill" style="width:${{sw}}%"></div></div>
-        <span class="score-num">${{s.score}}</span>
-      </div>
-      <div style="padding:8px 12px;border-top:1px solid rgba(255,255,255,.05);" onclick="event.stopPropagation()">
-        <button data-simuid="${{uid}}" onclick="toggleSim('${{uid}}',this)"
-          style="width:100%;background:rgba(245,197,24,.07);border:1px solid rgba(245,197,24,.2);border-radius:8px;
-                 padding:7px 12px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;
-                 font-family:'DM Mono',monospace;font-size:9.5px;font-weight:700;color:rgba(255,209,102,.8);
-                 letter-spacing:.8px;text-transform:uppercase;transition:all .2s;">
-          <span style="display:flex;align-items:center;gap:7px;"><span style="font-size:15px;">📊</span> Intraday P&L Simulator</span>
-          <span id="sim-arrow-${{uid}}" style="font-size:14px;transition:transform .25s;">▼</span>
-        </button>
-      </div>
-      <div id="sim-wrap-${{uid}}" style="display:none;overflow:hidden;">${{buildIntradaySim(s, uid)}}</div>
+      </div>`;
+
+    const bodyContent = `
+      <div class="sc-body">
+        ${{poorValueBadge}}${{lowLiquidityBadge}}
+        <div class="sc-top">
+          <div>
+            <div class="sc-name" style="font-size:16px;">${{emojis[s.biasTag]||"\uD83D\uDCCA"}} ${{s.name}}</div>
+            <div class="sc-sub">${{s.biasTag.toUpperCase()}} \u00B7 ${{s.isDebit?"DEBIT":"CREDIT"}} SPREAD \u00B7 DTE:${{ALL_DATA[currentExpiry]?.dte||"\u2014"}}</div>
+          </div>
+          <div class="pop-pill" style="background:${{popBg}};color:${{popCol}};border:1px solid ${{popCol}}33;">${{s.pop}}%<br><span style="font-size:12px;font-weight:700;">PoP</span></div>
+        </div>
+        ${{fitBar}}
+        ${{beAccuracyPanel}}
+        <div class="sc-fields">
+          <div class="sc-field"><span class="sc-field-lbl">Strike Price</span><span class="sc-field-val" style="color:var(--cyan);">ATM \u20B9${{ALL_DATA[currentExpiry]?.atm_strike?.toLocaleString("en-IN")||"\u2014"}}</span></div>
+          <div class="sc-field"><span class="sc-field-lbl">Max Profit</span><span class="sc-field-val up">\u20B9${{s.maxProfit.toLocaleString("en-IN")}}</span></div>
+          <div class="sc-field"><span class="sc-field-lbl">Max Loss</span><span class="sc-field-val down">\u20B9${{s.maxLoss.toLocaleString("en-IN")}}</span></div>
+          <div class="sc-field"><span class="sc-field-lbl">Max RR Ratio</span><span class="sc-field-val" style="color:var(--gold);">1:${{rrDisp}}</span></div>
+          <div class="sc-field"><span class="sc-field-lbl">Breakevens</span><span class="sc-field-val" style="font-size:14px;font-weight:700;color:#d8eeff;">${{beStr}}</span></div>
+          <div class="sc-field"><span class="sc-field-lbl">Net Credit/Debit</span><span class="sc-field-val">${{netDisp}}</span></div>
+          <div class="sc-field" style="grid-column:1/-1"><span class="sc-field-lbl">Est. Margin / Premium</span><span class="sc-field-val" style="color:var(--purple);">\u20B9${{s.margin.toLocaleString("en-IN")}}</span></div>
+        </div>
+        ${{legsSection}}
+        <div class="sc-score">
+          <span class="score-lbl">SCORE</span>
+          <div class="score-bar-track"><div class="score-bar-fill" style="width:${{sw}}%"></div></div>
+          <span class="score-num">${{s.score}}</span>
+        </div>
+        <div style="padding:8px 12px;border-top:1px solid rgba(255,255,255,.05);" onclick="event.stopPropagation()">
+          <button data-simuid="${{uid}}" onclick="toggleSim('${{uid}}',this)"
+            style="width:100%;background:rgba(245,197,24,.07);border:1px solid rgba(245,197,24,.2);border-radius:8px;
+                   padding:7px 12px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;
+                   font-family:'DM Mono',monospace;font-size:9.5px;font-weight:700;color:rgba(255,209,102,.8);
+                   letter-spacing:.8px;text-transform:uppercase;transition:all .2s;">
+            <span style="display:flex;align-items:center;gap:7px;"><span style="font-size:15px;">\uD83D\uDCCA</span> Intraday P&L Simulator</span>
+            <span id="sim-arrow-${{uid}}" style="font-size:14px;transition:transform .25s;">\u25BC</span>
+          </button>
+        </div>
+        <div id="sim-wrap-${{uid}}" style="display:none;overflow:hidden;">${{buildIntradaySim(s, uid)}}</div>
+      </div>`;
+
+    return `<div class="strat-card" id="sc-card-${{uid}}" style="--cc:${{cc}};animation-delay:${{i*0.05}}s" data-stratname="${{s.name}}">
+      ${{headerRow}}
+      ${{bodyContent}}
     </div>`;
   }}).join("");
+
+  // Auto-expand first card and show its payoff
+  const first = document.querySelector(".strat-card");
+  if(first) {{
+    first.classList.add("sc-open");
+    const nm = first.dataset.stratname;
+    if(nm) selectPayoff(nm);
+  }}
 }}
 
 // ── Intraday Simulator ────────────────────────────────────────
