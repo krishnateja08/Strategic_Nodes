@@ -766,7 +766,7 @@ def build_html(all_expiry_data, expiry_list, generated_at):
 *{{margin:0;padding:0;box-sizing:border-box;}}
 body{{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;overflow-x:hidden;}}
 body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:44px 44px;pointer-events:none;z-index:0;}}
-.wrap{{position:relative;z-index:1;max-width:1500px;margin:0 auto;padding:18px;}}
+.wrap{{position:relative;z-index:1;max-width:100%;margin:0 auto;padding:12px 18px;}}
 
 /* ── HEADER ── */
 .hdr{{display:flex;align-items:center;justify-content:space-between;padding:16px 22px;background:linear-gradient(135deg,#0d111799,#11182699);border:1px solid var(--border);border-top:2px solid var(--cyan);border-radius:12px;margin-bottom:18px;backdrop-filter:blur(12px);}}
@@ -932,7 +932,7 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 .strat-card.sc-open{{border-color:var(--cc,var(--cyan));box-shadow:0 0 0 1px var(--cc,var(--cyan))22,0 8px 28px rgba(0,0,0,.4);}}
 
 /* Collapsed header row */
-.sc-header{{display:flex;align-items:center;gap:10px;padding:11px 14px;user-select:none;}}
+.sc-header{{display:flex;align-items:center;gap:8px;padding:10px 12px;user-select:none;flex-wrap:wrap;}}
 .sc-chevron{{font-size:11px;color:#6a90b8;transition:transform .25s;flex-shrink:0;margin-right:2px;}}
 .strat-card.sc-open .sc-chevron{{transform:rotate(90deg);color:var(--cc,var(--cyan));}}
 .sc-pill-bias{{font-size:11px;font-weight:800;font-family:'DM Mono',monospace;padding:3px 8px;border-radius:4px;letter-spacing:.8px;flex-shrink:0;}}
@@ -940,9 +940,9 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 .sc-pill-bear{{background:rgba(255,107,107,.15);color:#ff6b6b;border:1px solid rgba(255,107,107,.3);}}
 .sc-pill-neut{{background:rgba(0,212,255,.12);color:#00d4ff;border:1px solid rgba(0,212,255,.25);}}
 .sc-pill-volt{{background:rgba(168,130,255,.15);color:#a882ff;border:1px solid rgba(168,130,255,.3);}}
-.sc-name{{font-size:15px;font-weight:800;color:#ffffff;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}}
-.sc-header-right{{display:flex;align-items:center;gap:10px;flex-shrink:0;}}
-.sc-legs-mini{{display:flex;flex-wrap:nowrap;gap:4px;}}
+.sc-name{{font-size:15px;font-weight:800;color:#ffffff;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}}
+.sc-header-right{{display:flex;align-items:center;gap:6px;flex-shrink:0;flex-wrap:wrap;}}
+.sc-legs-mini{{display:flex;flex-wrap:wrap;gap:4px;max-width:100%;}}
 .sc-leg-chip{{font-size:12px;font-weight:700;font-family:'DM Mono',monospace;padding:3px 8px;border-radius:4px;white-space:nowrap;}}
 .sc-leg-chip.sell{{background:rgba(255,107,107,.15);color:#ff8080;border:1px solid rgba(255,107,107,.25);}}
 .sc-leg-chip.buy{{background:rgba(0,200,150,.12);color:#00c896;border:1px solid rgba(0,200,150,.22);}}
