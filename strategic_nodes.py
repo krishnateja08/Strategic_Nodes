@@ -758,9 +758,9 @@ def build_html(all_expiry_data, expiry_list, generated_at):
   --gold:       #ffd166;
   --purple:     #8aa0ff;
   --orange:     #ff9f43;
-  --text:       #ddeeff;
-  --text2:      #6a8aaa;
-  --text3:      #2d4560;
+  --text:       #f0f8ff;
+  --text2:      #cce4f5;
+  --text3:      #9dbdd8;
   --grid:       #0b1520;
 }}
 *{{margin:0;padding:0;box-sizing:border-box;}}
@@ -834,7 +834,7 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 .be-inp-wrap{{position:relative;}}
 .be-inp-icon{{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:15px;pointer-events:none;}}
 .be-inp-padded{{padding-left:30px!important;}}
-.be-optional-badge{{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:var(--text3);font-family:'DM Mono',monospace;background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:2px 7px;margin-left:8px;text-transform:uppercase;letter-spacing:.5px;vertical-align:middle;}}
+.be-optional-badge{{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#9dbdd8;font-family:'DM Mono',monospace;background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:2px 7px;margin-left:8px;text-transform:uppercase;letter-spacing:.5px;vertical-align:middle;}}
 
 /* ── BE RANGE BAR ── */
 .be-rangebar-wrap{{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:10px 14px;margin-bottom:14px;}}
@@ -864,7 +864,7 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 .chain-col-hdr{{display:grid;grid-template-columns:1fr 100px 1fr;padding:5px 0 4px;border-bottom:1px solid var(--border2);background:#0a1218;position:sticky;top:32px;z-index:2;}}
 .chain-col-hdr .ce-cols{{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;padding:0 10px 0 6px;}}
 .chain-col-hdr .pe-cols{{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;padding:0 6px 0 10px;}}
-.chain-col-hdr span{{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;font-family:'JetBrains Mono',monospace;text-align:right;}}
+.chain-col-hdr span{{font-size:11px;color:#9dbdd8;text-transform:uppercase;letter-spacing:.8px;font-family:'JetBrains Mono',monospace;text-align:right;}}
 .chain-col-hdr .pe-cols span{{text-align:left;}}
 .chain-row{{display:grid;grid-template-columns:1fr 100px 1fr;border-bottom:1px solid var(--border2);transition:background .12s;position:relative;}}
 .chain-row:hover{{background:#ffffff04;}}
@@ -874,9 +874,9 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 .chain-row.be-lo-row .stk-cell{{border-left:2px solid var(--red)!important;border-right:2px solid var(--red)!important;}}
 .chain-row.be-hi-row .stk-cell{{border-left:2px solid var(--green)!important;border-right:2px solid var(--green)!important;}}
 .ce-side{{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;align-items:center;padding:8px 10px 8px 6px;gap:2px;position:relative;overflow:hidden;}}
-.ce-heat-bg{{position:absolute;top:0;right:0;bottom:0;background:var(--green);opacity:0.09;pointer-events:none;border-radius:2px 0 0 2px;}}
+.ce-heat-bg{{position:absolute;top:0;right:0;bottom:0;background:var(--green);opacity:0.14;pointer-events:none;border-radius:2px 0 0 2px;}}
 .pe-side{{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;align-items:center;padding:8px 6px 8px 10px;gap:2px;position:relative;overflow:hidden;}}
-.pe-heat-bg{{position:absolute;top:0;left:0;bottom:0;background:var(--red);opacity:0.09;pointer-events:none;border-radius:0 2px 2px 0;}}
+.pe-heat-bg{{position:absolute;top:0;left:0;bottom:0;background:var(--red);opacity:0.14;pointer-events:none;border-radius:0 2px 2px 0;}}
 .stk-cell{{display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;border-left:1px solid var(--border);border-right:1px solid var(--border);background:#0a1520;min-height:36px;position:relative;flex-direction:column;gap:2px;}}
 .atm-tag{{background:var(--cyan);color:#000;font-size:9px;font-weight:800;padding:1px 6px;border-radius:0 0 4px 4px;position:absolute;top:0;letter-spacing:.5px;}}
 .cv-ltp{{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;text-align:right;}}
@@ -903,7 +903,7 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 .g-row{{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--border2);}}
 .g-label{{display:flex;flex-direction:column;}}
 .g-name{{font-size:14px;font-weight:700;color:var(--text);}}
-.g-sub{{font-size:12px;color:var(--text3);margin-top:1px;font-family:'DM Mono',monospace;}}
+.g-sub{{font-size:12px;color:#cce4f5;margin-top:1px;font-family:'DM Mono',monospace;}}
 .g-vals{{display:flex;flex-direction:column;gap:3px;align-items:flex-end;}}
 .g-ce-val{{font-family:'DM Mono',monospace;font-size:14px;font-weight:700;color:#00c8e0;}}
 .g-pe-val{{font-family:'DM Mono',monospace;font-size:14px;font-weight:700;color:#ff9090;}}
@@ -933,7 +933,7 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 .pop-pill{{padding:4px 10px;border-radius:14px;font-size:15px;font-weight:800;font-family:'DM Mono',monospace;white-space:nowrap;}}
 .sc-fields{{padding:10px 15px;display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;border-bottom:1px solid var(--border);}}
 .sc-field{{display:flex;flex-direction:column;}}
-.sc-field-lbl{{font-size:8.5px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;font-family:'DM Mono',monospace;}}
+.sc-field-lbl{{font-size:11px;color:#9dbdd8;text-transform:uppercase;letter-spacing:.7px;font-family:'DM Mono',monospace;}}
 .sc-field-val{{font-size:15px;font-weight:700;font-family:'DM Mono',monospace;margin-top:2px;}}
 .sc-legs{{padding:9px 15px;background:#0d111766;display:flex;flex-wrap:wrap;gap:5px;border-bottom:1px solid var(--border);}}
 .leg-tag{{border-radius:5px;padding:3px 8px;font-size:9.5px;font-weight:700;font-family:'DM Mono',monospace;}}
@@ -955,17 +955,17 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 .leg-detail-main{{display:flex;align-items:center;gap:7px;font-family:'DM Mono',monospace;font-size:14px;font-weight:700;}}
 .leg-ce{{color:var(--green);}} .leg-pe{{color:var(--red);}}
 .leg-stk{{color:var(--cyan);}} .leg-prem{{color:var(--text2);font-size:13px;}}
-.leg-why{{font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:2px;line-height:1.5;}}
+.leg-why{{font-size:12px;color:#9dbdd8;font-family:'DM Mono',monospace;margin-top:2px;line-height:1.5;}}
 
 .fit-bar-wrap{{padding:8px 15px;border-bottom:1px solid var(--border);}}
-.fit-bar-hdr{{display:flex;justify-content:space-between;font-size:8.5px;font-family:'DM Mono',monospace;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px;}}
+.fit-bar-hdr{{display:flex;justify-content:space-between;font-size:11px;font-family:'DM Mono',monospace;color:#9dbdd8;text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px;}}
 .fit-bar-track{{height:4px;background:var(--border);border-radius:2px;overflow:hidden;}}
 .fit-bar-fill{{height:100%;border-radius:2px;transition:width .8s cubic-bezier(.4,0,.2,1);}}
 
 .sc-score{{padding:8px 15px;display:flex;align-items:center;gap:8px;}}
 .score-bar-track{{flex:1;height:3px;background:var(--border);border-radius:2px;overflow:hidden;}}
 .score-bar-fill{{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--cyan),var(--purple));transition:width 1s ease;}}
-.score-lbl{{font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;}}
+.score-lbl{{font-size:12px;color:#9dbdd8;font-family:'DM Mono',monospace;}}
 .score-num{{font-size:14px;font-weight:700;color:var(--cyan);font-family:'DM Mono',monospace;}}
 
 /* ── INTRADAY P&L SIMULATOR ── */
@@ -993,7 +993,7 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 .slpb{{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 12px;border-radius:9px;min-width:90px;}}
 .slpb-lbl{{font-size:7.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.28);}}
 .slpb-num{{font-family:'DM Mono',monospace;font-size:18px;font-weight:700;line-height:1;}}
-.slpb-sub{{font-size:11px;color:rgba(255,255,255,.25);}}
+.slpb-sub{{font-size:11px;color:rgba(255,255,255,.55);}}
 .cbar-row{{display:flex;align-items:center;gap:6px;margin-bottom:5px;}}
 .cbar-lbl{{font-family:'DM Mono',monospace;font-size:12px;font-weight:700;width:44px;flex-shrink:0;}}
 .cbar-track{{flex:1;height:4px;background:rgba(255,255,255,.07);border-radius:2px;overflow:hidden;}}
@@ -1003,7 +1003,7 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 .sim-slide-wrap{{padding:0 10px 10px;}}
 .sim-slide-labels{{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;}}
 .sim-slide-cur{{font-family:'DM Mono',monospace;font-size:13px;font-weight:700;color:#ffd166;background:rgba(245,197,24,.1);border:1px solid rgba(245,197,24,.28);border-radius:5px;padding:2px 8px;}}
-.sim-slide-edge{{font-size:11px;color:rgba(255,255,255,.25);}}
+.sim-slide-edge{{font-size:11px;color:rgba(255,255,255,.55);}}
 input.sim-range{{width:100%;height:4px;border-radius:2px;outline:none;border:none;-webkit-appearance:none;cursor:pointer;background:linear-gradient(90deg,#ffd166 var(--pct,50%),rgba(255,255,255,.09) var(--pct,50%));}}
 input.sim-range::-webkit-slider-thumb{{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#ffd166;border:2px solid var(--bg);box-shadow:0 0 6px rgba(245,197,24,.45);cursor:pointer;}}
 
@@ -1013,7 +1013,7 @@ canvas#payoffChart{{width:100%!important;height:288px!important;}}
 
 /* ── EMPTY STATE ── */
 .empty{{text-align:center;padding:50px 20px;color:var(--text3);grid-column:1/-1;}}
-.empty-icon{{font-size:44px;margin-bottom:12px;opacity:.3;}}
+.empty-icon{{font-size:44px;margin-bottom:12px;opacity:.6;}}
 .empty p{{font-size:14px;font-family:'DM Mono',monospace;line-height:1.8;}}
 
 /* ── FOOTER ── */
@@ -1053,15 +1053,15 @@ canvas#payoffChart{{width:100%!important;height:288px!important;}}
   </div>
   <div style="display:flex;align-items:center;gap:14px;">
     <div style="text-align:right;">
-      <div style="font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;">GENERATED</div>
+      <div style="font-size:12px;color:#9dbdd8;font-family:'DM Mono',monospace;">GENERATED</div>
       <div class="gen-time" style="font-size:14px;color:var(--text2);font-family:'DM Mono',monospace;">{generated_at}</div>
     </div>
     <div style="text-align:right;">
-      <div style="font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;">IST TIME</div>
+      <div style="font-size:12px;color:#9dbdd8;font-family:'DM Mono',monospace;">IST TIME</div>
       <div style="font-size:17px;font-weight:700;color:var(--cyan);font-family:'DM Mono',monospace;letter-spacing:1px;" id="istClock">--:--:--</div>
     </div>
     <div style="text-align:right;">
-      <div style="font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;">NEXT REFRESH</div>
+      <div style="font-size:12px;color:#9dbdd8;font-family:'DM Mono',monospace;">NEXT REFRESH</div>
       <div style="font-size:14px;color:var(--cyan);font-family:'DM Mono',monospace;" id="countdown">30s</div>
     </div>
     <div class="live-pill"><div class="live-dot"></div>LIVE</div>
@@ -1124,7 +1124,7 @@ canvas#payoffChart{{width:100%!important;height:288px!important;}}
             <div class="mode-dot"></div> 📍 S/R Levels
           </button>
           <button class="mode-btn" id="modeBE" onclick="setMode('be')">
-            <div class="mode-dot" style="opacity:.3;"></div> 🎯 Breakeven
+            <div class="mode-dot" style="opacity:.6;"></div> 🎯 Breakeven
           </button>
         </div>
       </div>
@@ -1197,7 +1197,7 @@ canvas#payoffChart{{width:100%!important;height:288px!important;}}
                    placeholder="e.g. 24000 — leave blank to skip"
                    oninput="updateBEVisual()"/>
           </div>
-          <div style="font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:4px;" id="beLowerHint">
+          <div style="font-size:12px;color:#9dbdd8;font-family:'DM Mono',monospace;margin-top:4px;" id="beLowerHint">
             "Nifty will NOT close below this at expiry"
           </div>
         </div>
@@ -1214,7 +1214,7 @@ canvas#payoffChart{{width:100%!important;height:288px!important;}}
                    placeholder="e.g. 25500 — leave blank to skip"
                    oninput="updateBEVisual()"/>
           </div>
-          <div style="font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:4px;" id="beUpperHint">
+          <div style="font-size:12px;color:#9dbdd8;font-family:'DM Mono',monospace;margin-top:4px;" id="beUpperHint">
             "Nifty will NOT close above this at expiry"
           </div>
         </div>
@@ -1280,7 +1280,7 @@ canvas#payoffChart{{width:100%!important;height:288px!important;}}
         <div></div>
         <div class="pe-cols"><span>ΔOI</span><span>OI(L)</span><span>IV%</span><span>LTP</span></div>
       </div>
-      <div id="chainBody"><div style="text-align:center;padding:50px;color:var(--text3);font-family:'JetBrains Mono',monospace;font-size:14px;">Loading…</div></div>
+      <div id="chainBody"><div style="text-align:center;padding:50px;color:#9dbdd8;font-family:'JetBrains Mono',monospace;font-size:14px;">Loading…</div></div>
     </div>
   </div>
 
@@ -1290,13 +1290,13 @@ canvas#payoffChart{{width:100%!important;height:288px!important;}}
     <div class="g-sel-wrap"><select class="g-sel" id="greeksStrikeSel" onchange="updateGreeksForStrike(this.value)"></select></div>
     <div class="g-atm-badge" id="greeksAtmBadge">
       <div><div class="g-strike-type" id="greeksTypeLabel">ATM</div><div class="g-strike-val" id="greeksStrikeVal">—</div></div>
-      <div class="g-ltp-row"><span class="g-ce-ltp" id="greeksCeLtp">CE —</span><span style="color:var(--text3);font-size:12px;">/</span><span class="g-pe-ltp" id="greeksPeLtp">PE —</span></div>
+      <div class="g-ltp-row"><span class="g-ce-ltp" id="greeksCeLtp">CE —</span><span style="color:#9dbdd8;font-size:12px;">/</span><span class="g-pe-ltp" id="greeksPeLtp">PE —</span></div>
     </div>
     <div class="g-row"><div class="g-label"><span class="g-name">Δ Delta</span><span class="g-sub">CE / PE</span></div><div class="g-vals" id="greeksDeltaWrap"><div class="delta-bar-wrap"><div class="delta-bar-track"><div class="delta-bar-fill" id="dbarCe" style="background:var(--green);"></div></div><span class="g-ce-val" id="greeksDeltaCe">—</span></div><div class="delta-bar-wrap"><div class="delta-bar-track"><div class="delta-bar-fill" id="dbarPe" style="background:var(--red);"></div></div><span class="g-pe-val" id="greeksDeltaPe">—</span></div></div></div>
-    <div class="g-row"><div class="g-label"><span class="g-name">σ IV</span><span class="skew-lbl" id="greeksSkewLbl" style="color:var(--purple);">—</span></div><div class="g-vals"><div style="display:flex;align-items:center;gap:5px;"><span style="font-size:11px;color:rgba(0,200,220,.8);">CE</span><span class="g-ce-val" id="greeksIvCe">—</span></div><div style="display:flex;align-items:center;gap:5px;"><span style="font-size:11px;color:rgba(255,144,144,.8);">PE</span><span class="g-pe-val" id="greeksIvPe">—</span></div></div></div>
-    <div class="g-row"><div class="g-label"><span class="g-name">Θ Theta</span><span class="g-sub">per day</span></div><div class="g-vals"><div style="display:flex;align-items:center;gap:5px;"><span style="font-size:11px;color:rgba(0,200,220,.8);">CE</span><span class="g-ce-val" id="greeksThetaCe">—</span></div><div style="display:flex;align-items:center;gap:5px;"><span style="font-size:11px;color:rgba(255,144,144,.8);">PE</span><span class="g-pe-val" id="greeksThetaPe">—</span></div></div></div>
-    <div class="g-row"><div class="g-label"><span class="g-name">ν Vega</span><span class="g-sub">per 1% IV</span></div><div class="g-vals"><div style="display:flex;align-items:center;gap:5px;"><span style="font-size:11px;color:rgba(0,200,220,.8);">CE</span><span class="g-ce-val" id="greeksVegaCe">—</span></div><div style="display:flex;align-items:center;gap:5px;"><span style="font-size:11px;color:rgba(255,144,144,.8);">PE</span><span class="g-pe-val" id="greeksVegaPe">—</span></div></div></div>
-    <div class="g-row"><div class="g-label"><span class="g-name">Γ Gamma</span><span class="g-sub">delta/point</span></div><div class="g-vals"><div style="display:flex;align-items:center;gap:5px;"><span style="font-size:11px;color:rgba(0,200,220,.8);">CE</span><span class="g-ce-val" id="greeksGammaCe">—</span></div><div style="display:flex;align-items:center;gap:5px;"><span style="font-size:11px;color:rgba(255,144,144,.8);">PE</span><span class="g-pe-val" id="greeksGammaPe">—</span></div></div></div>
+    <div class="g-row"><div class="g-label"><span class="g-name">σ IV</span><span class="skew-lbl" id="greeksSkewLbl" style="color:var(--purple);">—</span></div><div class="g-vals"><div style="display:flex;align-items:center;gap:5px;"><span style="font-size:12px;font-weight:700;color:#00d8f5;">CE</span><span class="g-ce-val" id="greeksIvCe">—</span></div><div style="display:flex;align-items:center;gap:5px;"><span style="font-size:12px;font-weight:700;color:#ff9090;">PE</span><span class="g-pe-val" id="greeksIvPe">—</span></div></div></div>
+    <div class="g-row"><div class="g-label"><span class="g-name">Θ Theta</span><span class="g-sub">per day</span></div><div class="g-vals"><div style="display:flex;align-items:center;gap:5px;"><span style="font-size:12px;font-weight:700;color:#00d8f5;">CE</span><span class="g-ce-val" id="greeksThetaCe">—</span></div><div style="display:flex;align-items:center;gap:5px;"><span style="font-size:12px;font-weight:700;color:#ff9090;">PE</span><span class="g-pe-val" id="greeksThetaPe">—</span></div></div></div>
+    <div class="g-row"><div class="g-label"><span class="g-name">ν Vega</span><span class="g-sub">per 1% IV</span></div><div class="g-vals"><div style="display:flex;align-items:center;gap:5px;"><span style="font-size:12px;font-weight:700;color:#00d8f5;">CE</span><span class="g-ce-val" id="greeksVegaCe">—</span></div><div style="display:flex;align-items:center;gap:5px;"><span style="font-size:12px;font-weight:700;color:#ff9090;">PE</span><span class="g-pe-val" id="greeksVegaPe">—</span></div></div></div>
+    <div class="g-row"><div class="g-label"><span class="g-name">Γ Gamma</span><span class="g-sub">delta/point</span></div><div class="g-vals"><div style="display:flex;align-items:center;gap:5px;"><span style="font-size:12px;font-weight:700;color:#00d8f5;">CE</span><span class="g-ce-val" id="greeksGammaCe">—</span></div><div style="display:flex;align-items:center;gap:5px;"><span style="font-size:12px;font-weight:700;color:#ff9090;">PE</span><span class="g-pe-val" id="greeksGammaPe">—</span></div></div></div>
     <div class="iv-gauge-wrap">
       <div class="iv-gauge-row"><span class="iv-gauge-lbl">IV Average</span><span class="iv-gauge-val" id="greeksIvAvg" style="color:var(--green);">—</span></div>
       <div class="iv-gauge-track"><div class="iv-gauge-fill" id="greeksIvBar" style="width:0%;background:var(--green);"></div></div>
@@ -1325,7 +1325,7 @@ canvas#payoffChart{{width:100%!important;height:288px!important;}}
 <!-- PAYOFF CHART -->
 <div class="panel" style="margin-bottom:18px;">
   <div class="panel-hdr">
-    <div class="panel-title">📈 Payoff Diagram<span style="font-size:12px;color:var(--text3);margin-left:8px;font-family:'JetBrains Mono',monospace;">🟢 Today (BSM) &nbsp;|&nbsp; 🔵 At Expiry &nbsp;|&nbsp; bars = OI</span></div>
+    <div class="panel-title">📈 Payoff Diagram<span style="font-size:12px;color:#9dbdd8;margin-left:8px;font-family:'JetBrains Mono',monospace;">🟢 Today (BSM) &nbsp;|&nbsp; 🔵 At Expiry &nbsp;|&nbsp; bars = OI</span></div>
     <select class="sel" style="width:200px;" id="payoffSel" onchange="drawPayoff()"><option value="">— Select Strategy —</option></select>
   </div>
   <div id="payoffStats" style="display:none;grid-template-columns:repeat(4,1fr);gap:10px;padding:14px 16px 0;"></div>
@@ -2544,7 +2544,7 @@ function buildIntradaySim(s, uid) {{
       <div class="sim-live-pnl">
         <div class="slpb" style="background:rgba(0,200,150,.07);border:1px solid rgba(0,200,150,.18);"><div class="slpb-lbl">Δ Delta P&L</div><div class="slpb-num" style="color:#00c896;" id="sim-dp-${{uid}}">+₹0</div><div class="slpb-sub">flat = ₹0</div></div>
         <div class="slpb" style="background:rgba(255,107,107,.07);border:1px solid rgba(255,107,107,.18);"><div class="slpb-lbl">Θ Theta Cost</div><div class="slpb-num" style="color:#ff9090;">${{thetaStr}}/day</div><div class="slpb-sub">time decay</div></div>
-        <div class="slpb" style="background:rgba(138,160,255,.07);border:1px solid rgba(138,160,255,.18);"><div class="slpb-lbl">ν Vega ±1%</div><div class="slpb-num" style="color:#8aa0ff;">${{vegaStr}}</div><div class="slpb-sub">per 1% IV</div></div>
+        <div class="slpb" style="background:rgba(138,160,255,.07);border:1px solid rgba(138,160,255,.18);"><div class="slpb-lbl">ν Vega ±1%</div><div class="slpb-num" style="color:#8aa0ff;">${{vegaStr}}</div><div class="slpb-sub" style="color:#9dbdd8;">per 1% IV</div></div>
         <div class="slpb" style="background:rgba(245,197,24,.07);border:1px solid rgba(245,197,24,.18);"><div class="slpb-lbl">Net (Flat)</div><div class="slpb-num" style="color:#ffd166;">${{thetaStr}}</div><div class="slpb-sub">theta drag</div></div>
       </div>
       <div style="padding:10px 10px 0;"><div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.22);margin-bottom:8px;">Greek contribution bars</div>
@@ -2701,13 +2701,13 @@ function drawPayoff() {{
       responsive:true,maintainAspectRatio:false,
       interaction:{{mode:"index",intersect:false,axis:"x"}},
       plugins:{{
-        legend:{{display:true,position:"top",labels:{{color:"#6a8aaa",font:{{family:"DM Mono",size:10}},boxWidth:14,filter:item=>item.text!=="Zero"}}}},
+        legend:{{display:true,position:"top",labels:{{color:"#b0cce0",font:{{family:"DM Mono",size:10}},boxWidth:14,filter:item=>item.text!=="Zero"}}}},
         tooltip:{{enabled:false,mode:"index",intersect:false}},
       }},
       scales:{{
-        x:{{ticks:{{color:"#2d4560",font:{{family:"DM Mono",size:9}},maxTicksLimit:12,callback:(val,idx)=>{{const price=priceRange[idx]??val;return price>=1000?Math.round(price).toLocaleString("en-IN"):price;}}}},grid:{{color:"#0b1520"}},border:{{color:"#1a2535"}}}},
-        yPnl:{{position:"left",ticks:{{color:"#2d4560",font:{{family:"DM Mono",size:9}},callback:v=>"₹"+(Math.abs(v)>=1000?(v/1000).toFixed(0)+"K":v)}},grid:{{color:"#0b1520"}},border:{{color:"#1a2535"}},title:{{display:true,text:"Profit / Loss",color:"#3d5a73",font:{{size:9,family:"DM Mono"}}}}}},
-        yOI:{{position:"right",ticks:{{color:"#2d4560",font:{{family:"DM Mono",size:9}},callback:v=>v>=1000?(v/1000).toFixed(0)+"L":v}},grid:{{drawOnChartArea:false}},border:{{color:"#1a2535"}},title:{{display:true,text:"Open Interest",color:"#3d5a73",font:{{size:9,family:"DM Mono"}}}}}},
+        x:{{ticks:{{color:"#6a90b8",font:{{family:"DM Mono",size:9}},maxTicksLimit:12,callback:(val,idx)=>{{const price=priceRange[idx]??val;return price>=1000?Math.round(price).toLocaleString("en-IN"):price;}}}},grid:{{color:"#0b1520"}},border:{{color:"#1a2535"}}}},
+        yPnl:{{position:"left",ticks:{{color:"#6a90b8",font:{{family:"DM Mono",size:9}},callback:v=>"₹"+(Math.abs(v)>=1000?(v/1000).toFixed(0)+"K":v)}},grid:{{color:"#0b1520"}},border:{{color:"#1a2535"}},title:{{display:true,text:"Profit / Loss",color:"#7aA8c8",font:{{size:9,family:"DM Mono"}}}}}},
+        yOI:{{position:"right",ticks:{{color:"#6a90b8",font:{{family:"DM Mono",size:9}},callback:v=>v>=1000?(v/1000).toFixed(0)+"L":v}},grid:{{drawOnChartArea:false}},border:{{color:"#1a2535"}},title:{{display:true,text:"Open Interest",color:"#7aA8c8",font:{{size:9,family:"DM Mono"}}}}}},
       }},
     }},
     plugins:[{{
@@ -2771,12 +2771,12 @@ function drawPayoff() {{
     const tSign=todayVal>=0?"+":"", eSign=expVal>=0?"+":"";
     const tCol=todayVal>=0?"#00c896":"#ff6b6b", eCol=expVal>=0?"#00c896":"#ff6b6b";
     const tPct=((todayVal/netCost)*100).toFixed(1), ePct=((expVal/netCost)*100).toFixed(1);
-    tt.innerHTML=`<div style="font-size:12px;color:#6a8aaa;margin-bottom:5px;letter-spacing:1px;">WHEN PRICE IS AT</div>
+    tt.innerHTML=`<div style="font-size:12px;color:#b0cce0;margin-bottom:5px;letter-spacing:1px;">WHEN PRICE IS AT</div>
       <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:10px;"><span style="font-size:18px;font-weight:800;color:#ddeeff;font-family:'DM Mono',monospace;">&#8377;${{price.toLocaleString("en-IN")}}</span><span style="font-size:14px;font-weight:700;color:${{pCol}};font-family:'DM Mono',monospace;">${{sign}}${{pctChg}}%&nbsp;(${{sign}}${{(price-underlying).toLocaleString("en-IN")}})</span></div>
       <div style="height:1px;background:rgba(255,255,255,0.07);margin-bottom:10px;"></div>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;"><span style="font-size:12px;color:#6a8aaa;display:flex;align-items:center;gap:6px;"><span style="width:9px;height:9px;border-radius:50%;background:#00c896;display:inline-block;"></span>Today <span style="color:#3d5a73;margin-left:2px;">DTE:${{dte}}</span></span><span style="font-size:16px;font-weight:800;color:${{tCol}};font-family:'DM Mono',monospace;">${{tSign}}&#8377;${{Math.round(todayVal).toLocaleString("en-IN")}}<span style="font-size:12px;opacity:.8;"> (${{tSign}}${{tPct}}%)</span></span></div>
-      <div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:12px;color:#6a8aaa;display:flex;align-items:center;gap:6px;"><span style="width:9px;height:9px;border-radius:50%;background:#5ba3ff;display:inline-block;"></span>At Expiry <span style="color:#3d5a73;margin-left:2px;">T=0</span></span><span style="font-size:16px;font-weight:800;color:${{eCol}};font-family:'DM Mono',monospace;">${{eSign}}&#8377;${{Math.round(expVal).toLocaleString("en-IN")}}<span style="font-size:12px;opacity:.8;"> (${{eSign}}${{ePct}}%)</span></span></div>
-      <div style="margin-top:9px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.06);font-size:12px;color:#3d5a73;">Theta loss by expiry: <span style="color:${{(todayVal-expVal)>0?"#ff6b6b":"#00c896"}};font-weight:700;">${{(todayVal-expVal)>=0?"-":"+"}}&#8377;${{Math.abs(Math.round(todayVal-expVal)).toLocaleString("en-IN")}}</span></div>`;
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;"><span style="font-size:12px;color:#b0cce0;display:flex;align-items:center;gap:6px;"><span style="width:9px;height:9px;border-radius:50%;background:#00c896;display:inline-block;"></span>Today <span style="color:#7aA8c8;margin-left:2px;">DTE:${{dte}}</span></span><span style="font-size:16px;font-weight:800;color:${{tCol}};font-family:'DM Mono',monospace;">${{tSign}}&#8377;${{Math.round(todayVal).toLocaleString("en-IN")}}<span style="font-size:12px;opacity:.8;"> (${{tSign}}${{tPct}}%)</span></span></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:12px;color:#b0cce0;display:flex;align-items:center;gap:6px;"><span style="width:9px;height:9px;border-radius:50%;background:#5ba3ff;display:inline-block;"></span>At Expiry <span style="color:#7aA8c8;margin-left:2px;">T=0</span></span><span style="font-size:16px;font-weight:800;color:${{eCol}};font-family:'DM Mono',monospace;">${{eSign}}&#8377;${{Math.round(expVal).toLocaleString("en-IN")}}<span style="font-size:12px;opacity:.8;"> (${{eSign}}${{ePct}}%)</span></span></div>
+      <div style="margin-top:9px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.06);font-size:12px;color:#7aA8c8;">Theta loss by expiry: <span style="color:${{(todayVal-expVal)>0?"#ff6b6b":"#00c896"}};font-weight:700;">${{(todayVal-expVal)>=0?"-":"+"}}&#8377;${{Math.abs(Math.round(todayVal-expVal)).toLocaleString("en-IN")}}</span></div>`;
     const ttW=268,ttH=140;
     let fixedL=clientX+18,fixedT=clientY-ttH/2;
     if(fixedL+ttW>window.innerWidth-10) fixedL=clientX-ttW-18;
