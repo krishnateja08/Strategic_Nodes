@@ -935,7 +935,7 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 .sc-header{{display:flex;align-items:center;gap:10px;padding:11px 14px;user-select:none;}}
 .sc-chevron{{font-size:11px;color:#6a90b8;transition:transform .25s;flex-shrink:0;margin-right:2px;}}
 .strat-card.sc-open .sc-chevron{{transform:rotate(90deg);color:var(--cc,var(--cyan));}}
-.sc-pill-bias{{font-size:9px;font-weight:800;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:4px;letter-spacing:.8px;flex-shrink:0;}}
+.sc-pill-bias{{font-size:11px;font-weight:800;font-family:'DM Mono',monospace;padding:3px 8px;border-radius:4px;letter-spacing:.8px;flex-shrink:0;}}
 .sc-pill-bull{{background:rgba(0,200,150,.15);color:#00c896;border:1px solid rgba(0,200,150,.3);}}
 .sc-pill-bear{{background:rgba(255,107,107,.15);color:#ff6b6b;border:1px solid rgba(255,107,107,.3);}}
 .sc-pill-neut{{background:rgba(0,212,255,.12);color:#00d4ff;border:1px solid rgba(0,212,255,.25);}}
@@ -943,11 +943,11 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 .sc-name{{font-size:15px;font-weight:800;color:#ffffff;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}}
 .sc-header-right{{display:flex;align-items:center;gap:10px;flex-shrink:0;}}
 .sc-legs-mini{{display:flex;flex-wrap:nowrap;gap:4px;}}
-.sc-leg-chip{{font-size:9px;font-weight:700;font-family:'DM Mono',monospace;padding:2px 6px;border-radius:4px;white-space:nowrap;}}
+.sc-leg-chip{{font-size:12px;font-weight:700;font-family:'DM Mono',monospace;padding:3px 8px;border-radius:4px;white-space:nowrap;}}
 .sc-leg-chip.sell{{background:rgba(255,107,107,.15);color:#ff8080;border:1px solid rgba(255,107,107,.25);}}
 .sc-leg-chip.buy{{background:rgba(0,200,150,.12);color:#00c896;border:1px solid rgba(0,200,150,.22);}}
 .pop-pill{{padding:4px 10px;border-radius:14px;font-size:15px;font-weight:800;font-family:'DM Mono',monospace;white-space:nowrap;flex-shrink:0;}}
-.sc-fit-badge{{font-size:9px;font-weight:800;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:4px;letter-spacing:.5px;flex-shrink:0;background:rgba(255,209,102,.12);color:#ffd166;border:1px solid rgba(255,209,102,.25);}}
+.sc-fit-badge{{font-size:12px;font-weight:800;font-family:'DM Mono',monospace;padding:3px 8px;border-radius:4px;letter-spacing:.5px;flex-shrink:0;background:rgba(255,209,102,.12);color:#ffd166;border:1px solid rgba(255,209,102,.25);}}
 
 /* Expandable body */
 .sc-body{{display:none;border-top:1px solid var(--border);}}
@@ -2431,17 +2431,17 @@ function renderStrategies() {{
             const col=Math.abs(a.diff)<=30?"var(--green)":Math.abs(a.diff)<=80?"var(--gold)":"var(--red)";
             const icon=Math.abs(a.diff)<=30?"✅":Math.abs(a.diff)<=80?"⚠️":"❌";
             return `<div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:7px;padding:7px 10px;">
-              <div style="font-size:11px;color:#b8d4e8;font-family:'DM Mono',monospace;margin-bottom:4px;">${{icon}} ${{a.side.toUpperCase()}} BE</div>
+              <div style="font-size:13px;color:#b8d4e8;font-family:'DM Mono',monospace;margin-bottom:4px;">${{icon}} ${{a.side.toUpperCase()}} BE</div>
               <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
-                <div style="text-align:center;"><div style="font-size:11px;font-weight:700;color:#c8dff0;font-family:'DM Mono',monospace;">YOUR INPUT</div><div style="font-size:15px;font-weight:800;font-family:'DM Mono',monospace;color:var(--gold);">₹${{a.target.toLocaleString("en-IN")}}</div></div>
+                <div style="text-align:center;"><div style="font-size:13px;font-weight:700;color:#c8dff0;font-family:'DM Mono',monospace;">YOUR INPUT</div><div style="font-size:15px;font-weight:800;font-family:'DM Mono',monospace;color:var(--gold);">₹${{a.target.toLocaleString("en-IN")}}</div></div>
                 <div style="color:#d8eeff;font-size:16px;font-weight:700;">→</div>
-                <div style="text-align:center;"><div style="font-size:11px;font-weight:700;color:#c8dff0;font-family:'DM Mono',monospace;">ACTUAL BE</div><div style="font-size:15px;font-weight:800;font-family:'DM Mono',monospace;color:${{col}};">₹${{a.actual.toLocaleString("en-IN")}}</div></div>
-                <div style="text-align:center;"><div style="font-size:11px;font-weight:700;color:#c8dff0;font-family:'DM Mono',monospace;">DIFF</div><div style="font-size:14px;font-weight:700;font-family:'DM Mono',monospace;color:${{col}};">${{sign}}${{a.diff}}</div></div>
+                <div style="text-align:center;"><div style="font-size:13px;font-weight:700;color:#c8dff0;font-family:'DM Mono',monospace;">ACTUAL BE</div><div style="font-size:15px;font-weight:800;font-family:'DM Mono',monospace;color:${{col}};">₹${{a.actual.toLocaleString("en-IN")}}</div></div>
+                <div style="text-align:center;"><div style="font-size:13px;font-weight:700;color:#c8dff0;font-family:'DM Mono',monospace;">DIFF</div><div style="font-size:14px;font-weight:700;font-family:'DM Mono',monospace;color:${{col}};">${{sign}}${{a.diff}}</div></div>
               </div>
             </div>`;
           }}).join("")}}
         </div>
-        <div style="margin-top:6px;font-size:11px;color:#b8d4e8;font-family:'DM Mono',monospace;line-height:1.6;">
+        <div style="margin-top:6px;font-size:13px;color:#b8d4e8;font-family:'DM Mono',monospace;line-height:1.6;">
           ℹ️ Diff = (Sell Strike ± actual premium collected) vs your input. Small diff = sell strikes were well-chosen.
         </div>
       </div>` : "";
@@ -2481,7 +2481,7 @@ function renderStrategies() {{
         <div class="sc-header-right">
           ${{s.isBEMode?`<span class="sc-fit-badge">FIT ${{s.fit||"—"}}%</span>`:""}}
           <div class="sc-legs-mini">${{legChips}}</div>
-          <div class="pop-pill" style="background:${{popBg}};color:${{popCol}};border:1px solid ${{popCol}}33;">${{s.pop}}%<br><span style="font-size:9px;font-weight:700;">PoP</span></div>
+          <div class="pop-pill" style="background:${{popBg}};color:${{popCol}};border:1px solid ${{popCol}}33;">${{s.pop}}%<br><span style="font-size:11px;font-weight:700;">PoP</span></div>
         </div>
       </div>`;
 
@@ -2516,7 +2516,7 @@ function renderStrategies() {{
           <button data-simuid="${{uid}}" onclick="toggleSim('${{uid}}',this)"
             style="width:100%;background:rgba(245,197,24,.07);border:1px solid rgba(245,197,24,.2);border-radius:8px;
                    padding:7px 12px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;
-                   font-family:'DM Mono',monospace;font-size:9.5px;font-weight:700;color:rgba(255,209,102,.8);
+                   font-family:'DM Mono',monospace;font-size:12px;font-weight:700;color:rgba(255,209,102,.8);
                    letter-spacing:.8px;text-transform:uppercase;transition:all .2s;">
             <span style="display:flex;align-items:center;gap:7px;"><span style="font-size:15px;">📊</span> Intraday P&L Simulator</span>
             <span id="sim-arrow-${{uid}}" style="font-size:14px;transition:transform .25s;">▼</span>
