@@ -924,7 +924,7 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 .sec-hdr{{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}}
 .sec-title{{font-size:17px;font-weight:800;display:flex;align-items:center;gap:9px;}}
 .sec-tag{{font-size:12px;font-weight:700;background:#00d4ff12;border:1px solid #00d4ff28;color:var(--cyan);padding:2px 9px;border-radius:14px;font-family:'DM Mono',monospace;letter-spacing:1px;}}
-.strat-grid{{display:flex;flex-direction:column;gap:8px;}}
+.strat-grid{{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}}
 
 /* ── ACCORDION CARD ── */
 .strat-card{{background:var(--bg3);border:1px solid var(--border);border-radius:11px;overflow:hidden;transition:border-color .25s,box-shadow .25s;cursor:pointer;}}
@@ -2531,13 +2531,7 @@ function renderStrategies() {{
     </div>`;
   }}).join("");
 
-  // Auto-expand first card and show its payoff
-  const first = document.querySelector(".strat-card");
-  if(first) {{
-    first.classList.add("sc-open");
-    const nm = first.dataset.stratname;
-    if(nm) selectPayoff(nm);
-  }}
+  // Cards start collapsed — user clicks to open
 }}
 
 // ── Intraday Simulator ────────────────────────────────────────
