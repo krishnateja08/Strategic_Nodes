@@ -749,7 +749,7 @@ def build_html(all_expiry_data, expiry_list, generated_at):
 :root {{
   --bg:         #07090f;
   --bg2:        #0d1117;
-  --bg3:        #111826;
+  --bg3:        #131d2b;
   --border:     #1a2535;
   --border2:    #0e1e30;
   --cyan:       #00d4ff;
@@ -758,9 +758,9 @@ def build_html(all_expiry_data, expiry_list, generated_at):
   --gold:       #ffd166;
   --purple:     #8aa0ff;
   --orange:     #ff9f43;
-  --text:       #f0f8ff;
-  --text2:      #cce4f5;
-  --text3:      #9dbdd8;
+  --text:       #ffffff;
+  --text2:      #d8eeff;
+  --text3:      #b8d4e8;
   --grid:       #0b1520;
 }}
 *{{margin:0;padding:0;box-sizing:border-box;}}
@@ -774,7 +774,7 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 .logo{{width:44px;height:44px;background:linear-gradient(135deg,var(--cyan),var(--purple));border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-weight:500;font-size:19px;color:#000;box-shadow:0 0 18px #00d4ff33;}}
 .hdr h1{{font-size:22px;font-weight:800;letter-spacing:-.5px;}}
 .hdr h1 span{{color:var(--cyan);}}
-.hdr-sub{{font-size:14px;color:var(--text2);font-family:'DM Mono',monospace;margin-top:2px;}}
+.hdr-sub{{font-size:14px;color:#d8eeff;font-family:'DM Mono',monospace;margin-top:2px;}}
 .live-pill{{display:flex;align-items:center;gap:7px;background:#00c89611;border:1px solid #00c89633;border-radius:20px;padding:5px 13px;font-size:14px;font-weight:700;color:var(--green);font-family:'DM Mono',monospace;}}
 .live-dot{{width:7px;height:7px;background:var(--green);border-radius:50%;animation:pulse 1.5s infinite;}}
 
@@ -782,9 +782,9 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 .ticker{{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px;}}
 .tick-card{{background:var(--bg3);border:1px solid var(--border);border-top:2px solid var(--tc,var(--cyan));border-radius:10px;padding:14px 18px;transition:border-color .3s;}}
 .tick-card:hover{{border-color:var(--tc,var(--cyan));}}
-.tick-lbl{{font-size:13px;color:var(--text2);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:1px;}}
+.tick-lbl{{font-size:13px;color:#d8eeff;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:1px;}}
 .tick-val{{font-size:25px;font-weight:800;font-family:'DM Mono',monospace;margin-top:3px;}}
-.tick-sub{{font-size:13px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:1px;}}
+.tick-sub{{font-size:13px;color:#b8d4e8;font-family:'DM Mono',monospace;margin-top:1px;}}
 
 /* ── MAIN LAYOUT ── */
 .main{{display:grid;grid-template-columns:340px 1fr 210px;gap:16px;margin-bottom:18px;}}
@@ -792,35 +792,35 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 /* ── PANEL ── */
 .panel{{background:var(--bg3);border:1px solid var(--border);border-radius:12px;overflow:hidden;}}
 .panel-hdr{{padding:13px 18px;background:linear-gradient(90deg,#0d1a26,#0d1117);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}}
-.panel-title{{font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text2);display:flex;align-items:center;gap:7px;}}
+.panel-title{{font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#d8eeff;display:flex;align-items:center;gap:7px;}}
 .panel-body{{padding:18px;}}
 
 /* ── MODE TOGGLE ── */
 .mode-toggle{{display:grid;grid-template-columns:1fr 1fr;background:var(--bg2);border:1px solid var(--border);border-radius:9px;padding:4px;margin-bottom:16px;gap:3px;}}
-.mode-btn{{padding:9px 6px;border:1px solid transparent;border-radius:7px;background:transparent;color:var(--text3);font-family:'DM Mono',monospace;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;cursor:pointer;transition:all .22s;text-align:center;display:flex;align-items:center;justify-content:center;gap:5px;}}
-.mode-btn:hover{{color:var(--text2);}}
+.mode-btn{{padding:9px 6px;border:1px solid transparent;border-radius:7px;background:transparent;color:#b8d4e8;font-family:'DM Mono',monospace;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;cursor:pointer;transition:all .22s;text-align:center;display:flex;align-items:center;justify-content:center;gap:5px;}}
+.mode-btn:hover{{color:#d8eeff;}}
 .mode-btn.active-sr{{background:linear-gradient(135deg,rgba(0,212,255,.14),rgba(138,160,255,.09));border-color:rgba(0,212,255,.35);color:var(--cyan);box-shadow:0 2px 12px rgba(0,212,255,.12);}}
 .mode-btn.active-be{{background:linear-gradient(135deg,rgba(255,209,102,.14),rgba(255,159,67,.09));border-color:rgba(255,209,102,.35);color:var(--gold);box-shadow:0 2px 12px rgba(255,209,102,.12);}}
 .mode-dot{{width:6px;height:6px;border-radius:50%;background:currentColor;}}
 
 /* ── INPUTS ── */
 .form-grp{{margin-bottom:14px;}}
-.form-lbl{{display:block;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text2);margin-bottom:6px;font-family:'DM Mono',monospace;}}
+.form-lbl{{display:block;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#d8eeff;margin-bottom:6px;font-family:'DM Mono',monospace;}}
 .inp{{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:9px 12px;color:var(--text);font-family:'DM Mono',monospace;font-size:16px;outline:none;transition:all .2s;}}
 .inp:focus{{border-color:var(--cyan);box-shadow:0 0 0 3px #00d4ff12;}}
 .sel{{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:9px 12px;color:var(--text);font-family:'DM Mono',monospace;font-size:15px;outline:none;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%2300d4ff' d='M5 7L0 2h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;transition:all .2s;}}
 .sel:focus{{border-color:var(--cyan);box-shadow:0 0 0 3px #00d4ff12;}}
 .sel option{{background:#0d1117;}}
 .bias-row{{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;}}
-.bias-btn{{padding:9px 6px;border:1px solid var(--border);border-radius:7px;background:var(--bg2);color:var(--text2);font-family:'DM Mono',monospace;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;cursor:pointer;transition:all .2s;text-align:center;}}
+.bias-btn{{padding:9px 6px;border:1px solid var(--border);border-radius:7px;background:var(--bg2);color:#d8eeff;font-family:'DM Mono',monospace;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;cursor:pointer;transition:all .2s;text-align:center;}}
 .bias-btn:hover{{border-color:var(--cyan);color:var(--cyan);}}
 .bias-bull{{border-color:var(--green)!important;background:#00c89611!important;color:var(--green)!important;}}
 .bias-bear{{border-color:var(--red)!important;background:#ff6b6b11!important;color:var(--red)!important;}}
 .bias-neut{{border-color:var(--gold)!important;background:#ffd16611!important;color:var(--gold)!important;}}
 .sr-row{{display:flex;gap:7px;margin-bottom:7px;align-items:center;}}
-.add-btn{{background:transparent;border:1px dashed var(--border);border-radius:7px;color:var(--text3);padding:7px 11px;font-size:18px;cursor:pointer;transition:all .2s;line-height:1;}}
+.add-btn{{background:transparent;border:1px dashed var(--border);border-radius:7px;color:#b8d4e8;padding:7px 11px;font-size:18px;cursor:pointer;transition:all .2s;line-height:1;}}
 .add-btn:hover{{border-color:var(--cyan);color:var(--cyan);}}
-.rm-btn{{background:transparent;border:none;color:var(--text3);font-size:17px;cursor:pointer;padding:3px 7px;transition:color .2s;line-height:1;}}
+.rm-btn{{background:transparent;border:none;color:#b8d4e8;font-size:17px;cursor:pointer;padding:3px 7px;transition:color .2s;line-height:1;}}
 .rm-btn:hover{{color:var(--red);}}
 .divider{{height:1px;background:var(--border);margin:12px 0;}}
 .analyze-btn{{width:100%;padding:13px;border:none;border-radius:9px;font-family:'Syne',sans-serif;font-size:17px;font-weight:800;text-transform:uppercase;letter-spacing:2px;cursor:pointer;transition:all .3s;margin-top:6px;}}
@@ -838,7 +838,7 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 
 /* ── BE RANGE BAR ── */
 .be-rangebar-wrap{{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:10px 14px;margin-bottom:14px;}}
-.be-rb-lbl{{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;}}
+.be-rb-lbl{{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#b8d4e8;font-family:'DM Mono',monospace;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;}}
 .be-rb-lbl span{{color:var(--gold);font-size:13px;font-family:'DM Mono',monospace;}}
 .be-rb-track{{position:relative;height:8px;background:var(--bg);border-radius:4px;overflow:visible;margin-bottom:6px;}}
 .be-rb-fill{{position:absolute;top:0;height:100%;background:linear-gradient(90deg,rgba(255,107,107,.4),rgba(0,200,150,.4));border-radius:4px;transition:all .35s;}}
@@ -852,14 +852,14 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 /* ── BE CHIPS ── */
 .be-chips{{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:14px;}}
 .be-chip{{background:var(--bg2);border:1px solid var(--border2);border-radius:7px;padding:8px 10px;text-align:center;}}
-.be-chip-lbl{{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:3px;}}
+.be-chip-lbl{{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#b8d4e8;font-family:'DM Mono',monospace;margin-bottom:3px;}}
 .be-chip-val{{font-size:16px;font-weight:800;font-family:'DM Mono',monospace;}}
 
 /* ── OPTION CHAIN ── */
 .chain-wrap{{overflow:auto;max-height:540px;}}
 .chain-side-hdr{{display:grid;grid-template-columns:1fr 100px 1fr;padding:7px 0;border-bottom:1px solid var(--border);background:linear-gradient(90deg,#0d1a26,#0d1117);position:sticky;top:0;z-index:3;}}
 .chain-side-hdr .ce-hdr{{text-align:right;padding-right:12px;font-size:12px;font-weight:800;color:var(--green);letter-spacing:1.5px;text-transform:uppercase;}}
-.chain-side-hdr .st-hdr{{text-align:center;font-size:12px;font-weight:800;color:var(--text2);letter-spacing:1px;text-transform:uppercase;}}
+.chain-side-hdr .st-hdr{{text-align:center;font-size:12px;font-weight:800;color:#d8eeff;letter-spacing:1px;text-transform:uppercase;}}
 .chain-side-hdr .pe-hdr{{text-align:left;padding-left:12px;font-size:12px;font-weight:800;color:var(--red);letter-spacing:1.5px;text-transform:uppercase;}}
 .chain-col-hdr{{display:grid;grid-template-columns:1fr 100px 1fr;padding:5px 0 4px;border-bottom:1px solid var(--border2);background:#0a1218;position:sticky;top:32px;z-index:2;}}
 .chain-col-hdr .ce-cols{{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;padding:0 10px 0 6px;}}
@@ -880,8 +880,8 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 .stk-cell{{display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;border-left:1px solid var(--border);border-right:1px solid var(--border);background:#0a1520;min-height:36px;position:relative;flex-direction:column;gap:2px;}}
 .atm-tag{{background:var(--cyan);color:#000;font-size:9px;font-weight:800;padding:1px 6px;border-radius:0 0 4px 4px;position:absolute;top:0;letter-spacing:.5px;}}
 .cv-ltp{{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;text-align:right;}}
-.cv-iv{{font-size:12px;color:var(--text2);font-family:'JetBrains Mono',monospace;text-align:right;}}
-.cv-oi{{font-size:12px;font-family:'JetBrains Mono',monospace;color:var(--text2);text-align:right;}}
+.cv-iv{{font-size:12px;color:#d8eeff;font-family:'JetBrains Mono',monospace;text-align:right;}}
+.cv-oi{{font-size:12px;font-family:'JetBrains Mono',monospace;color:#d8eeff;text-align:right;}}
 .cv-doi{{font-size:12px;font-family:'JetBrains Mono',monospace;text-align:right;}}
 .pe-side .cv-ltp,.pe-side .cv-iv,.pe-side .cv-oi,.pe-side .cv-doi{{text-align:left;}}
 .ce-ltp-v{{color:var(--green);}} .pe-ltp-v{{color:var(--red);}}
@@ -889,7 +889,7 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 
 /* ── GREEKS SIDEBAR ── */
 .greeks-panel{{padding:0;}}
-.greeks-title{{padding:13px 14px 10px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text2);display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}}
+.greeks-title{{padding:13px 14px 10px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#d8eeff;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}}
 .g-exp-tag{{font-size:12px;color:var(--cyan);background:#00d4ff12;border:1px solid #00d4ff22;padding:2px 8px;border-radius:10px;font-family:'DM Mono',monospace;}}
 .g-sel-wrap{{padding:10px 12px 8px;border-bottom:1px solid var(--border);}}
 .g-sel{{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:7px 10px;color:var(--text);font-family:'DM Mono',monospace;font-size:13px;outline:none;cursor:pointer;appearance:none;}}
@@ -912,7 +912,7 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 .delta-bar-fill{{height:100%;border-radius:2px;}}
 .iv-gauge-wrap{{padding:8px 12px 6px;border-bottom:1px solid var(--border2);}}
 .iv-gauge-row{{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}}
-.iv-gauge-lbl{{font-size:12px;color:var(--text2);font-family:'DM Mono',monospace;}}
+.iv-gauge-lbl{{font-size:12px;color:#d8eeff;font-family:'DM Mono',monospace;}}
 .iv-gauge-val{{font-size:14px;font-weight:700;font-family:'DM Mono',monospace;}}
 .iv-gauge-track{{height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:4px;}}
 .iv-gauge-fill{{height:100%;border-radius:2px;transition:width .6s;}}
@@ -928,12 +928,12 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 .strat-card{{background:var(--bg3);border:1px solid var(--border);border-radius:11px;overflow:hidden;transition:all .3s;cursor:pointer;}}
 .strat-card:hover{{transform:translateY(-3px);box-shadow:0 10px 32px rgba(0,0,0,.4);border-color:var(--cc,var(--cyan));}}
 .sc-top{{padding:13px 15px 10px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;}}
-.sc-name{{font-size:16px;font-weight:800;}}
-.sc-sub{{font-size:13px;color:var(--text2);margin-top:2px;font-family:'DM Mono',monospace;}}
+.sc-name{{font-size:17px;font-weight:800;color:#ffffff;}}
+.sc-sub{{font-size:13px;color:#d8eeff;margin-top:2px;font-family:'DM Mono',monospace;}}
 .pop-pill{{padding:4px 10px;border-radius:14px;font-size:15px;font-weight:800;font-family:'DM Mono',monospace;white-space:nowrap;}}
 .sc-fields{{padding:10px 15px;display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;border-bottom:1px solid var(--border);}}
 .sc-field{{display:flex;flex-direction:column;}}
-.sc-field-lbl{{font-size:11px;color:#9dbdd8;text-transform:uppercase;letter-spacing:.7px;font-family:'DM Mono',monospace;}}
+.sc-field-lbl{{font-size:12px;font-weight:700;color:#c8dff0;text-transform:uppercase;letter-spacing:.7px;font-family:'DM Mono',monospace;}}
 .sc-field-val{{font-size:15px;font-weight:700;font-family:'DM Mono',monospace;margin-top:2px;}}
 .sc-legs{{padding:9px 15px;background:#0d111766;display:flex;flex-wrap:wrap;gap:5px;border-bottom:1px solid var(--border);}}
 .leg-tag{{border-radius:5px;padding:3px 8px;font-size:9.5px;font-weight:700;font-family:'DM Mono',monospace;}}
@@ -941,9 +941,9 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 .leg-sell{{border:1px solid var(--red);color:var(--red);background:#ff6b6b08;}}
 
 /* ── BE STRATEGY CARD EXTRAS ── */
-.be-mode-bar{{background:linear-gradient(90deg,rgba(255,209,102,.12),transparent);border-bottom:1px solid rgba(255,209,102,.18);padding:5px 14px;font-size:12px;font-weight:800;color:var(--gold);font-family:'DM Mono',monospace;letter-spacing:1px;display:flex;align-items:center;gap:6px;}}
+.be-mode-bar{{background:linear-gradient(90deg,rgba(255,209,102,.18),transparent);border-bottom:1px solid rgba(255,209,102,.30);padding:5px 14px;font-size:13px;font-weight:800;color:#ffd166;font-family:'DM Mono',monospace;letter-spacing:1px;display:flex;align-items:center;gap:6px;}}
 .sc-legs-detail{{padding:9px 15px;background:#0d111766;border-bottom:1px solid var(--border);}}
-.sc-legs-detail-title{{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:7px;}}
+.sc-legs-detail-title{{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;color:#d8eeff;font-family:'DM Mono',monospace;margin-bottom:7px;}}
 .leg-detail-row{{display:flex;align-items:flex-start;gap:8px;padding:6px 9px;border-radius:7px;border:1px solid transparent;margin-bottom:5px;}}
 .leg-detail-row:last-child{{margin-bottom:0;}}
 .leg-detail-row.buy{{background:rgba(0,200,150,.07);border-color:rgba(0,200,150,.18);}}
@@ -954,33 +954,33 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 .leg-detail-body{{flex:1;}}
 .leg-detail-main{{display:flex;align-items:center;gap:7px;font-family:'DM Mono',monospace;font-size:14px;font-weight:700;}}
 .leg-ce{{color:var(--green);}} .leg-pe{{color:var(--red);}}
-.leg-stk{{color:var(--cyan);}} .leg-prem{{color:var(--text2);font-size:13px;}}
-.leg-why{{font-size:12px;color:#9dbdd8;font-family:'DM Mono',monospace;margin-top:2px;line-height:1.5;}}
+.leg-stk{{color:var(--cyan);}} .leg-prem{{color:#d8eeff;font-size:14px;font-weight:600;}}
+.leg-why{{font-size:13px;color:#c8dff0;font-family:'DM Mono',monospace;margin-top:2px;line-height:1.5;}}
 
 .fit-bar-wrap{{padding:8px 15px;border-bottom:1px solid var(--border);}}
-.fit-bar-hdr{{display:flex;justify-content:space-between;font-size:11px;font-family:'DM Mono',monospace;color:#9dbdd8;text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px;}}
+.fit-bar-hdr{{display:flex;justify-content:space-between;font-size:12px;font-weight:700;font-family:'DM Mono',monospace;color:#d8eeff;text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px;}}
 .fit-bar-track{{height:4px;background:var(--border);border-radius:2px;overflow:hidden;}}
 .fit-bar-fill{{height:100%;border-radius:2px;transition:width .8s cubic-bezier(.4,0,.2,1);}}
 
 .sc-score{{padding:8px 15px;display:flex;align-items:center;gap:8px;}}
 .score-bar-track{{flex:1;height:3px;background:var(--border);border-radius:2px;overflow:hidden;}}
 .score-bar-fill{{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--cyan),var(--purple));transition:width 1s ease;}}
-.score-lbl{{font-size:12px;color:#9dbdd8;font-family:'DM Mono',monospace;}}
+.score-lbl{{font-size:13px;font-weight:700;color:#d8eeff;font-family:'DM Mono',monospace;}}
 .score-num{{font-size:14px;font-weight:700;color:var(--cyan);font-family:'DM Mono',monospace;}}
 
 /* ── INTRADAY P&L SIMULATOR ── */
 .intraday-sim{{border-top:2px solid rgba(255,209,102,.22);background:linear-gradient(135deg,rgba(245,197,24,.03),rgba(200,155,10,.015));}}
 .sim-tabs{{display:flex;border-bottom:1px solid rgba(255,255,255,.06);}}
-.sim-tab{{flex:1;padding:8px 4px;font-family:'DM Mono',monospace;font-size:8.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;text-align:center;color:rgba(255,255,255,.28);border:none;background:transparent;transition:all .2s;border-bottom:2px solid transparent;margin-bottom:-1px;}}
+.sim-tab{{flex:1;padding:8px 4px;font-family:'DM Mono',monospace;font-size:8.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;text-align:center;color:#b8d4e8;border:none;background:transparent;transition:all .2s;border-bottom:2px solid transparent;margin-bottom:-1px;}}
 .sim-tab.active{{color:#ffd166;border-bottom-color:#ffd166;background:rgba(245,197,24,.06);}}
 .sim-tab:hover:not(.active){{color:rgba(255,255,255,.55);background:rgba(255,255,255,.03);}}
 .sim-hdr{{display:flex;align-items:center;justify-content:space-between;padding:8px 10px 6px;}}
 .sim-icon{{width:20px;height:20px;border-radius:5px;background:rgba(245,197,24,.15);border:1px solid rgba(245,197,24,.3);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}}
 .sim-title{{font-size:12px;font-weight:700;color:rgba(255,209,102,.9);letter-spacing:.8px;text-transform:uppercase;}}
-.sim-subtitle{{font-size:11px;color:rgba(255,255,255,.28);margin-top:1px;}}
+.sim-subtitle{{font-size:11px;color:#b8d4e8;margin-top:1px;}}
 .sim-tbl{{width:100%;border-collapse:collapse;}}
 .sim-tbl thead tr{{background:rgba(255,255,255,.03);}}
-.sim-tbl th{{padding:5px 8px;font-size:7.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.28);text-align:center;border-bottom:1px solid rgba(255,255,255,.06);}}
+.sim-tbl th{{padding:5px 8px;font-size:7.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#b8d4e8;text-align:center;border-bottom:1px solid rgba(255,255,255,.06);}}
 .sim-tbl th:first-child{{text-align:left;}}
 .sim-tbl td{{padding:6px 8px;font-family:'DM Mono',monospace;font-size:13px;text-align:center;border-bottom:1px solid rgba(255,255,255,.03);transition:background .12s;}}
 .sim-tbl td:first-child{{text-align:left;}}
@@ -991,9 +991,9 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 .sim-pnl-val{{font-weight:700;font-size:14px;}}
 .sim-live-pnl{{display:flex;align-items:center;justify-content:center;gap:8px;padding:10px;flex-wrap:wrap;border-bottom:1px solid rgba(255,255,255,.05);}}
 .slpb{{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 12px;border-radius:9px;min-width:90px;}}
-.slpb-lbl{{font-size:7.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.28);}}
+.slpb-lbl{{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#b8d4e8;}}
 .slpb-num{{font-family:'DM Mono',monospace;font-size:18px;font-weight:700;line-height:1;}}
-.slpb-sub{{font-size:11px;color:rgba(255,255,255,.55);}}
+.slpb-sub{{font-size:12px;color:#c8dff0;}}
 .cbar-row{{display:flex;align-items:center;gap:6px;margin-bottom:5px;}}
 .cbar-lbl{{font-family:'DM Mono',monospace;font-size:12px;font-weight:700;width:44px;flex-shrink:0;}}
 .cbar-track{{flex:1;height:4px;background:rgba(255,255,255,.07);border-radius:2px;overflow:hidden;}}
@@ -1012,12 +1012,12 @@ input.sim-range::-webkit-slider-thumb{{-webkit-appearance:none;width:14px;height
 canvas#payoffChart{{width:100%!important;height:288px!important;}}
 
 /* ── EMPTY STATE ── */
-.empty{{text-align:center;padding:50px 20px;color:var(--text3);grid-column:1/-1;}}
+.empty{{text-align:center;padding:50px 20px;color:#b8d4e8;grid-column:1/-1;}}
 .empty-icon{{font-size:44px;margin-bottom:12px;opacity:.6;}}
 .empty p{{font-size:14px;font-family:'DM Mono',monospace;line-height:1.8;}}
 
 /* ── FOOTER ── */
-.footer{{text-align:center;padding:16px;font-size:13px;color:var(--text3);font-family:'DM Mono',monospace;border-top:1px solid var(--border);margin-top:6px;}}
+.footer{{text-align:center;padding:16px;font-size:13px;color:#b8d4e8;font-family:'DM Mono',monospace;border-top:1px solid var(--border);margin-top:6px;}}
 
 /* ── ANIMATIONS ── */
 @keyframes pulse{{0%,100%{{opacity:1;box-shadow:0 0 0 0 #00c89655;}}50%{{opacity:.6;box-shadow:0 0 0 5px transparent;}}}}
@@ -1054,7 +1054,7 @@ canvas#payoffChart{{width:100%!important;height:288px!important;}}
   <div style="display:flex;align-items:center;gap:14px;">
     <div style="text-align:right;">
       <div style="font-size:12px;color:#9dbdd8;font-family:'DM Mono',monospace;">GENERATED</div>
-      <div class="gen-time" style="font-size:14px;color:var(--text2);font-family:'DM Mono',monospace;">{generated_at}</div>
+      <div class="gen-time" style="font-size:14px;color:#d8eeff;font-family:'DM Mono',monospace;">{generated_at}</div>
     </div>
     <div style="text-align:right;">
       <div style="font-size:12px;color:#9dbdd8;font-family:'DM Mono',monospace;">IST TIME</div>
@@ -1264,9 +1264,9 @@ canvas#payoffChart{{width:100%!important;height:288px!important;}}
     <div class="panel-hdr">
       <div class="panel-title">📊 Live Option Chain</div>
       <div style="display:flex;align-items:center;gap:14px;">
-        <span style="font-size:13px;color:var(--text2);font-family:'JetBrains Mono',monospace;">SPOT <b style="color:var(--cyan);" id="chainSpotLbl">—</b></span>
-        <span style="font-size:13px;color:var(--text2);font-family:'JetBrains Mono',monospace;">DTE <b style="color:var(--gold);" id="chainDteLbl">—</b></span>
-        <span style="font-size:13px;color:var(--text2);font-family:'JetBrains Mono',monospace;" id="chainExpLbl"></span>
+        <span style="font-size:13px;color:#d8eeff;font-family:'JetBrains Mono',monospace;">SPOT <b style="color:var(--cyan);" id="chainSpotLbl">—</b></span>
+        <span style="font-size:13px;color:#d8eeff;font-family:'JetBrains Mono',monospace;">DTE <b style="color:var(--gold);" id="chainDteLbl">—</b></span>
+        <span style="font-size:13px;color:#d8eeff;font-family:'JetBrains Mono',monospace;" id="chainExpLbl"></span>
       </div>
     </div>
     <div class="chain-wrap">
@@ -1333,12 +1333,12 @@ canvas#payoffChart{{width:100%!important;height:288px!important;}}
   <div id="payoffTooltip" style="display:none;position:fixed;z-index:9999;background:rgba(8,18,30,0.97);border:1px solid rgba(0,212,255,0.28);border-radius:10px;padding:13px 16px;min-width:250px;max-width:280px;box-shadow:0 8px 36px rgba(0,0,0,0.7);pointer-events:none;font-family:'JetBrains Mono',monospace;backdrop-filter:blur(8px);"></div>
   <div id="payoffFooter" style="display:none;padding:10px 16px 12px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
     <div style="display:flex;align-items:center;gap:8px;">
-      <span style="font-size:12px;color:var(--text2);font-family:'JetBrains Mono',monospace;letter-spacing:1px;">BREAKEVENS</span>
+      <span style="font-size:12px;color:#d8eeff;font-family:'JetBrains Mono',monospace;letter-spacing:1px;">BREAKEVENS</span>
       <div id="beBadges" style="display:flex;gap:6px;"></div>
     </div>
-    <div style="font-size:14px;font-family:'JetBrains Mono',monospace;color:var(--text2);" id="projBadge">Select a strategy to see projected P&L</div>
+    <div style="font-size:14px;font-family:'JetBrains Mono',monospace;color:#d8eeff;" id="projBadge">Select a strategy to see projected P&L</div>
   </div>
-  <div id="projBadgeFallback" style="text-align:center;padding:10px 16px 14px;font-size:14px;font-family:'JetBrains Mono',monospace;border-top:1px solid var(--border);color:var(--text2);">Select a strategy to see projected P&L</div>
+  <div id="projBadgeFallback" style="text-align:center;padding:10px 16px 14px;font-size:14px;font-family:'JetBrains Mono',monospace;border-top:1px solid var(--border);color:#d8eeff;">Select a strategy to see projected P&L</div>
 </div>
 
 <div class="footer">NIFTY OPTIONS ANALYZER · NSE INDIA DATA · FOR EDUCATIONAL PURPOSE ONLY · NOT FINANCIAL ADVICE</div>
@@ -2374,10 +2374,10 @@ function renderStrategies() {{
 
     // ── BE mode: show detailed leg reasons + fit bar + quality warnings ──
     const poorValueBadge    = (s.isBEMode && s.poorValue)
-      ? `<div style="margin:0 0 2px;padding:5px 14px;background:rgba(255,107,107,.10);border-bottom:1px solid rgba(255,107,107,.25);font-size:11px;font-weight:700;color:#ff6b6b;font-family:'DM Mono',monospace;letter-spacing:.8px;">⚠️ POOR VALUE — Yield-to-Risk ${{s.yieldToRisk.toFixed(2)}}x (below 1:5 threshold). Consider a wider spread.</div>`
+      ? `<div style="margin:0 0 2px;padding:6px 14px;background:rgba(255,107,107,.15);border-bottom:1px solid rgba(255,107,107,.40);font-size:12px;font-weight:800;color:#ff8080;font-family:'DM Mono',monospace;letter-spacing:.8px;">⚠️ POOR VALUE — Yield-to-Risk ${{s.yieldToRisk.toFixed(2)}}x (below 1:5 threshold). Consider a wider spread.</div>`
       : "";
     const lowLiquidityBadge = (s.isBEMode && s.lowLiquidity)
-      ? `<div style="margin:0 0 2px;padding:5px 14px;background:rgba(255,209,102,.08);border-bottom:1px solid rgba(255,209,102,.25);font-size:11px;font-weight:700;color:#ffd166;font-family:'DM Mono',monospace;letter-spacing:.8px;">⚠️ LOW LIQUIDITY — One or more sell legs have zero OI. Verify fills before trading.</div>`
+      ? `<div style="margin:0 0 2px;padding:6px 14px;background:rgba(255,209,102,.14);border-bottom:1px solid rgba(255,209,102,.40);font-size:12px;font-weight:800;color:#ffd166;font-family:'DM Mono',monospace;letter-spacing:.8px;">⚠️ LOW LIQUIDITY — One or more sell legs have zero OI. Verify fills before trading.</div>`
       : "";
     const beModeTop = s.isBEMode
       ? `<div class="be-mode-bar">🎯 BE STRATEGY &nbsp;·&nbsp; FIT: <b style="color:var(--gold);">${{s.fit||"—"}}%</b></div>${{poorValueBadge}}${{lowLiquidityBadge}}`
@@ -2386,33 +2386,33 @@ function renderStrategies() {{
     // ── BE accuracy panel: shows YOUR INPUT vs ACTUAL BE side by side ──
     const beAccuracyPanel = (s.isBEMode && s.beAccuracy && s.beAccuracy.length) ? `
       <div style="margin:0;padding:8px 14px;background:rgba(6,10,18,.6);border-bottom:1px solid var(--border);">
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:6px;">🎯 YOUR INPUT vs ACTUAL BREAKEVENS</div>
+        <div style="font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;color:#d8eeff;font-family:'DM Mono',monospace;margin-bottom:6px;">🎯 YOUR INPUT vs ACTUAL BREAKEVENS</div>
         <div style="display:grid;grid-template-columns:${{s.beAccuracy.length>1?"1fr 1fr":"1fr"}};gap:8px;">
           ${{s.beAccuracy.map(a=>{{
             const sign = a.diff >= 0 ? "+" : "";
             const col  = Math.abs(a.diff) <= 30 ? "var(--green)" : Math.abs(a.diff) <= 80 ? "var(--gold)" : "var(--red)";
             const icon = Math.abs(a.diff) <= 30 ? "✅" : Math.abs(a.diff) <= 80 ? "⚠️" : "❌";
             return `<div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:7px;padding:7px 10px;">
-              <div style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:4px;">${{icon}} ${{a.side.toUpperCase()}} BE</div>
+              <div style="font-size:11px;color:#b8d4e8;font-family:'DM Mono',monospace;margin-bottom:4px;">${{icon}} ${{a.side.toUpperCase()}} BE</div>
               <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
                 <div style="text-align:center;">
-                  <div style="font-size:9px;color:var(--text3);font-family:'DM Mono',monospace;">YOUR INPUT</div>
+                  <div style="font-size:11px;font-weight:700;color:#c8dff0;font-family:'DM Mono',monospace;">YOUR INPUT</div>
                   <div style="font-size:15px;font-weight:800;font-family:'DM Mono',monospace;color:var(--gold);">₹${{a.target.toLocaleString("en-IN")}}</div>
                 </div>
-                <div style="color:var(--text3);font-size:13px;">→</div>
+                <div style="color:#d8eeff;font-size:16px;font-weight:700;">→</div>
                 <div style="text-align:center;">
-                  <div style="font-size:9px;color:var(--text3);font-family:'DM Mono',monospace;">ACTUAL BE</div>
+                  <div style="font-size:11px;font-weight:700;color:#c8dff0;font-family:'DM Mono',monospace;">ACTUAL BE</div>
                   <div style="font-size:15px;font-weight:800;font-family:'DM Mono',monospace;color:${{col}};">₹${{a.actual.toLocaleString("en-IN")}}</div>
                 </div>
                 <div style="text-align:center;">
-                  <div style="font-size:9px;color:var(--text3);font-family:'DM Mono',monospace;">DIFF</div>
+                  <div style="font-size:11px;font-weight:700;color:#c8dff0;font-family:'DM Mono',monospace;">DIFF</div>
                   <div style="font-size:14px;font-weight:700;font-family:'DM Mono',monospace;color:${{col}};">${{sign}}${{a.diff}}</div>
                 </div>
               </div>
             </div>`;
           }}).join("")}}
         </div>
-        <div style="margin-top:6px;font-size:8.5px;color:var(--text3);font-family:'DM Mono',monospace;line-height:1.6;">
+        <div style="margin-top:6px;font-size:11px;color:#b8d4e8;font-family:'DM Mono',monospace;line-height:1.6;">
           ℹ️ Diff = (Sell Strike ± actual premium collected) vs your input. Small diff = sell strikes were well-chosen.
         </div>
       </div>` : "";
@@ -2452,7 +2452,7 @@ function renderStrategies() {{
           <div class="sc-name">${{emojis[s.biasTag]||"📊"}} ${{s.name}}</div>
           <div class="sc-sub">${{s.biasTag.toUpperCase()}} · ${{s.isDebit?"DEBIT":"CREDIT"}} SPREAD · DTE:${{ALL_DATA[currentExpiry]?.dte||"—"}}</div>
         </div>
-        <div class="pop-pill" style="background:${{popBg}};color:${{popCol}};border:1px solid ${{popCol}}33;">${{s.pop}}%<br><span style="font-size:11px;font-weight:400;">PoP</span></div>
+        <div class="pop-pill" style="background:${{popBg}};color:${{popCol}};border:1px solid ${{popCol}}33;">${{s.pop}}%<br><span style="font-size:12px;font-weight:700;">PoP</span></div>
       </div>
       ${{fitBar}}
       ${{beAccuracyPanel}}
@@ -2461,7 +2461,7 @@ function renderStrategies() {{
         <div class="sc-field"><span class="sc-field-lbl">Max Profit</span><span class="sc-field-val up">₹${{s.maxProfit.toLocaleString("en-IN")}}</span></div>
         <div class="sc-field"><span class="sc-field-lbl">Max Loss</span><span class="sc-field-val down">₹${{s.maxLoss.toLocaleString("en-IN")}}</span></div>
         <div class="sc-field"><span class="sc-field-lbl">Max RR Ratio</span><span class="sc-field-val" style="color:var(--gold);">1:${{rrDisp}}</span></div>
-        <div class="sc-field"><span class="sc-field-lbl">Breakevens</span><span class="sc-field-val" style="font-size:13px;color:var(--text2);">${{beStr}}</span></div>
+        <div class="sc-field"><span class="sc-field-lbl">Breakevens</span><span class="sc-field-val" style="font-size:14px;font-weight:700;color:#d8eeff;">${{beStr}}</span></div>
         <div class="sc-field"><span class="sc-field-lbl">Net Credit/Debit</span><span class="sc-field-val">${{netDisp}}</span></div>
         <div class="sc-field" style="grid-column:1/-1"><span class="sc-field-lbl">Est. Margin / Premium</span><span class="sc-field-val" style="color:var(--purple);">₹${{s.margin.toLocaleString("en-IN")}}</span></div>
       </div>
@@ -2535,7 +2535,7 @@ function buildIntradaySim(s, uid) {{
       <button class="sim-tab"        onclick="simTab('${{uid}}','sl',this)">🎚 Slider</button>
     </div>
     <div id="sim-sc-${{uid}}">
-      <div class="sim-hdr"><div style="display:flex;align-items:center;gap:7px;"><div class="sim-icon">📅</div><div><div class="sim-title">TODAY'S P&L SCENARIOS</div><div class="sim-subtitle">Exit before market close — Delta + Theta estimate</div></div></div><div style="font-family:'DM Mono',monospace;font-size:11px;color:rgba(255,255,255,.22);">DTE: ${{dte}}</div></div>
+      <div class="sim-hdr"><div style="display:flex;align-items:center;gap:7px;"><div class="sim-icon">📅</div><div><div class="sim-title">TODAY'S P&L SCENARIOS</div><div class="sim-subtitle">Exit before market close — Delta + Theta estimate</div></div></div><div style="font-family:'DM Mono',monospace;font-size:11px;color:#b8d4e8;">DTE: ${{dte}}</div></div>
       <div style="overflow-x:auto;padding:0 10px 10px;"><table class="sim-tbl"><thead><tr><th>Nifty Move</th><th>Spot</th>${{legHeaders}}<th style="color:rgba(255,255,255,.55);">Today P&L</th></tr></thead><tbody>${{scenarioRows}}</tbody></table></div>
       <div class="sim-note"><span style="flex-shrink:0;">⏱</span><span>Formula: <strong style="color:#ffd166;">Delta × move + Theta/day</strong>. Actual P&L may vary with IV. Max profit of ₹${{maxP.toLocaleString("en-IN")}} is only achievable <strong>at expiry</strong>.</span></div>
     </div>
@@ -2544,15 +2544,15 @@ function buildIntradaySim(s, uid) {{
       <div class="sim-live-pnl">
         <div class="slpb" style="background:rgba(0,200,150,.07);border:1px solid rgba(0,200,150,.18);"><div class="slpb-lbl">Δ Delta P&L</div><div class="slpb-num" style="color:#00c896;" id="sim-dp-${{uid}}">+₹0</div><div class="slpb-sub">flat = ₹0</div></div>
         <div class="slpb" style="background:rgba(255,107,107,.07);border:1px solid rgba(255,107,107,.18);"><div class="slpb-lbl">Θ Theta Cost</div><div class="slpb-num" style="color:#ff9090;">${{thetaStr}}/day</div><div class="slpb-sub">time decay</div></div>
-        <div class="slpb" style="background:rgba(138,160,255,.07);border:1px solid rgba(138,160,255,.18);"><div class="slpb-lbl">ν Vega ±1%</div><div class="slpb-num" style="color:#8aa0ff;">${{vegaStr}}</div><div class="slpb-sub" style="color:#9dbdd8;">per 1% IV</div></div>
+        <div class="slpb" style="background:rgba(138,160,255,.07);border:1px solid rgba(138,160,255,.18);"><div class="slpb-lbl">ν Vega ±1%</div><div class="slpb-num" style="color:#8aa0ff;">${{vegaStr}}</div><div class="slpb-sub">per 1% IV</div></div>
         <div class="slpb" style="background:rgba(245,197,24,.07);border:1px solid rgba(245,197,24,.18);"><div class="slpb-lbl">Net (Flat)</div><div class="slpb-num" style="color:#ffd166;">${{thetaStr}}</div><div class="slpb-sub">theta drag</div></div>
       </div>
-      <div style="padding:10px 10px 0;"><div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.22);margin-bottom:8px;">Greek contribution bars</div>
+      <div style="padding:10px 10px 0;"><div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#b8d4e8;margin-bottom:8px;">Greek contribution bars</div>
         <div class="cbar-row"><div class="cbar-lbl" style="color:#00c896;">Δ Delta</div><div class="cbar-track"><div class="cbar-fill" style="width:${{dBar}}%;background:#00c896;" id="sim-db-${{uid}}"></div></div><div class="cbar-val" style="color:#00c896;" id="sim-dv-${{uid}}">₹0 (flat)</div></div>
         <div class="cbar-row"><div class="cbar-lbl" style="color:#ff9090;">Θ Theta</div><div class="cbar-track"><div class="cbar-fill" style="width:100%;background:#ff6b6b;"></div></div><div class="cbar-val" style="color:#ff9090;">${{thetaStr}}/day</div></div>
         <div class="cbar-row"><div class="cbar-lbl" style="color:#8aa0ff;">ν Vega</div><div class="cbar-track"><div class="cbar-fill" style="width:${{Math.round(Math.abs(Math.round(vegaPerIV))/absMax*100)}}%;background:#8aa0ff;"></div></div><div class="cbar-val" style="color:#8aa0ff;">${{vegaStr}}</div></div>
       </div>
-      <div style="margin:10px 10px 12px;padding:9px 11px;background:rgba(0,0,0,.18);border-radius:8px;font-size:12px;color:rgba(255,255,255,.35);line-height:1.8;"><strong style="color:rgba(255,255,255,.55);">Net Delta:</strong> ${{(netDelta>=0?"+":"")+netDelta.toFixed(3)}} per point → <strong style="color:#00c896;">₹${{deltaPerPt.toFixed(1)}} per Nifty point</strong><br><strong style="color:rgba(255,255,255,.55);">Net Theta:</strong> ${{thetaStr}} per trading day</div>
+      <div style="margin:10px 10px 12px;padding:9px 11px;background:rgba(0,0,0,.18);border-radius:8px;font-size:12px;color:#c8dff0;line-height:1.8;"><strong style="color:rgba(255,255,255,.55);">Net Delta:</strong> ${{(netDelta>=0?"+":"")+netDelta.toFixed(3)}} per point → <strong style="color:#00c896;">₹${{deltaPerPt.toFixed(1)}} per Nifty point</strong><br><strong style="color:rgba(255,255,255,.55);">Net Theta:</strong> ${{thetaStr}} per trading day</div>
     </div>
     <div id="sim-sl-${{uid}}" style="display:none;">
       <div class="sim-hdr"><div style="display:flex;align-items:center;gap:7px;"><div class="sim-icon">🎚</div><div><div class="sim-title">LIVE SCENARIO SLIDER</div><div class="sim-subtitle">Drag to see today's estimated exit P&L</div></div></div></div>
@@ -2561,13 +2561,13 @@ function buildIntradaySim(s, uid) {{
         <input class="sim-range" type="range" id="sim-range-${{uid}}" min="${{sliderMin}}" max="${{sliderMax}}" value="${{underlying}}" step="25" style="--pct:50%" oninput="simSlide('${{uid}}',${{underlying}},${{deltaPerPt}},${{thetaDay}},${{maxP}},${{maxL}},this.value)">
       </div>
       <div style="padding:0 10px 14px;"><div style="background:rgba(0,0,0,.25);border-radius:10px;padding:14px;text-align:center;border:1px solid rgba(255,255,255,.06);">
-        <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.22);margin-bottom:6px;">ESTIMATED EXIT P&L TODAY</div>
+        <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#b8d4e8;margin-bottom:6px;">ESTIMATED EXIT P&L TODAY</div>
         <div style="font-family:'DM Mono',monospace;font-size:30px;font-weight:700;" id="sim-bigpnl-${{uid}}">${{thetaStr}}</div>
-        <div style="font-size:12px;color:rgba(255,255,255,.28);margin-top:4px;" id="sim-note-${{uid}}">Theta drag only (flat market)</div>
+        <div style="font-size:12px;color:#b8d4e8;margin-top:4px;" id="sim-note-${{uid}}">Theta drag only (flat market)</div>
         <div style="display:flex;gap:12px;justify-content:center;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.05);">
-          <div style="text-align:center;"><div style="font-size:7.5px;color:rgba(255,255,255,.28);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;">Delta P&L</div><div style="font-family:'DM Mono',monospace;font-size:15px;font-weight:700;color:#00c896;" id="sim-slide-d-${{uid}}">₹0</div></div>
-          <div style="text-align:center;"><div style="font-size:7.5px;color:rgba(255,255,255,.28);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;">Theta Cost</div><div style="font-family:'DM Mono',monospace;font-size:15px;font-weight:700;color:#ff9090;">${{thetaStr}}</div></div>
-          <div style="text-align:center;"><div style="font-size:7.5px;color:rgba(255,255,255,.28);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;">% of Max</div><div style="font-family:'DM Mono',monospace;font-size:15px;font-weight:700;color:#ffd166;" id="sim-slide-pct-${{uid}}">—</div></div>
+          <div style="text-align:center;"><div style="font-size:7.5px;color:#b8d4e8;letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;">Delta P&L</div><div style="font-family:'DM Mono',monospace;font-size:15px;font-weight:700;color:#00c896;" id="sim-slide-d-${{uid}}">₹0</div></div>
+          <div style="text-align:center;"><div style="font-size:7.5px;color:#b8d4e8;letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;">Theta Cost</div><div style="font-family:'DM Mono',monospace;font-size:15px;font-weight:700;color:#ff9090;">${{thetaStr}}</div></div>
+          <div style="text-align:center;"><div style="font-size:7.5px;color:#b8d4e8;letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;">% of Max</div><div style="font-family:'DM Mono',monospace;font-size:15px;font-weight:700;color:#ffd166;" id="sim-slide-pct-${{uid}}">—</div></div>
         </div>
       </div></div>
     </div>
@@ -2672,10 +2672,10 @@ function drawPayoff() {{
   const bes=s.breakevens||[];
   statsEl.style.display="grid";
   statsEl.innerHTML=`
-    <div style="background:var(--bg2);border:1px solid var(--border);border-top:2px solid var(--green);border-radius:10px;padding:10px 14px;"><div style="font-size:12px;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;">Max Profit</div><div style="font-size:17px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--green);margin-top:3px;">${{s.maxProfit>=999999?"Unlimited":"₹"+s.maxProfit.toLocaleString("en-IN")}}</div></div>
-    <div style="background:var(--bg2);border:1px solid var(--border);border-top:2px solid var(--red);border-radius:10px;padding:10px 14px;"><div style="font-size:12px;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;">Max Loss</div><div style="font-size:17px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--red);margin-top:3px;">₹${{s.maxLoss.toLocaleString("en-IN")}}</div></div>
-    <div style="background:var(--bg2);border:1px solid var(--border);border-top:2px solid var(--gold);border-radius:10px;padding:10px 14px;"><div style="font-size:12px;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;">Lower BE</div><div style="font-size:17px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--gold);margin-top:3px;">${{bes[0]?"₹"+bes[0].toLocaleString("en-IN"):"—"}}</div></div>
-    <div style="background:var(--bg2);border:1px solid var(--border);border-top:2px solid var(--gold);border-radius:10px;padding:10px 14px;"><div style="font-size:12px;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;">Upper BE</div><div style="font-size:17px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--gold);margin-top:3px;">${{bes[1]?"₹"+bes[1].toLocaleString("en-IN"):bes[0]?"₹"+bes[0].toLocaleString("en-IN"):"—"}}</div></div>`;
+    <div style="background:var(--bg2);border:1px solid var(--border);border-top:2px solid var(--green);border-radius:10px;padding:10px 14px;"><div style="font-size:12px;color:#d8eeff;text-transform:uppercase;letter-spacing:.8px;">Max Profit</div><div style="font-size:17px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--green);margin-top:3px;">${{s.maxProfit>=999999?"Unlimited":"₹"+s.maxProfit.toLocaleString("en-IN")}}</div></div>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-top:2px solid var(--red);border-radius:10px;padding:10px 14px;"><div style="font-size:12px;color:#d8eeff;text-transform:uppercase;letter-spacing:.8px;">Max Loss</div><div style="font-size:17px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--red);margin-top:3px;">₹${{s.maxLoss.toLocaleString("en-IN")}}</div></div>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-top:2px solid var(--gold);border-radius:10px;padding:10px 14px;"><div style="font-size:12px;color:#d8eeff;text-transform:uppercase;letter-spacing:.8px;">Lower BE</div><div style="font-size:17px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--gold);margin-top:3px;">${{bes[0]?"₹"+bes[0].toLocaleString("en-IN"):"—"}}</div></div>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-top:2px solid var(--gold);border-radius:10px;padding:10px 14px;"><div style="font-size:12px;color:#d8eeff;text-transform:uppercase;letter-spacing:.8px;">Upper BE</div><div style="font-size:17px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--gold);margin-top:3px;">${{bes[1]?"₹"+bes[1].toLocaleString("en-IN"):bes[0]?"₹"+bes[0].toLocaleString("en-IN"):"—"}}</div></div>`;
   const footerEl=document.getElementById("payoffFooter"), fallbackEl=document.getElementById("projBadgeFallback");
   if(footerEl) footerEl.style.display="flex"; if(fallbackEl) fallbackEl.style.display="none";
   const beBadgesEl=document.getElementById("beBadges");
