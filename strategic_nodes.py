@@ -771,20 +771,20 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 /* ── HEADER ── */
 .hdr{{display:flex;align-items:center;justify-content:space-between;padding:16px 22px;background:linear-gradient(135deg,#0d111799,#11182699);border:1px solid var(--border);border-top:2px solid var(--cyan);border-radius:12px;margin-bottom:18px;backdrop-filter:blur(12px);}}
 .hdr-left{{display:flex;align-items:center;gap:14px;}}
-.logo{{width:44px;height:44px;background:linear-gradient(135deg,var(--cyan),var(--purple));border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-weight:500;font-size:17px;color:#000;box-shadow:0 0 18px #00d4ff33;}}
-.hdr h1{{font-size:20px;font-weight:800;letter-spacing:-.5px;}}
+.logo{{width:44px;height:44px;background:linear-gradient(135deg,var(--cyan),var(--purple));border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-weight:500;font-size:19px;color:#000;box-shadow:0 0 18px #00d4ff33;}}
+.hdr h1{{font-size:22px;font-weight:800;letter-spacing:-.5px;}}
 .hdr h1 span{{color:var(--cyan);}}
-.hdr-sub{{font-size:11px;color:var(--text2);font-family:'DM Mono',monospace;margin-top:2px;}}
-.live-pill{{display:flex;align-items:center;gap:7px;background:#00c89611;border:1px solid #00c89633;border-radius:20px;padding:5px 13px;font-size:11px;font-weight:700;color:var(--green);font-family:'DM Mono',monospace;}}
+.hdr-sub{{font-size:14px;color:var(--text2);font-family:'DM Mono',monospace;margin-top:2px;}}
+.live-pill{{display:flex;align-items:center;gap:7px;background:#00c89611;border:1px solid #00c89633;border-radius:20px;padding:5px 13px;font-size:14px;font-weight:700;color:var(--green);font-family:'DM Mono',monospace;}}
 .live-dot{{width:7px;height:7px;background:var(--green);border-radius:50%;animation:pulse 1.5s infinite;}}
 
 /* ── TICKER ── */
 .ticker{{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px;}}
 .tick-card{{background:var(--bg3);border:1px solid var(--border);border-top:2px solid var(--tc,var(--cyan));border-radius:10px;padding:14px 18px;transition:border-color .3s;}}
 .tick-card:hover{{border-color:var(--tc,var(--cyan));}}
-.tick-lbl{{font-size:10px;color:var(--text2);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:1px;}}
-.tick-val{{font-size:22px;font-weight:800;font-family:'DM Mono',monospace;margin-top:3px;}}
-.tick-sub{{font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:1px;}}
+.tick-lbl{{font-size:13px;color:var(--text2);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:1px;}}
+.tick-val{{font-size:25px;font-weight:800;font-family:'DM Mono',monospace;margin-top:3px;}}
+.tick-sub{{font-size:13px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:1px;}}
 
 /* ── MAIN LAYOUT ── */
 .main{{display:grid;grid-template-columns:340px 1fr 210px;gap:16px;margin-bottom:18px;}}
@@ -792,12 +792,12 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 /* ── PANEL ── */
 .panel{{background:var(--bg3);border:1px solid var(--border);border-radius:12px;overflow:hidden;}}
 .panel-hdr{{padding:13px 18px;background:linear-gradient(90deg,#0d1a26,#0d1117);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}}
-.panel-title{{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text2);display:flex;align-items:center;gap:7px;}}
+.panel-title{{font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text2);display:flex;align-items:center;gap:7px;}}
 .panel-body{{padding:18px;}}
 
 /* ── MODE TOGGLE ── */
 .mode-toggle{{display:grid;grid-template-columns:1fr 1fr;background:var(--bg2);border:1px solid var(--border);border-radius:9px;padding:4px;margin-bottom:16px;gap:3px;}}
-.mode-btn{{padding:9px 6px;border:1px solid transparent;border-radius:7px;background:transparent;color:var(--text3);font-family:'DM Mono',monospace;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;cursor:pointer;transition:all .22s;text-align:center;display:flex;align-items:center;justify-content:center;gap:5px;}}
+.mode-btn{{padding:9px 6px;border:1px solid transparent;border-radius:7px;background:transparent;color:var(--text3);font-family:'DM Mono',monospace;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;cursor:pointer;transition:all .22s;text-align:center;display:flex;align-items:center;justify-content:center;gap:5px;}}
 .mode-btn:hover{{color:var(--text2);}}
 .mode-btn.active-sr{{background:linear-gradient(135deg,rgba(0,212,255,.14),rgba(138,160,255,.09));border-color:rgba(0,212,255,.35);color:var(--cyan);box-shadow:0 2px 12px rgba(0,212,255,.12);}}
 .mode-btn.active-be{{background:linear-gradient(135deg,rgba(255,209,102,.14),rgba(255,159,67,.09));border-color:rgba(255,209,102,.35);color:var(--gold);box-shadow:0 2px 12px rgba(255,209,102,.12);}}
@@ -805,25 +805,25 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 
 /* ── INPUTS ── */
 .form-grp{{margin-bottom:14px;}}
-.form-lbl{{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text2);margin-bottom:6px;font-family:'DM Mono',monospace;}}
-.inp{{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:9px 12px;color:var(--text);font-family:'DM Mono',monospace;font-size:13px;outline:none;transition:all .2s;}}
+.form-lbl{{display:block;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text2);margin-bottom:6px;font-family:'DM Mono',monospace;}}
+.inp{{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:9px 12px;color:var(--text);font-family:'DM Mono',monospace;font-size:16px;outline:none;transition:all .2s;}}
 .inp:focus{{border-color:var(--cyan);box-shadow:0 0 0 3px #00d4ff12;}}
-.sel{{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:9px 12px;color:var(--text);font-family:'DM Mono',monospace;font-size:12px;outline:none;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%2300d4ff' d='M5 7L0 2h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;transition:all .2s;}}
+.sel{{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:9px 12px;color:var(--text);font-family:'DM Mono',monospace;font-size:15px;outline:none;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%2300d4ff' d='M5 7L0 2h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;transition:all .2s;}}
 .sel:focus{{border-color:var(--cyan);box-shadow:0 0 0 3px #00d4ff12;}}
 .sel option{{background:#0d1117;}}
 .bias-row{{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;}}
-.bias-btn{{padding:9px 6px;border:1px solid var(--border);border-radius:7px;background:var(--bg2);color:var(--text2);font-family:'DM Mono',monospace;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;cursor:pointer;transition:all .2s;text-align:center;}}
+.bias-btn{{padding:9px 6px;border:1px solid var(--border);border-radius:7px;background:var(--bg2);color:var(--text2);font-family:'DM Mono',monospace;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;cursor:pointer;transition:all .2s;text-align:center;}}
 .bias-btn:hover{{border-color:var(--cyan);color:var(--cyan);}}
 .bias-bull{{border-color:var(--green)!important;background:#00c89611!important;color:var(--green)!important;}}
 .bias-bear{{border-color:var(--red)!important;background:#ff6b6b11!important;color:var(--red)!important;}}
 .bias-neut{{border-color:var(--gold)!important;background:#ffd16611!important;color:var(--gold)!important;}}
 .sr-row{{display:flex;gap:7px;margin-bottom:7px;align-items:center;}}
-.add-btn{{background:transparent;border:1px dashed var(--border);border-radius:7px;color:var(--text3);padding:7px 11px;font-size:16px;cursor:pointer;transition:all .2s;line-height:1;}}
+.add-btn{{background:transparent;border:1px dashed var(--border);border-radius:7px;color:var(--text3);padding:7px 11px;font-size:18px;cursor:pointer;transition:all .2s;line-height:1;}}
 .add-btn:hover{{border-color:var(--cyan);color:var(--cyan);}}
-.rm-btn{{background:transparent;border:none;color:var(--text3);font-size:15px;cursor:pointer;padding:3px 7px;transition:color .2s;line-height:1;}}
+.rm-btn{{background:transparent;border:none;color:var(--text3);font-size:17px;cursor:pointer;padding:3px 7px;transition:color .2s;line-height:1;}}
 .rm-btn:hover{{color:var(--red);}}
 .divider{{height:1px;background:var(--border);margin:12px 0;}}
-.analyze-btn{{width:100%;padding:13px;border:none;border-radius:9px;font-family:'Syne',sans-serif;font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:2px;cursor:pointer;transition:all .3s;margin-top:6px;}}
+.analyze-btn{{width:100%;padding:13px;border:none;border-radius:9px;font-family:'Syne',sans-serif;font-size:17px;font-weight:800;text-transform:uppercase;letter-spacing:2px;cursor:pointer;transition:all .3s;margin-top:6px;}}
 .analyze-btn.sr-btn{{background:linear-gradient(135deg,var(--cyan),var(--purple));color:#000;}}
 .analyze-btn.be-btn{{background:linear-gradient(135deg,var(--gold),var(--orange));color:#000;}}
 .analyze-btn:hover{{transform:translateY(-2px);box-shadow:0 8px 28px #00d4ff33;}}
@@ -832,14 +832,14 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 
 /* ── BE MODE INPUTS ── */
 .be-inp-wrap{{position:relative;}}
-.be-inp-icon{{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:12px;pointer-events:none;}}
+.be-inp-icon{{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:15px;pointer-events:none;}}
 .be-inp-padded{{padding-left:30px!important;}}
-.be-optional-badge{{display:inline-flex;align-items:center;gap:4px;font-size:8px;font-weight:700;color:var(--text3);font-family:'DM Mono',monospace;background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:2px 7px;margin-left:8px;text-transform:uppercase;letter-spacing:.5px;vertical-align:middle;}}
+.be-optional-badge{{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:var(--text3);font-family:'DM Mono',monospace;background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:2px 7px;margin-left:8px;text-transform:uppercase;letter-spacing:.5px;vertical-align:middle;}}
 
 /* ── BE RANGE BAR ── */
 .be-rangebar-wrap{{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:10px 14px;margin-bottom:14px;}}
-.be-rb-lbl{{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;}}
-.be-rb-lbl span{{color:var(--gold);font-size:10px;font-family:'DM Mono',monospace;}}
+.be-rb-lbl{{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;}}
+.be-rb-lbl span{{color:var(--gold);font-size:13px;font-family:'DM Mono',monospace;}}
 .be-rb-track{{position:relative;height:8px;background:var(--bg);border-radius:4px;overflow:visible;margin-bottom:6px;}}
 .be-rb-fill{{position:absolute;top:0;height:100%;background:linear-gradient(90deg,rgba(255,107,107,.4),rgba(0,200,150,.4));border-radius:4px;transition:all .35s;}}
 .be-rb-fill-lower{{position:absolute;top:0;height:100%;background:rgba(255,107,107,.4);border-radius:4px 0 0 4px;transition:all .35s;}}
@@ -847,24 +847,24 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 .be-rb-spot{{position:absolute;top:50%;transform:translate(-50%,-50%);width:13px;height:13px;border-radius:50%;background:var(--cyan);border:2px solid var(--bg2);box-shadow:0 0 10px rgba(0,212,255,.6);transition:left .35s;z-index:2;}}
 .be-rb-marker-lo{{position:absolute;top:50%;transform:translate(-50%,-50%);width:10px;height:10px;border-radius:50%;background:var(--red);border:2px solid var(--bg2);z-index:2;transition:left .35s;}}
 .be-rb-marker-hi{{position:absolute;top:50%;transform:translate(-50%,-50%);width:10px;height:10px;border-radius:50%;background:var(--green);border:2px solid var(--bg2);z-index:2;transition:left .35s;}}
-.be-rb-label-row{{display:flex;justify-content:space-between;font-family:'DM Mono',monospace;font-size:9px;}}
+.be-rb-label-row{{display:flex;justify-content:space-between;font-family:'DM Mono',monospace;font-size:12px;}}
 
 /* ── BE CHIPS ── */
 .be-chips{{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:14px;}}
 .be-chip{{background:var(--bg2);border:1px solid var(--border2);border-radius:7px;padding:8px 10px;text-align:center;}}
-.be-chip-lbl{{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:3px;}}
-.be-chip-val{{font-size:13px;font-weight:800;font-family:'DM Mono',monospace;}}
+.be-chip-lbl{{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:3px;}}
+.be-chip-val{{font-size:16px;font-weight:800;font-family:'DM Mono',monospace;}}
 
 /* ── OPTION CHAIN ── */
 .chain-wrap{{overflow:auto;max-height:540px;}}
 .chain-side-hdr{{display:grid;grid-template-columns:1fr 100px 1fr;padding:7px 0;border-bottom:1px solid var(--border);background:linear-gradient(90deg,#0d1a26,#0d1117);position:sticky;top:0;z-index:3;}}
-.chain-side-hdr .ce-hdr{{text-align:right;padding-right:12px;font-size:9px;font-weight:800;color:var(--green);letter-spacing:1.5px;text-transform:uppercase;}}
-.chain-side-hdr .st-hdr{{text-align:center;font-size:9px;font-weight:800;color:var(--text2);letter-spacing:1px;text-transform:uppercase;}}
-.chain-side-hdr .pe-hdr{{text-align:left;padding-left:12px;font-size:9px;font-weight:800;color:var(--red);letter-spacing:1.5px;text-transform:uppercase;}}
+.chain-side-hdr .ce-hdr{{text-align:right;padding-right:12px;font-size:12px;font-weight:800;color:var(--green);letter-spacing:1.5px;text-transform:uppercase;}}
+.chain-side-hdr .st-hdr{{text-align:center;font-size:12px;font-weight:800;color:var(--text2);letter-spacing:1px;text-transform:uppercase;}}
+.chain-side-hdr .pe-hdr{{text-align:left;padding-left:12px;font-size:12px;font-weight:800;color:var(--red);letter-spacing:1.5px;text-transform:uppercase;}}
 .chain-col-hdr{{display:grid;grid-template-columns:1fr 100px 1fr;padding:5px 0 4px;border-bottom:1px solid var(--border2);background:#0a1218;position:sticky;top:32px;z-index:2;}}
 .chain-col-hdr .ce-cols{{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;padding:0 10px 0 6px;}}
 .chain-col-hdr .pe-cols{{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;padding:0 6px 0 10px;}}
-.chain-col-hdr span{{font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;font-family:'JetBrains Mono',monospace;text-align:right;}}
+.chain-col-hdr span{{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;font-family:'JetBrains Mono',monospace;text-align:right;}}
 .chain-col-hdr .pe-cols span{{text-align:left;}}
 .chain-row{{display:grid;grid-template-columns:1fr 100px 1fr;border-bottom:1px solid var(--border2);transition:background .12s;position:relative;}}
 .chain-row:hover{{background:#ffffff04;}}
@@ -877,85 +877,85 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 .ce-heat-bg{{position:absolute;top:0;right:0;bottom:0;background:var(--green);opacity:0.09;pointer-events:none;border-radius:2px 0 0 2px;}}
 .pe-side{{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;align-items:center;padding:8px 6px 8px 10px;gap:2px;position:relative;overflow:hidden;}}
 .pe-heat-bg{{position:absolute;top:0;left:0;bottom:0;background:var(--red);opacity:0.09;pointer-events:none;border-radius:0 2px 2px 0;}}
-.stk-cell{{display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;border-left:1px solid var(--border);border-right:1px solid var(--border);background:#0a1520;min-height:36px;position:relative;flex-direction:column;gap:2px;}}
-.atm-tag{{background:var(--cyan);color:#000;font-size:7px;font-weight:800;padding:1px 6px;border-radius:0 0 4px 4px;position:absolute;top:0;letter-spacing:.5px;}}
-.cv-ltp{{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;text-align:right;}}
-.cv-iv{{font-size:9px;color:var(--text2);font-family:'JetBrains Mono',monospace;text-align:right;}}
-.cv-oi{{font-size:9px;font-family:'JetBrains Mono',monospace;color:var(--text2);text-align:right;}}
-.cv-doi{{font-size:9px;font-family:'JetBrains Mono',monospace;text-align:right;}}
+.stk-cell{{display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;border-left:1px solid var(--border);border-right:1px solid var(--border);background:#0a1520;min-height:36px;position:relative;flex-direction:column;gap:2px;}}
+.atm-tag{{background:var(--cyan);color:#000;font-size:9px;font-weight:800;padding:1px 6px;border-radius:0 0 4px 4px;position:absolute;top:0;letter-spacing:.5px;}}
+.cv-ltp{{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;text-align:right;}}
+.cv-iv{{font-size:12px;color:var(--text2);font-family:'JetBrains Mono',monospace;text-align:right;}}
+.cv-oi{{font-size:12px;font-family:'JetBrains Mono',monospace;color:var(--text2);text-align:right;}}
+.cv-doi{{font-size:12px;font-family:'JetBrains Mono',monospace;text-align:right;}}
 .pe-side .cv-ltp,.pe-side .cv-iv,.pe-side .cv-oi,.pe-side .cv-doi{{text-align:left;}}
 .ce-ltp-v{{color:var(--green);}} .pe-ltp-v{{color:var(--red);}}
 .up{{color:var(--green)!important;}} .down{{color:var(--red)!important;}}
 
 /* ── GREEKS SIDEBAR ── */
 .greeks-panel{{padding:0;}}
-.greeks-title{{padding:13px 14px 10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text2);display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}}
-.g-exp-tag{{font-size:9px;color:var(--cyan);background:#00d4ff12;border:1px solid #00d4ff22;padding:2px 8px;border-radius:10px;font-family:'DM Mono',monospace;}}
+.greeks-title{{padding:13px 14px 10px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text2);display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}}
+.g-exp-tag{{font-size:12px;color:var(--cyan);background:#00d4ff12;border:1px solid #00d4ff22;padding:2px 8px;border-radius:10px;font-family:'DM Mono',monospace;}}
 .g-sel-wrap{{padding:10px 12px 8px;border-bottom:1px solid var(--border);}}
-.g-sel{{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:7px 10px;color:var(--text);font-family:'DM Mono',monospace;font-size:10px;outline:none;cursor:pointer;appearance:none;}}
+.g-sel{{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:7px 10px;color:var(--text);font-family:'DM Mono',monospace;font-size:13px;outline:none;cursor:pointer;appearance:none;}}
 .g-sel option{{background:#0d1117;}}
 .g-atm-badge{{margin:8px 12px;padding:8px 10px;background:linear-gradient(135deg,#00d4ff0a,#8aa0ff0a);border:1px solid #00d4ff22;border-radius:8px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px;}}
-.g-strike-type{{font-size:8px;font-weight:700;color:rgba(138,160,255,.9);font-family:'DM Mono',monospace;}}
-.g-strike-val{{font-size:16px;font-weight:800;color:var(--cyan);font-family:'DM Mono',monospace;}}
+.g-strike-type{{font-size:11px;font-weight:700;color:rgba(138,160,255,.9);font-family:'DM Mono',monospace;}}
+.g-strike-val{{font-size:18px;font-weight:800;color:var(--cyan);font-family:'DM Mono',monospace;}}
 .g-ltp-row{{display:flex;gap:6px;margin-top:2px;width:100%;}}
-.g-ce-ltp{{font-size:9px;color:#00c8e0;font-family:'DM Mono',monospace;}}
-.g-pe-ltp{{font-size:9px;color:#ff9090;font-family:'DM Mono',monospace;}}
+.g-ce-ltp{{font-size:12px;color:#00c8e0;font-family:'DM Mono',monospace;}}
+.g-pe-ltp{{font-size:12px;color:#ff9090;font-family:'DM Mono',monospace;}}
 .g-row{{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--border2);}}
 .g-label{{display:flex;flex-direction:column;}}
-.g-name{{font-size:11px;font-weight:700;color:var(--text);}}
-.g-sub{{font-size:9px;color:var(--text3);margin-top:1px;font-family:'DM Mono',monospace;}}
+.g-name{{font-size:14px;font-weight:700;color:var(--text);}}
+.g-sub{{font-size:12px;color:var(--text3);margin-top:1px;font-family:'DM Mono',monospace;}}
 .g-vals{{display:flex;flex-direction:column;gap:3px;align-items:flex-end;}}
-.g-ce-val{{font-family:'DM Mono',monospace;font-size:11px;font-weight:700;color:#00c8e0;}}
-.g-pe-val{{font-family:'DM Mono',monospace;font-size:11px;font-weight:700;color:#ff9090;}}
+.g-ce-val{{font-family:'DM Mono',monospace;font-size:14px;font-weight:700;color:#00c8e0;}}
+.g-pe-val{{font-family:'DM Mono',monospace;font-size:14px;font-weight:700;color:#ff9090;}}
 .delta-bar-wrap{{display:flex;align-items:center;gap:4px;}}
 .delta-bar-track{{width:32px;height:3px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;}}
 .delta-bar-fill{{height:100%;border-radius:2px;}}
 .iv-gauge-wrap{{padding:8px 12px 6px;border-bottom:1px solid var(--border2);}}
 .iv-gauge-row{{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}}
-.iv-gauge-lbl{{font-size:9px;color:var(--text2);font-family:'DM Mono',monospace;}}
-.iv-gauge-val{{font-size:11px;font-weight:700;font-family:'DM Mono',monospace;}}
+.iv-gauge-lbl{{font-size:12px;color:var(--text2);font-family:'DM Mono',monospace;}}
+.iv-gauge-val{{font-size:14px;font-weight:700;font-family:'DM Mono',monospace;}}
 .iv-gauge-track{{height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:4px;}}
 .iv-gauge-fill{{height:100%;border-radius:2px;transition:width .6s;}}
 .iv-regime{{font-size:8.5px;text-align:center;font-weight:700;letter-spacing:.5px;padding:4px 0 8px;font-family:'DM Mono',monospace;}}
-.skew-lbl{{font-size:9px;font-weight:700;font-family:'DM Mono',monospace;}}
+.skew-lbl{{font-size:12px;font-weight:700;font-family:'DM Mono',monospace;}}
 
 /* ── STRATEGIES ── */
 .strat-section{{margin-bottom:18px;}}
 .sec-hdr{{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}}
-.sec-title{{font-size:15px;font-weight:800;display:flex;align-items:center;gap:9px;}}
-.sec-tag{{font-size:9px;font-weight:700;background:#00d4ff12;border:1px solid #00d4ff28;color:var(--cyan);padding:2px 9px;border-radius:14px;font-family:'DM Mono',monospace;letter-spacing:1px;}}
+.sec-title{{font-size:17px;font-weight:800;display:flex;align-items:center;gap:9px;}}
+.sec-tag{{font-size:12px;font-weight:700;background:#00d4ff12;border:1px solid #00d4ff28;color:var(--cyan);padding:2px 9px;border-radius:14px;font-family:'DM Mono',monospace;letter-spacing:1px;}}
 .strat-grid{{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px;}}
 .strat-card{{background:var(--bg3);border:1px solid var(--border);border-radius:11px;overflow:hidden;transition:all .3s;cursor:pointer;}}
 .strat-card:hover{{transform:translateY(-3px);box-shadow:0 10px 32px rgba(0,0,0,.4);border-color:var(--cc,var(--cyan));}}
 .sc-top{{padding:13px 15px 10px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;}}
-.sc-name{{font-size:13px;font-weight:800;}}
-.sc-sub{{font-size:10px;color:var(--text2);margin-top:2px;font-family:'DM Mono',monospace;}}
-.pop-pill{{padding:4px 10px;border-radius:14px;font-size:12px;font-weight:800;font-family:'DM Mono',monospace;white-space:nowrap;}}
+.sc-name{{font-size:16px;font-weight:800;}}
+.sc-sub{{font-size:13px;color:var(--text2);margin-top:2px;font-family:'DM Mono',monospace;}}
+.pop-pill{{padding:4px 10px;border-radius:14px;font-size:15px;font-weight:800;font-family:'DM Mono',monospace;white-space:nowrap;}}
 .sc-fields{{padding:10px 15px;display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;border-bottom:1px solid var(--border);}}
 .sc-field{{display:flex;flex-direction:column;}}
 .sc-field-lbl{{font-size:8.5px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;font-family:'DM Mono',monospace;}}
-.sc-field-val{{font-size:12px;font-weight:700;font-family:'DM Mono',monospace;margin-top:2px;}}
+.sc-field-val{{font-size:15px;font-weight:700;font-family:'DM Mono',monospace;margin-top:2px;}}
 .sc-legs{{padding:9px 15px;background:#0d111766;display:flex;flex-wrap:wrap;gap:5px;border-bottom:1px solid var(--border);}}
 .leg-tag{{border-radius:5px;padding:3px 8px;font-size:9.5px;font-weight:700;font-family:'DM Mono',monospace;}}
 .leg-buy{{border:1px solid var(--green);color:var(--green);background:#00c89608;}}
 .leg-sell{{border:1px solid var(--red);color:var(--red);background:#ff6b6b08;}}
 
 /* ── BE STRATEGY CARD EXTRAS ── */
-.be-mode-bar{{background:linear-gradient(90deg,rgba(255,209,102,.12),transparent);border-bottom:1px solid rgba(255,209,102,.18);padding:5px 14px;font-size:9px;font-weight:800;color:var(--gold);font-family:'DM Mono',monospace;letter-spacing:1px;display:flex;align-items:center;gap:6px;}}
+.be-mode-bar{{background:linear-gradient(90deg,rgba(255,209,102,.12),transparent);border-bottom:1px solid rgba(255,209,102,.18);padding:5px 14px;font-size:12px;font-weight:800;color:var(--gold);font-family:'DM Mono',monospace;letter-spacing:1px;display:flex;align-items:center;gap:6px;}}
 .sc-legs-detail{{padding:9px 15px;background:#0d111766;border-bottom:1px solid var(--border);}}
-.sc-legs-detail-title{{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:7px;}}
+.sc-legs-detail-title{{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:7px;}}
 .leg-detail-row{{display:flex;align-items:flex-start;gap:8px;padding:6px 9px;border-radius:7px;border:1px solid transparent;margin-bottom:5px;}}
 .leg-detail-row:last-child{{margin-bottom:0;}}
 .leg-detail-row.buy{{background:rgba(0,200,150,.07);border-color:rgba(0,200,150,.18);}}
 .leg-detail-row.sell{{background:rgba(255,107,107,.07);border-color:rgba(255,107,107,.18);}}
-.leg-detail-badge{{font-size:9px;font-weight:800;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:4px;flex-shrink:0;margin-top:2px;}}
+.leg-detail-badge{{font-size:12px;font-weight:800;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:4px;flex-shrink:0;margin-top:2px;}}
 .leg-detail-badge.buy{{background:rgba(0,200,150,.2);color:var(--green);}}
 .leg-detail-badge.sell{{background:rgba(255,107,107,.2);color:var(--red);}}
 .leg-detail-body{{flex:1;}}
-.leg-detail-main{{display:flex;align-items:center;gap:7px;font-family:'DM Mono',monospace;font-size:11px;font-weight:700;}}
+.leg-detail-main{{display:flex;align-items:center;gap:7px;font-family:'DM Mono',monospace;font-size:14px;font-weight:700;}}
 .leg-ce{{color:var(--green);}} .leg-pe{{color:var(--red);}}
-.leg-stk{{color:var(--cyan);}} .leg-prem{{color:var(--text2);font-size:10px;}}
-.leg-why{{font-size:9px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:2px;line-height:1.5;}}
+.leg-stk{{color:var(--cyan);}} .leg-prem{{color:var(--text2);font-size:13px;}}
+.leg-why{{font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:2px;line-height:1.5;}}
 
 .fit-bar-wrap{{padding:8px 15px;border-bottom:1px solid var(--border);}}
 .fit-bar-hdr{{display:flex;justify-content:space-between;font-size:8.5px;font-family:'DM Mono',monospace;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px;}}
@@ -965,8 +965,8 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 .sc-score{{padding:8px 15px;display:flex;align-items:center;gap:8px;}}
 .score-bar-track{{flex:1;height:3px;background:var(--border);border-radius:2px;overflow:hidden;}}
 .score-bar-fill{{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--cyan),var(--purple));transition:width 1s ease;}}
-.score-lbl{{font-size:9px;color:var(--text3);font-family:'DM Mono',monospace;}}
-.score-num{{font-size:11px;font-weight:700;color:var(--cyan);font-family:'DM Mono',monospace;}}
+.score-lbl{{font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;}}
+.score-num{{font-size:14px;font-weight:700;color:var(--cyan);font-family:'DM Mono',monospace;}}
 
 /* ── INTRADAY P&L SIMULATOR ── */
 .intraday-sim{{border-top:2px solid rgba(255,209,102,.22);background:linear-gradient(135deg,rgba(245,197,24,.03),rgba(200,155,10,.015));}}
@@ -975,35 +975,35 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 .sim-tab.active{{color:#ffd166;border-bottom-color:#ffd166;background:rgba(245,197,24,.06);}}
 .sim-tab:hover:not(.active){{color:rgba(255,255,255,.55);background:rgba(255,255,255,.03);}}
 .sim-hdr{{display:flex;align-items:center;justify-content:space-between;padding:8px 10px 6px;}}
-.sim-icon{{width:20px;height:20px;border-radius:5px;background:rgba(245,197,24,.15);border:1px solid rgba(245,197,24,.3);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;}}
-.sim-title{{font-size:9px;font-weight:700;color:rgba(255,209,102,.9);letter-spacing:.8px;text-transform:uppercase;}}
-.sim-subtitle{{font-size:8px;color:rgba(255,255,255,.28);margin-top:1px;}}
+.sim-icon{{width:20px;height:20px;border-radius:5px;background:rgba(245,197,24,.15);border:1px solid rgba(245,197,24,.3);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}}
+.sim-title{{font-size:12px;font-weight:700;color:rgba(255,209,102,.9);letter-spacing:.8px;text-transform:uppercase;}}
+.sim-subtitle{{font-size:11px;color:rgba(255,255,255,.28);margin-top:1px;}}
 .sim-tbl{{width:100%;border-collapse:collapse;}}
 .sim-tbl thead tr{{background:rgba(255,255,255,.03);}}
 .sim-tbl th{{padding:5px 8px;font-size:7.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.28);text-align:center;border-bottom:1px solid rgba(255,255,255,.06);}}
 .sim-tbl th:first-child{{text-align:left;}}
-.sim-tbl td{{padding:6px 8px;font-family:'DM Mono',monospace;font-size:10px;text-align:center;border-bottom:1px solid rgba(255,255,255,.03);transition:background .12s;}}
+.sim-tbl td{{padding:6px 8px;font-family:'DM Mono',monospace;font-size:13px;text-align:center;border-bottom:1px solid rgba(255,255,255,.03);transition:background .12s;}}
 .sim-tbl td:first-child{{text-align:left;}}
 .sim-tbl tr:last-child td{{border-bottom:none;}}
 .sim-tbl tr:hover td{{background:rgba(255,255,255,.025);}}
 .sim-tbl tr.sim-flat td{{background:rgba(245,197,24,.06);border-left:2px solid rgba(245,197,24,.35);}}
-.sim-move-lbl{{font-size:9px;font-weight:700;padding:2px 6px;border-radius:5px;display:inline-block;}}
-.sim-pnl-val{{font-weight:700;font-size:11px;}}
+.sim-move-lbl{{font-size:12px;font-weight:700;padding:2px 6px;border-radius:5px;display:inline-block;}}
+.sim-pnl-val{{font-weight:700;font-size:14px;}}
 .sim-live-pnl{{display:flex;align-items:center;justify-content:center;gap:8px;padding:10px;flex-wrap:wrap;border-bottom:1px solid rgba(255,255,255,.05);}}
 .slpb{{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 12px;border-radius:9px;min-width:90px;}}
 .slpb-lbl{{font-size:7.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.28);}}
-.slpb-num{{font-family:'DM Mono',monospace;font-size:16px;font-weight:700;line-height:1;}}
-.slpb-sub{{font-size:8px;color:rgba(255,255,255,.25);}}
+.slpb-num{{font-family:'DM Mono',monospace;font-size:18px;font-weight:700;line-height:1;}}
+.slpb-sub{{font-size:11px;color:rgba(255,255,255,.25);}}
 .cbar-row{{display:flex;align-items:center;gap:6px;margin-bottom:5px;}}
-.cbar-lbl{{font-family:'DM Mono',monospace;font-size:9px;font-weight:700;width:44px;flex-shrink:0;}}
+.cbar-lbl{{font-family:'DM Mono',monospace;font-size:12px;font-weight:700;width:44px;flex-shrink:0;}}
 .cbar-track{{flex:1;height:4px;background:rgba(255,255,255,.07);border-radius:2px;overflow:hidden;}}
 .cbar-fill{{height:100%;border-radius:2px;transition:width .4s;}}
-.cbar-val{{font-family:'DM Mono',monospace;font-size:9px;font-weight:700;min-width:58px;text-align:right;}}
-.sim-note{{margin:0 10px 10px;padding:7px 10px;background:rgba(255,107,107,.05);border:1px solid rgba(255,107,107,.13);border-radius:7px;font-size:9px;color:rgba(255,150,150,.65);display:flex;align-items:flex-start;gap:6px;line-height:1.5;}}
+.cbar-val{{font-family:'DM Mono',monospace;font-size:12px;font-weight:700;min-width:58px;text-align:right;}}
+.sim-note{{margin:0 10px 10px;padding:7px 10px;background:rgba(255,107,107,.05);border:1px solid rgba(255,107,107,.13);border-radius:7px;font-size:12px;color:rgba(255,150,150,.65);display:flex;align-items:flex-start;gap:6px;line-height:1.5;}}
 .sim-slide-wrap{{padding:0 10px 10px;}}
 .sim-slide-labels{{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;}}
-.sim-slide-cur{{font-family:'DM Mono',monospace;font-size:10px;font-weight:700;color:#ffd166;background:rgba(245,197,24,.1);border:1px solid rgba(245,197,24,.28);border-radius:5px;padding:2px 8px;}}
-.sim-slide-edge{{font-size:8px;color:rgba(255,255,255,.25);}}
+.sim-slide-cur{{font-family:'DM Mono',monospace;font-size:13px;font-weight:700;color:#ffd166;background:rgba(245,197,24,.1);border:1px solid rgba(245,197,24,.28);border-radius:5px;padding:2px 8px;}}
+.sim-slide-edge{{font-size:11px;color:rgba(255,255,255,.25);}}
 input.sim-range{{width:100%;height:4px;border-radius:2px;outline:none;border:none;-webkit-appearance:none;cursor:pointer;background:linear-gradient(90deg,#ffd166 var(--pct,50%),rgba(255,255,255,.09) var(--pct,50%));}}
 input.sim-range::-webkit-slider-thumb{{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#ffd166;border:2px solid var(--bg);box-shadow:0 0 6px rgba(245,197,24,.45);cursor:pointer;}}
 
@@ -1013,11 +1013,11 @@ canvas#payoffChart{{width:100%!important;height:288px!important;}}
 
 /* ── EMPTY STATE ── */
 .empty{{text-align:center;padding:50px 20px;color:var(--text3);grid-column:1/-1;}}
-.empty-icon{{font-size:42px;margin-bottom:12px;opacity:.3;}}
-.empty p{{font-size:11px;font-family:'DM Mono',monospace;line-height:1.8;}}
+.empty-icon{{font-size:44px;margin-bottom:12px;opacity:.3;}}
+.empty p{{font-size:14px;font-family:'DM Mono',monospace;line-height:1.8;}}
 
 /* ── FOOTER ── */
-.footer{{text-align:center;padding:16px;font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;border-top:1px solid var(--border);margin-top:6px;}}
+.footer{{text-align:center;padding:16px;font-size:13px;color:var(--text3);font-family:'DM Mono',monospace;border-top:1px solid var(--border);margin-top:6px;}}
 
 /* ── ANIMATIONS ── */
 @keyframes pulse{{0%,100%{{opacity:1;box-shadow:0 0 0 0 #00c89655;}}50%{{opacity:.6;box-shadow:0 0 0 5px transparent;}}}}
@@ -1036,7 +1036,7 @@ canvas#payoffChart{{width:100%!important;height:288px!important;}}
 
 @media(max-width:1100px){{.main{{grid-template-columns:300px 1fr!important;}}.greeks-panel{{display:none;}}.ticker{{grid-template-columns:repeat(2,1fr);}}}}
 @media(max-width:800px){{.main{{grid-template-columns:1fr!important;}}.ticker{{grid-template-columns:repeat(2,1fr);}}.strat-grid{{grid-template-columns:1fr!important;}}.hdr{{flex-direction:column;gap:10px;align-items:flex-start;}}.hdr>div:last-child{{align-self:flex-end;}}.wrap{{padding:10px;}}}}
-@media(max-width:500px){{.ticker{{grid-template-columns:1fr 1fr;gap:8px;}}.tick-val{{font-size:17px;}}.hdr h1{{font-size:16px;}}.bias-row{{grid-template-columns:repeat(3,1fr);}}.sc-fields{{grid-template-columns:1fr 1fr;}}}}
+@media(max-width:500px){{.ticker{{grid-template-columns:1fr 1fr;gap:8px;}}.tick-val{{font-size:19px;}}.hdr h1{{font-size:18px;}}.bias-row{{grid-template-columns:repeat(3,1fr);}}.sc-fields{{grid-template-columns:1fr 1fr;}}}}
 </style>
 </head>
 <body>
@@ -1053,16 +1053,16 @@ canvas#payoffChart{{width:100%!important;height:288px!important;}}
   </div>
   <div style="display:flex;align-items:center;gap:14px;">
     <div style="text-align:right;">
-      <div style="font-size:9px;color:var(--text3);font-family:'DM Mono',monospace;">GENERATED</div>
-      <div class="gen-time" style="font-size:11px;color:var(--text2);font-family:'DM Mono',monospace;">{generated_at}</div>
+      <div style="font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;">GENERATED</div>
+      <div class="gen-time" style="font-size:14px;color:var(--text2);font-family:'DM Mono',monospace;">{generated_at}</div>
     </div>
     <div style="text-align:right;">
-      <div style="font-size:9px;color:var(--text3);font-family:'DM Mono',monospace;">IST TIME</div>
-      <div style="font-size:14px;font-weight:700;color:var(--cyan);font-family:'DM Mono',monospace;letter-spacing:1px;" id="istClock">--:--:--</div>
+      <div style="font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;">IST TIME</div>
+      <div style="font-size:17px;font-weight:700;color:var(--cyan);font-family:'DM Mono',monospace;letter-spacing:1px;" id="istClock">--:--:--</div>
     </div>
     <div style="text-align:right;">
-      <div style="font-size:9px;color:var(--text3);font-family:'DM Mono',monospace;">NEXT REFRESH</div>
-      <div style="font-size:11px;color:var(--cyan);font-family:'DM Mono',monospace;" id="countdown">30s</div>
+      <div style="font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;">NEXT REFRESH</div>
+      <div style="font-size:14px;color:var(--cyan);font-family:'DM Mono',monospace;" id="countdown">30s</div>
     </div>
     <div class="live-pill"><div class="live-dot"></div>LIVE</div>
   </div>
@@ -1179,9 +1179,9 @@ canvas#payoffChart{{width:100%!important;height:288px!important;}}
             <div class="be-rb-marker-hi" id="beRbMarkerHi" style="display:none;"></div>
           </div>
           <div class="be-rb-label-row">
-            <span id="beRbLoLbl" style="color:var(--red);font-family:'DM Mono',monospace;font-size:9px;">—</span>
-            <span style="color:var(--cyan);font-family:'DM Mono',monospace;font-size:9px;" id="beRbSpotLbl">SPOT —</span>
-            <span id="beRbHiLbl" style="color:var(--green);font-family:'DM Mono',monospace;font-size:9px;">—</span>
+            <span id="beRbLoLbl" style="color:var(--red);font-family:'DM Mono',monospace;font-size:12px;">—</span>
+            <span style="color:var(--cyan);font-family:'DM Mono',monospace;font-size:12px;" id="beRbSpotLbl">SPOT —</span>
+            <span id="beRbHiLbl" style="color:var(--green);font-family:'DM Mono',monospace;font-size:12px;">—</span>
           </div>
         </div>
 
@@ -1197,7 +1197,7 @@ canvas#payoffChart{{width:100%!important;height:288px!important;}}
                    placeholder="e.g. 24000 — leave blank to skip"
                    oninput="updateBEVisual()"/>
           </div>
-          <div style="font-size:9px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:4px;" id="beLowerHint">
+          <div style="font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:4px;" id="beLowerHint">
             "Nifty will NOT close below this at expiry"
           </div>
         </div>
@@ -1214,7 +1214,7 @@ canvas#payoffChart{{width:100%!important;height:288px!important;}}
                    placeholder="e.g. 25500 — leave blank to skip"
                    oninput="updateBEVisual()"/>
           </div>
-          <div style="font-size:9px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:4px;" id="beUpperHint">
+          <div style="font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:4px;" id="beUpperHint">
             "Nifty will NOT close above this at expiry"
           </div>
         </div>
@@ -1264,9 +1264,9 @@ canvas#payoffChart{{width:100%!important;height:288px!important;}}
     <div class="panel-hdr">
       <div class="panel-title">📊 Live Option Chain</div>
       <div style="display:flex;align-items:center;gap:14px;">
-        <span style="font-size:10px;color:var(--text2);font-family:'JetBrains Mono',monospace;">SPOT <b style="color:var(--cyan);" id="chainSpotLbl">—</b></span>
-        <span style="font-size:10px;color:var(--text2);font-family:'JetBrains Mono',monospace;">DTE <b style="color:var(--gold);" id="chainDteLbl">—</b></span>
-        <span style="font-size:10px;color:var(--text2);font-family:'JetBrains Mono',monospace;" id="chainExpLbl"></span>
+        <span style="font-size:13px;color:var(--text2);font-family:'JetBrains Mono',monospace;">SPOT <b style="color:var(--cyan);" id="chainSpotLbl">—</b></span>
+        <span style="font-size:13px;color:var(--text2);font-family:'JetBrains Mono',monospace;">DTE <b style="color:var(--gold);" id="chainDteLbl">—</b></span>
+        <span style="font-size:13px;color:var(--text2);font-family:'JetBrains Mono',monospace;" id="chainExpLbl"></span>
       </div>
     </div>
     <div class="chain-wrap">
@@ -1280,7 +1280,7 @@ canvas#payoffChart{{width:100%!important;height:288px!important;}}
         <div></div>
         <div class="pe-cols"><span>ΔOI</span><span>OI(L)</span><span>IV%</span><span>LTP</span></div>
       </div>
-      <div id="chainBody"><div style="text-align:center;padding:50px;color:var(--text3);font-family:'JetBrains Mono',monospace;font-size:11px;">Loading…</div></div>
+      <div id="chainBody"><div style="text-align:center;padding:50px;color:var(--text3);font-family:'JetBrains Mono',monospace;font-size:14px;">Loading…</div></div>
     </div>
   </div>
 
@@ -1290,13 +1290,13 @@ canvas#payoffChart{{width:100%!important;height:288px!important;}}
     <div class="g-sel-wrap"><select class="g-sel" id="greeksStrikeSel" onchange="updateGreeksForStrike(this.value)"></select></div>
     <div class="g-atm-badge" id="greeksAtmBadge">
       <div><div class="g-strike-type" id="greeksTypeLabel">ATM</div><div class="g-strike-val" id="greeksStrikeVal">—</div></div>
-      <div class="g-ltp-row"><span class="g-ce-ltp" id="greeksCeLtp">CE —</span><span style="color:var(--text3);font-size:9px;">/</span><span class="g-pe-ltp" id="greeksPeLtp">PE —</span></div>
+      <div class="g-ltp-row"><span class="g-ce-ltp" id="greeksCeLtp">CE —</span><span style="color:var(--text3);font-size:12px;">/</span><span class="g-pe-ltp" id="greeksPeLtp">PE —</span></div>
     </div>
     <div class="g-row"><div class="g-label"><span class="g-name">Δ Delta</span><span class="g-sub">CE / PE</span></div><div class="g-vals" id="greeksDeltaWrap"><div class="delta-bar-wrap"><div class="delta-bar-track"><div class="delta-bar-fill" id="dbarCe" style="background:var(--green);"></div></div><span class="g-ce-val" id="greeksDeltaCe">—</span></div><div class="delta-bar-wrap"><div class="delta-bar-track"><div class="delta-bar-fill" id="dbarPe" style="background:var(--red);"></div></div><span class="g-pe-val" id="greeksDeltaPe">—</span></div></div></div>
-    <div class="g-row"><div class="g-label"><span class="g-name">σ IV</span><span class="skew-lbl" id="greeksSkewLbl" style="color:var(--purple);">—</span></div><div class="g-vals"><div style="display:flex;align-items:center;gap:5px;"><span style="font-size:8px;color:rgba(0,200,220,.8);">CE</span><span class="g-ce-val" id="greeksIvCe">—</span></div><div style="display:flex;align-items:center;gap:5px;"><span style="font-size:8px;color:rgba(255,144,144,.8);">PE</span><span class="g-pe-val" id="greeksIvPe">—</span></div></div></div>
-    <div class="g-row"><div class="g-label"><span class="g-name">Θ Theta</span><span class="g-sub">per day</span></div><div class="g-vals"><div style="display:flex;align-items:center;gap:5px;"><span style="font-size:8px;color:rgba(0,200,220,.8);">CE</span><span class="g-ce-val" id="greeksThetaCe">—</span></div><div style="display:flex;align-items:center;gap:5px;"><span style="font-size:8px;color:rgba(255,144,144,.8);">PE</span><span class="g-pe-val" id="greeksThetaPe">—</span></div></div></div>
-    <div class="g-row"><div class="g-label"><span class="g-name">ν Vega</span><span class="g-sub">per 1% IV</span></div><div class="g-vals"><div style="display:flex;align-items:center;gap:5px;"><span style="font-size:8px;color:rgba(0,200,220,.8);">CE</span><span class="g-ce-val" id="greeksVegaCe">—</span></div><div style="display:flex;align-items:center;gap:5px;"><span style="font-size:8px;color:rgba(255,144,144,.8);">PE</span><span class="g-pe-val" id="greeksVegaPe">—</span></div></div></div>
-    <div class="g-row"><div class="g-label"><span class="g-name">Γ Gamma</span><span class="g-sub">delta/point</span></div><div class="g-vals"><div style="display:flex;align-items:center;gap:5px;"><span style="font-size:8px;color:rgba(0,200,220,.8);">CE</span><span class="g-ce-val" id="greeksGammaCe">—</span></div><div style="display:flex;align-items:center;gap:5px;"><span style="font-size:8px;color:rgba(255,144,144,.8);">PE</span><span class="g-pe-val" id="greeksGammaPe">—</span></div></div></div>
+    <div class="g-row"><div class="g-label"><span class="g-name">σ IV</span><span class="skew-lbl" id="greeksSkewLbl" style="color:var(--purple);">—</span></div><div class="g-vals"><div style="display:flex;align-items:center;gap:5px;"><span style="font-size:11px;color:rgba(0,200,220,.8);">CE</span><span class="g-ce-val" id="greeksIvCe">—</span></div><div style="display:flex;align-items:center;gap:5px;"><span style="font-size:11px;color:rgba(255,144,144,.8);">PE</span><span class="g-pe-val" id="greeksIvPe">—</span></div></div></div>
+    <div class="g-row"><div class="g-label"><span class="g-name">Θ Theta</span><span class="g-sub">per day</span></div><div class="g-vals"><div style="display:flex;align-items:center;gap:5px;"><span style="font-size:11px;color:rgba(0,200,220,.8);">CE</span><span class="g-ce-val" id="greeksThetaCe">—</span></div><div style="display:flex;align-items:center;gap:5px;"><span style="font-size:11px;color:rgba(255,144,144,.8);">PE</span><span class="g-pe-val" id="greeksThetaPe">—</span></div></div></div>
+    <div class="g-row"><div class="g-label"><span class="g-name">ν Vega</span><span class="g-sub">per 1% IV</span></div><div class="g-vals"><div style="display:flex;align-items:center;gap:5px;"><span style="font-size:11px;color:rgba(0,200,220,.8);">CE</span><span class="g-ce-val" id="greeksVegaCe">—</span></div><div style="display:flex;align-items:center;gap:5px;"><span style="font-size:11px;color:rgba(255,144,144,.8);">PE</span><span class="g-pe-val" id="greeksVegaPe">—</span></div></div></div>
+    <div class="g-row"><div class="g-label"><span class="g-name">Γ Gamma</span><span class="g-sub">delta/point</span></div><div class="g-vals"><div style="display:flex;align-items:center;gap:5px;"><span style="font-size:11px;color:rgba(0,200,220,.8);">CE</span><span class="g-ce-val" id="greeksGammaCe">—</span></div><div style="display:flex;align-items:center;gap:5px;"><span style="font-size:11px;color:rgba(255,144,144,.8);">PE</span><span class="g-pe-val" id="greeksGammaPe">—</span></div></div></div>
     <div class="iv-gauge-wrap">
       <div class="iv-gauge-row"><span class="iv-gauge-lbl">IV Average</span><span class="iv-gauge-val" id="greeksIvAvg" style="color:var(--green);">—</span></div>
       <div class="iv-gauge-track"><div class="iv-gauge-fill" id="greeksIvBar" style="width:0%;background:var(--green);"></div></div>
@@ -1325,7 +1325,7 @@ canvas#payoffChart{{width:100%!important;height:288px!important;}}
 <!-- PAYOFF CHART -->
 <div class="panel" style="margin-bottom:18px;">
   <div class="panel-hdr">
-    <div class="panel-title">📈 Payoff Diagram<span style="font-size:9px;color:var(--text3);margin-left:8px;font-family:'JetBrains Mono',monospace;">🟢 Today (BSM) &nbsp;|&nbsp; 🔵 At Expiry &nbsp;|&nbsp; bars = OI</span></div>
+    <div class="panel-title">📈 Payoff Diagram<span style="font-size:12px;color:var(--text3);margin-left:8px;font-family:'JetBrains Mono',monospace;">🟢 Today (BSM) &nbsp;|&nbsp; 🔵 At Expiry &nbsp;|&nbsp; bars = OI</span></div>
     <select class="sel" style="width:200px;" id="payoffSel" onchange="drawPayoff()"><option value="">— Select Strategy —</option></select>
   </div>
   <div id="payoffStats" style="display:none;grid-template-columns:repeat(4,1fr);gap:10px;padding:14px 16px 0;"></div>
@@ -1333,12 +1333,12 @@ canvas#payoffChart{{width:100%!important;height:288px!important;}}
   <div id="payoffTooltip" style="display:none;position:fixed;z-index:9999;background:rgba(8,18,30,0.97);border:1px solid rgba(0,212,255,0.28);border-radius:10px;padding:13px 16px;min-width:250px;max-width:280px;box-shadow:0 8px 36px rgba(0,0,0,0.7);pointer-events:none;font-family:'JetBrains Mono',monospace;backdrop-filter:blur(8px);"></div>
   <div id="payoffFooter" style="display:none;padding:10px 16px 12px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
     <div style="display:flex;align-items:center;gap:8px;">
-      <span style="font-size:9px;color:var(--text2);font-family:'JetBrains Mono',monospace;letter-spacing:1px;">BREAKEVENS</span>
+      <span style="font-size:12px;color:var(--text2);font-family:'JetBrains Mono',monospace;letter-spacing:1px;">BREAKEVENS</span>
       <div id="beBadges" style="display:flex;gap:6px;"></div>
     </div>
-    <div style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--text2);" id="projBadge">Select a strategy to see projected P&L</div>
+    <div style="font-size:14px;font-family:'JetBrains Mono',monospace;color:var(--text2);" id="projBadge">Select a strategy to see projected P&L</div>
   </div>
-  <div id="projBadgeFallback" style="text-align:center;padding:10px 16px 14px;font-size:11px;font-family:'JetBrains Mono',monospace;border-top:1px solid var(--border);color:var(--text2);">Select a strategy to see projected P&L</div>
+  <div id="projBadgeFallback" style="text-align:center;padding:10px 16px 14px;font-size:14px;font-family:'JetBrains Mono',monospace;border-top:1px solid var(--border);color:var(--text2);">Select a strategy to see projected P&L</div>
 </div>
 
 <div class="footer">NIFTY OPTIONS ANALYZER · NSE INDIA DATA · FOR EDUCATIONAL PURPOSE ONLY · NOT FINANCIAL ADVICE</div>
@@ -1492,10 +1492,10 @@ function renderChain() {{
     const ceChgCls = r.ce_oi_chg>=0?"up":"down";
     const peChgCls = r.pe_oi_chg>=0?"up":"down";
     let rc = isAtm?"atm-row":isSup?"sup-row":isRes?"res-row":isBeL?"be-lo-row":isBeH?"be-hi-row":"";
-    const smark = isSup?'<span style="color:var(--green);font-size:7px;font-weight:700;letter-spacing:.5px;">▲ SUP</span>':"";
-    const rmark = isRes?'<span style="color:var(--red);font-size:7px;font-weight:700;letter-spacing:.5px;">▼ RES</span>':"";
-    const blomark = isBeL?'<span style="color:var(--red);font-size:7px;font-weight:700;letter-spacing:.5px;">BE ▼</span>':"";
-    const bhimark = isBeH?'<span style="color:var(--green);font-size:7px;font-weight:700;letter-spacing:.5px;">BE ▲</span>':"";
+    const smark = isSup?'<span style="color:var(--green);font-size:9px;font-weight:700;letter-spacing:.5px;">▲ SUP</span>':"";
+    const rmark = isRes?'<span style="color:var(--red);font-size:9px;font-weight:700;letter-spacing:.5px;">▼ RES</span>':"";
+    const blomark = isBeL?'<span style="color:var(--red);font-size:9px;font-weight:700;letter-spacing:.5px;">BE ▼</span>':"";
+    const bhimark = isBeH?'<span style="color:var(--green);font-size:9px;font-weight:700;letter-spacing:.5px;">BE ▲</span>':"";
     return `<div class="chain-row ${{rc}}">
       <div class="ce-side">
         <div class="ce-heat-bg" style="width:${{ceHeat}}%"></div>
@@ -2374,10 +2374,10 @@ function renderStrategies() {{
 
     // ── BE mode: show detailed leg reasons + fit bar + quality warnings ──
     const poorValueBadge    = (s.isBEMode && s.poorValue)
-      ? `<div style="margin:0 0 2px;padding:5px 14px;background:rgba(255,107,107,.10);border-bottom:1px solid rgba(255,107,107,.25);font-size:8px;font-weight:700;color:#ff6b6b;font-family:'DM Mono',monospace;letter-spacing:.8px;">⚠️ POOR VALUE — Yield-to-Risk ${{s.yieldToRisk.toFixed(2)}}x (below 1:5 threshold). Consider a wider spread.</div>`
+      ? `<div style="margin:0 0 2px;padding:5px 14px;background:rgba(255,107,107,.10);border-bottom:1px solid rgba(255,107,107,.25);font-size:11px;font-weight:700;color:#ff6b6b;font-family:'DM Mono',monospace;letter-spacing:.8px;">⚠️ POOR VALUE — Yield-to-Risk ${{s.yieldToRisk.toFixed(2)}}x (below 1:5 threshold). Consider a wider spread.</div>`
       : "";
     const lowLiquidityBadge = (s.isBEMode && s.lowLiquidity)
-      ? `<div style="margin:0 0 2px;padding:5px 14px;background:rgba(255,209,102,.08);border-bottom:1px solid rgba(255,209,102,.25);font-size:8px;font-weight:700;color:#ffd166;font-family:'DM Mono',monospace;letter-spacing:.8px;">⚠️ LOW LIQUIDITY — One or more sell legs have zero OI. Verify fills before trading.</div>`
+      ? `<div style="margin:0 0 2px;padding:5px 14px;background:rgba(255,209,102,.08);border-bottom:1px solid rgba(255,209,102,.25);font-size:11px;font-weight:700;color:#ffd166;font-family:'DM Mono',monospace;letter-spacing:.8px;">⚠️ LOW LIQUIDITY — One or more sell legs have zero OI. Verify fills before trading.</div>`
       : "";
     const beModeTop = s.isBEMode
       ? `<div class="be-mode-bar">🎯 BE STRATEGY &nbsp;·&nbsp; FIT: <b style="color:var(--gold);">${{s.fit||"—"}}%</b></div>${{poorValueBadge}}${{lowLiquidityBadge}}`
@@ -2386,27 +2386,27 @@ function renderStrategies() {{
     // ── BE accuracy panel: shows YOUR INPUT vs ACTUAL BE side by side ──
     const beAccuracyPanel = (s.isBEMode && s.beAccuracy && s.beAccuracy.length) ? `
       <div style="margin:0;padding:8px 14px;background:rgba(6,10,18,.6);border-bottom:1px solid var(--border);">
-        <div style="font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:6px;">🎯 YOUR INPUT vs ACTUAL BREAKEVENS</div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:6px;">🎯 YOUR INPUT vs ACTUAL BREAKEVENS</div>
         <div style="display:grid;grid-template-columns:${{s.beAccuracy.length>1?"1fr 1fr":"1fr"}};gap:8px;">
           ${{s.beAccuracy.map(a=>{{
             const sign = a.diff >= 0 ? "+" : "";
             const col  = Math.abs(a.diff) <= 30 ? "var(--green)" : Math.abs(a.diff) <= 80 ? "var(--gold)" : "var(--red)";
             const icon = Math.abs(a.diff) <= 30 ? "✅" : Math.abs(a.diff) <= 80 ? "⚠️" : "❌";
             return `<div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:7px;padding:7px 10px;">
-              <div style="font-size:8px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:4px;">${{icon}} ${{a.side.toUpperCase()}} BE</div>
+              <div style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:4px;">${{icon}} ${{a.side.toUpperCase()}} BE</div>
               <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
                 <div style="text-align:center;">
-                  <div style="font-size:7px;color:var(--text3);font-family:'DM Mono',monospace;">YOUR INPUT</div>
-                  <div style="font-size:12px;font-weight:800;font-family:'DM Mono',monospace;color:var(--gold);">₹${{a.target.toLocaleString("en-IN")}}</div>
+                  <div style="font-size:9px;color:var(--text3);font-family:'DM Mono',monospace;">YOUR INPUT</div>
+                  <div style="font-size:15px;font-weight:800;font-family:'DM Mono',monospace;color:var(--gold);">₹${{a.target.toLocaleString("en-IN")}}</div>
                 </div>
-                <div style="color:var(--text3);font-size:10px;">→</div>
+                <div style="color:var(--text3);font-size:13px;">→</div>
                 <div style="text-align:center;">
-                  <div style="font-size:7px;color:var(--text3);font-family:'DM Mono',monospace;">ACTUAL BE</div>
-                  <div style="font-size:12px;font-weight:800;font-family:'DM Mono',monospace;color:${{col}};">₹${{a.actual.toLocaleString("en-IN")}}</div>
+                  <div style="font-size:9px;color:var(--text3);font-family:'DM Mono',monospace;">ACTUAL BE</div>
+                  <div style="font-size:15px;font-weight:800;font-family:'DM Mono',monospace;color:${{col}};">₹${{a.actual.toLocaleString("en-IN")}}</div>
                 </div>
                 <div style="text-align:center;">
-                  <div style="font-size:7px;color:var(--text3);font-family:'DM Mono',monospace;">DIFF</div>
-                  <div style="font-size:11px;font-weight:700;font-family:'DM Mono',monospace;color:${{col}};">${{sign}}${{a.diff}}</div>
+                  <div style="font-size:9px;color:var(--text3);font-family:'DM Mono',monospace;">DIFF</div>
+                  <div style="font-size:14px;font-weight:700;font-family:'DM Mono',monospace;color:${{col}};">${{sign}}${{a.diff}}</div>
                 </div>
               </div>
             </div>`;
@@ -2439,7 +2439,7 @@ function renderStrategies() {{
               <div class="leg-why">↳ ${{l.why}}</div>
             </div>
           </div>`).join("")}}
-          ${{s.beInsight ? `<div style="margin-top:8px;padding:7px 10px;background:rgba(255,209,102,.06);border:1px solid rgba(255,209,102,.15);border-radius:7px;font-size:9px;font-family:'DM Mono',monospace;color:rgba(255,209,102,.8);line-height:1.6;">💡 ${{s.beInsight}}</div>` : ""}}
+          ${{s.beInsight ? `<div style="margin-top:8px;padding:7px 10px;background:rgba(255,209,102,.06);border:1px solid rgba(255,209,102,.15);border-radius:7px;font-size:12px;font-family:'DM Mono',monospace;color:rgba(255,209,102,.8);line-height:1.6;">💡 ${{s.beInsight}}</div>` : ""}}
         </div>`
       : `<div class="sc-legs">
           ${{s.legs.map(l=>`<span class="leg-tag leg-${{l.action}}">${{l.action.toUpperCase()}} ${{l.strike}} ${{l.opt_type||l.type}} @${{l.premium.toFixed(2)}}</span>`).join("")}}
@@ -2452,7 +2452,7 @@ function renderStrategies() {{
           <div class="sc-name">${{emojis[s.biasTag]||"📊"}} ${{s.name}}</div>
           <div class="sc-sub">${{s.biasTag.toUpperCase()}} · ${{s.isDebit?"DEBIT":"CREDIT"}} SPREAD · DTE:${{ALL_DATA[currentExpiry]?.dte||"—"}}</div>
         </div>
-        <div class="pop-pill" style="background:${{popBg}};color:${{popCol}};border:1px solid ${{popCol}}33;">${{s.pop}}%<br><span style="font-size:8px;font-weight:400;">PoP</span></div>
+        <div class="pop-pill" style="background:${{popBg}};color:${{popCol}};border:1px solid ${{popCol}}33;">${{s.pop}}%<br><span style="font-size:11px;font-weight:400;">PoP</span></div>
       </div>
       ${{fitBar}}
       ${{beAccuracyPanel}}
@@ -2461,7 +2461,7 @@ function renderStrategies() {{
         <div class="sc-field"><span class="sc-field-lbl">Max Profit</span><span class="sc-field-val up">₹${{s.maxProfit.toLocaleString("en-IN")}}</span></div>
         <div class="sc-field"><span class="sc-field-lbl">Max Loss</span><span class="sc-field-val down">₹${{s.maxLoss.toLocaleString("en-IN")}}</span></div>
         <div class="sc-field"><span class="sc-field-lbl">Max RR Ratio</span><span class="sc-field-val" style="color:var(--gold);">1:${{rrDisp}}</span></div>
-        <div class="sc-field"><span class="sc-field-lbl">Breakevens</span><span class="sc-field-val" style="font-size:10px;color:var(--text2);">${{beStr}}</span></div>
+        <div class="sc-field"><span class="sc-field-lbl">Breakevens</span><span class="sc-field-val" style="font-size:13px;color:var(--text2);">${{beStr}}</span></div>
         <div class="sc-field"><span class="sc-field-lbl">Net Credit/Debit</span><span class="sc-field-val">${{netDisp}}</span></div>
         <div class="sc-field" style="grid-column:1/-1"><span class="sc-field-lbl">Est. Margin / Premium</span><span class="sc-field-val" style="color:var(--purple);">₹${{s.margin.toLocaleString("en-IN")}}</span></div>
       </div>
@@ -2477,8 +2477,8 @@ function renderStrategies() {{
                  padding:7px 12px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;
                  font-family:'DM Mono',monospace;font-size:9.5px;font-weight:700;color:rgba(255,209,102,.8);
                  letter-spacing:.8px;text-transform:uppercase;transition:all .2s;">
-          <span style="display:flex;align-items:center;gap:7px;"><span style="font-size:12px;">📊</span> Intraday P&L Simulator</span>
-          <span id="sim-arrow-${{uid}}" style="font-size:11px;transition:transform .25s;">▼</span>
+          <span style="display:flex;align-items:center;gap:7px;"><span style="font-size:15px;">📊</span> Intraday P&L Simulator</span>
+          <span id="sim-arrow-${{uid}}" style="font-size:14px;transition:transform .25s;">▼</span>
         </button>
       </div>
       <div id="sim-wrap-${{uid}}" style="display:none;overflow:hidden;">${{buildIntradaySim(s, uid)}}</div>
@@ -2518,9 +2518,9 @@ function buildIntradaySim(s, uid) {{
       const tht=isCE?(st?.ce_theta||0):(st?.pe_theta||0);
       const est=Math.max(0,ltp+dlt*m.pts+tht).toFixed(0);
       const col=l.action==="buy"?"#00c8e0":"#ff9090";
-      return `<td style="color:${{col}};font-size:9px;">₹${{est}}</td>`;
+      return `<td style="color:${{col}};font-size:12px;">₹${{est}}</td>`;
     }}).join("");
-    return `<tr ${{isFlat}}><td><span class="sim-move-lbl" style="background:${{mBg}};color:${{mTxt}};">${{m.label}}</span></td><td style="color:rgba(255,255,255,.4);font-size:9px;">₹${{spot.toLocaleString("en-IN")}}</td>${{legCols}}<td><span class="sim-pnl-val" style="color:${{pCol}};">${{total>=0?"+":""}}₹${{Math.abs(Math.round(total)).toLocaleString("en-IN")}}</span><span style="font-size:8px;opacity:.55;margin-left:3px;">${{total>=0?"+":""}}${{pct}}%</span></td></tr>`;
+    return `<tr ${{isFlat}}><td><span class="sim-move-lbl" style="background:${{mBg}};color:${{mTxt}};">${{m.label}}</span></td><td style="color:rgba(255,255,255,.4);font-size:12px;">₹${{spot.toLocaleString("en-IN")}}</td>${{legCols}}<td><span class="sim-pnl-val" style="color:${{pCol}};">${{total>=0?"+":""}}₹${{Math.abs(Math.round(total)).toLocaleString("en-IN")}}</span><span style="font-size:11px;opacity:.55;margin-left:3px;">${{total>=0?"+":""}}${{pct}}%</span></td></tr>`;
   }}).join("");
   const legHeaders=s.legs.map(l=>`<th style="color:${{l.action==="buy"?"rgba(0,200,220,.7)":"rgba(255,144,144,.7)"}};font-size:7.5px;">${{l.action.toUpperCase()}} ${{l.strike}}</th>`).join("");
   const absMax=Math.max(Math.abs(thetaDay),Math.abs(Math.round(deltaPerPt*100)),Math.abs(Math.round(vegaPerIV)),1);
@@ -2535,7 +2535,7 @@ function buildIntradaySim(s, uid) {{
       <button class="sim-tab"        onclick="simTab('${{uid}}','sl',this)">🎚 Slider</button>
     </div>
     <div id="sim-sc-${{uid}}">
-      <div class="sim-hdr"><div style="display:flex;align-items:center;gap:7px;"><div class="sim-icon">📅</div><div><div class="sim-title">TODAY'S P&L SCENARIOS</div><div class="sim-subtitle">Exit before market close — Delta + Theta estimate</div></div></div><div style="font-family:'DM Mono',monospace;font-size:8px;color:rgba(255,255,255,.22);">DTE: ${{dte}}</div></div>
+      <div class="sim-hdr"><div style="display:flex;align-items:center;gap:7px;"><div class="sim-icon">📅</div><div><div class="sim-title">TODAY'S P&L SCENARIOS</div><div class="sim-subtitle">Exit before market close — Delta + Theta estimate</div></div></div><div style="font-family:'DM Mono',monospace;font-size:11px;color:rgba(255,255,255,.22);">DTE: ${{dte}}</div></div>
       <div style="overflow-x:auto;padding:0 10px 10px;"><table class="sim-tbl"><thead><tr><th>Nifty Move</th><th>Spot</th>${{legHeaders}}<th style="color:rgba(255,255,255,.55);">Today P&L</th></tr></thead><tbody>${{scenarioRows}}</tbody></table></div>
       <div class="sim-note"><span style="flex-shrink:0;">⏱</span><span>Formula: <strong style="color:#ffd166;">Delta × move + Theta/day</strong>. Actual P&L may vary with IV. Max profit of ₹${{maxP.toLocaleString("en-IN")}} is only achievable <strong>at expiry</strong>.</span></div>
     </div>
@@ -2547,12 +2547,12 @@ function buildIntradaySim(s, uid) {{
         <div class="slpb" style="background:rgba(138,160,255,.07);border:1px solid rgba(138,160,255,.18);"><div class="slpb-lbl">ν Vega ±1%</div><div class="slpb-num" style="color:#8aa0ff;">${{vegaStr}}</div><div class="slpb-sub">per 1% IV</div></div>
         <div class="slpb" style="background:rgba(245,197,24,.07);border:1px solid rgba(245,197,24,.18);"><div class="slpb-lbl">Net (Flat)</div><div class="slpb-num" style="color:#ffd166;">${{thetaStr}}</div><div class="slpb-sub">theta drag</div></div>
       </div>
-      <div style="padding:10px 10px 0;"><div style="font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.22);margin-bottom:8px;">Greek contribution bars</div>
+      <div style="padding:10px 10px 0;"><div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.22);margin-bottom:8px;">Greek contribution bars</div>
         <div class="cbar-row"><div class="cbar-lbl" style="color:#00c896;">Δ Delta</div><div class="cbar-track"><div class="cbar-fill" style="width:${{dBar}}%;background:#00c896;" id="sim-db-${{uid}}"></div></div><div class="cbar-val" style="color:#00c896;" id="sim-dv-${{uid}}">₹0 (flat)</div></div>
         <div class="cbar-row"><div class="cbar-lbl" style="color:#ff9090;">Θ Theta</div><div class="cbar-track"><div class="cbar-fill" style="width:100%;background:#ff6b6b;"></div></div><div class="cbar-val" style="color:#ff9090;">${{thetaStr}}/day</div></div>
         <div class="cbar-row"><div class="cbar-lbl" style="color:#8aa0ff;">ν Vega</div><div class="cbar-track"><div class="cbar-fill" style="width:${{Math.round(Math.abs(Math.round(vegaPerIV))/absMax*100)}}%;background:#8aa0ff;"></div></div><div class="cbar-val" style="color:#8aa0ff;">${{vegaStr}}</div></div>
       </div>
-      <div style="margin:10px 10px 12px;padding:9px 11px;background:rgba(0,0,0,.18);border-radius:8px;font-size:9px;color:rgba(255,255,255,.35);line-height:1.8;"><strong style="color:rgba(255,255,255,.55);">Net Delta:</strong> ${{(netDelta>=0?"+":"")+netDelta.toFixed(3)}} per point → <strong style="color:#00c896;">₹${{deltaPerPt.toFixed(1)}} per Nifty point</strong><br><strong style="color:rgba(255,255,255,.55);">Net Theta:</strong> ${{thetaStr}} per trading day</div>
+      <div style="margin:10px 10px 12px;padding:9px 11px;background:rgba(0,0,0,.18);border-radius:8px;font-size:12px;color:rgba(255,255,255,.35);line-height:1.8;"><strong style="color:rgba(255,255,255,.55);">Net Delta:</strong> ${{(netDelta>=0?"+":"")+netDelta.toFixed(3)}} per point → <strong style="color:#00c896;">₹${{deltaPerPt.toFixed(1)}} per Nifty point</strong><br><strong style="color:rgba(255,255,255,.55);">Net Theta:</strong> ${{thetaStr}} per trading day</div>
     </div>
     <div id="sim-sl-${{uid}}" style="display:none;">
       <div class="sim-hdr"><div style="display:flex;align-items:center;gap:7px;"><div class="sim-icon">🎚</div><div><div class="sim-title">LIVE SCENARIO SLIDER</div><div class="sim-subtitle">Drag to see today's estimated exit P&L</div></div></div></div>
@@ -2561,13 +2561,13 @@ function buildIntradaySim(s, uid) {{
         <input class="sim-range" type="range" id="sim-range-${{uid}}" min="${{sliderMin}}" max="${{sliderMax}}" value="${{underlying}}" step="25" style="--pct:50%" oninput="simSlide('${{uid}}',${{underlying}},${{deltaPerPt}},${{thetaDay}},${{maxP}},${{maxL}},this.value)">
       </div>
       <div style="padding:0 10px 14px;"><div style="background:rgba(0,0,0,.25);border-radius:10px;padding:14px;text-align:center;border:1px solid rgba(255,255,255,.06);">
-        <div style="font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.22);margin-bottom:6px;">ESTIMATED EXIT P&L TODAY</div>
-        <div style="font-family:'DM Mono',monospace;font-size:28px;font-weight:700;" id="sim-bigpnl-${{uid}}">${{thetaStr}}</div>
-        <div style="font-size:9px;color:rgba(255,255,255,.28);margin-top:4px;" id="sim-note-${{uid}}">Theta drag only (flat market)</div>
+        <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.22);margin-bottom:6px;">ESTIMATED EXIT P&L TODAY</div>
+        <div style="font-family:'DM Mono',monospace;font-size:30px;font-weight:700;" id="sim-bigpnl-${{uid}}">${{thetaStr}}</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.28);margin-top:4px;" id="sim-note-${{uid}}">Theta drag only (flat market)</div>
         <div style="display:flex;gap:12px;justify-content:center;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.05);">
-          <div style="text-align:center;"><div style="font-size:7.5px;color:rgba(255,255,255,.28);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;">Delta P&L</div><div style="font-family:'DM Mono',monospace;font-size:12px;font-weight:700;color:#00c896;" id="sim-slide-d-${{uid}}">₹0</div></div>
-          <div style="text-align:center;"><div style="font-size:7.5px;color:rgba(255,255,255,.28);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;">Theta Cost</div><div style="font-family:'DM Mono',monospace;font-size:12px;font-weight:700;color:#ff9090;">${{thetaStr}}</div></div>
-          <div style="text-align:center;"><div style="font-size:7.5px;color:rgba(255,255,255,.28);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;">% of Max</div><div style="font-family:'DM Mono',monospace;font-size:12px;font-weight:700;color:#ffd166;" id="sim-slide-pct-${{uid}}">—</div></div>
+          <div style="text-align:center;"><div style="font-size:7.5px;color:rgba(255,255,255,.28);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;">Delta P&L</div><div style="font-family:'DM Mono',monospace;font-size:15px;font-weight:700;color:#00c896;" id="sim-slide-d-${{uid}}">₹0</div></div>
+          <div style="text-align:center;"><div style="font-size:7.5px;color:rgba(255,255,255,.28);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;">Theta Cost</div><div style="font-family:'DM Mono',monospace;font-size:15px;font-weight:700;color:#ff9090;">${{thetaStr}}</div></div>
+          <div style="text-align:center;"><div style="font-size:7.5px;color:rgba(255,255,255,.28);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;">% of Max</div><div style="font-family:'DM Mono',monospace;font-size:15px;font-weight:700;color:#ffd166;" id="sim-slide-pct-${{uid}}">—</div></div>
         </div>
       </div></div>
     </div>
@@ -2672,14 +2672,14 @@ function drawPayoff() {{
   const bes=s.breakevens||[];
   statsEl.style.display="grid";
   statsEl.innerHTML=`
-    <div style="background:var(--bg2);border:1px solid var(--border);border-top:2px solid var(--green);border-radius:10px;padding:10px 14px;"><div style="font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;">Max Profit</div><div style="font-size:15px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--green);margin-top:3px;">${{s.maxProfit>=999999?"Unlimited":"₹"+s.maxProfit.toLocaleString("en-IN")}}</div></div>
-    <div style="background:var(--bg2);border:1px solid var(--border);border-top:2px solid var(--red);border-radius:10px;padding:10px 14px;"><div style="font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;">Max Loss</div><div style="font-size:15px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--red);margin-top:3px;">₹${{s.maxLoss.toLocaleString("en-IN")}}</div></div>
-    <div style="background:var(--bg2);border:1px solid var(--border);border-top:2px solid var(--gold);border-radius:10px;padding:10px 14px;"><div style="font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;">Lower BE</div><div style="font-size:15px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--gold);margin-top:3px;">${{bes[0]?"₹"+bes[0].toLocaleString("en-IN"):"—"}}</div></div>
-    <div style="background:var(--bg2);border:1px solid var(--border);border-top:2px solid var(--gold);border-radius:10px;padding:10px 14px;"><div style="font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;">Upper BE</div><div style="font-size:15px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--gold);margin-top:3px;">${{bes[1]?"₹"+bes[1].toLocaleString("en-IN"):bes[0]?"₹"+bes[0].toLocaleString("en-IN"):"—"}}</div></div>`;
+    <div style="background:var(--bg2);border:1px solid var(--border);border-top:2px solid var(--green);border-radius:10px;padding:10px 14px;"><div style="font-size:12px;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;">Max Profit</div><div style="font-size:17px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--green);margin-top:3px;">${{s.maxProfit>=999999?"Unlimited":"₹"+s.maxProfit.toLocaleString("en-IN")}}</div></div>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-top:2px solid var(--red);border-radius:10px;padding:10px 14px;"><div style="font-size:12px;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;">Max Loss</div><div style="font-size:17px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--red);margin-top:3px;">₹${{s.maxLoss.toLocaleString("en-IN")}}</div></div>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-top:2px solid var(--gold);border-radius:10px;padding:10px 14px;"><div style="font-size:12px;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;">Lower BE</div><div style="font-size:17px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--gold);margin-top:3px;">${{bes[0]?"₹"+bes[0].toLocaleString("en-IN"):"—"}}</div></div>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-top:2px solid var(--gold);border-radius:10px;padding:10px 14px;"><div style="font-size:12px;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;">Upper BE</div><div style="font-size:17px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--gold);margin-top:3px;">${{bes[1]?"₹"+bes[1].toLocaleString("en-IN"):bes[0]?"₹"+bes[0].toLocaleString("en-IN"):"—"}}</div></div>`;
   const footerEl=document.getElementById("payoffFooter"), fallbackEl=document.getElementById("projBadgeFallback");
   if(footerEl) footerEl.style.display="flex"; if(fallbackEl) fallbackEl.style.display="none";
   const beBadgesEl=document.getElementById("beBadges");
-  if(beBadgesEl) beBadgesEl.innerHTML=bes.map((be,i)=>`<span style="background:rgba(255,209,102,0.1);border:1px solid rgba(255,209,102,0.35);border-radius:6px;padding:3px 10px;font-size:10px;font-weight:700;color:var(--gold);font-family:'JetBrains Mono',monospace;">${{i===0?"▼":"▲"}} ₹${{be.toLocaleString("en-IN")}}</span>`).join("");
+  if(beBadgesEl) beBadgesEl.innerHTML=bes.map((be,i)=>`<span style="background:rgba(255,209,102,0.1);border:1px solid rgba(255,209,102,0.35);border-radius:6px;padding:3px 10px;font-size:13px;font-weight:700;color:var(--gold);font-family:'JetBrains Mono',monospace;">${{i===0?"▼":"▲"}} ₹${{be.toLocaleString("en-IN")}}</span>`).join("");
   const projBadgeEl=document.getElementById("projBadge");
   if(projBadgeEl) projBadgeEl.innerHTML=`Projected P&L now: <span style="color:${{projCol}};font-weight:800;">${{projSign}}₹${{Math.round(projPnl).toLocaleString("en-IN")}} (${{projSign}}${{projPct}}%)</span>`;
   const ctx=document.getElementById("payoffChart").getContext("2d");
@@ -2719,7 +2719,7 @@ function drawPayoff() {{
           const xPx=xScale.getPixelForValue(spotIdx);
           ctx2.save(); ctx2.setLineDash([6,4]); ctx2.strokeStyle="rgba(0,200,150,0.65)"; ctx2.lineWidth=1.5;
           ctx2.beginPath(); ctx2.moveTo(xPx,yScale.top); ctx2.lineTo(xPx,yScale.bottom); ctx2.stroke();
-          ctx2.setLineDash([]); ctx2.fillStyle="rgba(0,200,150,0.9)"; ctx2.font="bold 9px DM Mono,monospace"; ctx2.textAlign="center";
+          ctx2.setLineDash([]); ctx2.fillStyle="rgba(0,200,150,0.9)"; ctx2.font="bold 17pxpxpx DM Mono,monospace"; ctx2.textAlign="center";
           ctx2.fillText("▼ "+underlying.toLocaleString("en-IN"),xPx,yScale.top-4); ctx2.restore();
         }}
         const bePoints=[];
@@ -2735,7 +2735,7 @@ function drawPayoff() {{
           ctx2.save(); ctx2.setLineDash([4,3]); ctx2.strokeStyle="rgba(255,209,102,0.7)"; ctx2.lineWidth=1.5;
           ctx2.beginPath(); ctx2.moveTo(be.bePx,yScale.top); ctx2.lineTo(be.bePx,yScale.bottom); ctx2.stroke(); ctx2.setLineDash([]);
           const label="BE "+Math.round(be.bePrice).toLocaleString("en-IN");
-          ctx2.font="bold 8px DM Mono,monospace"; const tw=ctx2.measureText(label).width+10;
+          ctx2.font="bold 17pxpxpx DM Mono,monospace"; const tw=ctx2.measureText(label).width+10;
           const tx=be.bePx-tw/2,ty=yScale.top+6;
           ctx2.fillStyle="rgba(255,209,102,0.15)"; ctx2.strokeStyle="rgba(255,209,102,0.6)"; ctx2.lineWidth=1;
           ctx2.beginPath(); ctx2.roundRect(tx,ty,tw,14,3); ctx2.fill(); ctx2.stroke();
@@ -2771,12 +2771,12 @@ function drawPayoff() {{
     const tSign=todayVal>=0?"+":"", eSign=expVal>=0?"+":"";
     const tCol=todayVal>=0?"#00c896":"#ff6b6b", eCol=expVal>=0?"#00c896":"#ff6b6b";
     const tPct=((todayVal/netCost)*100).toFixed(1), ePct=((expVal/netCost)*100).toFixed(1);
-    tt.innerHTML=`<div style="font-size:9px;color:#6a8aaa;margin-bottom:5px;letter-spacing:1px;">WHEN PRICE IS AT</div>
-      <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:10px;"><span style="font-size:16px;font-weight:800;color:#ddeeff;font-family:'DM Mono',monospace;">&#8377;${{price.toLocaleString("en-IN")}}</span><span style="font-size:11px;font-weight:700;color:${{pCol}};font-family:'DM Mono',monospace;">${{sign}}${{pctChg}}%&nbsp;(${{sign}}${{(price-underlying).toLocaleString("en-IN")}})</span></div>
+    tt.innerHTML=`<div style="font-size:12px;color:#6a8aaa;margin-bottom:5px;letter-spacing:1px;">WHEN PRICE IS AT</div>
+      <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:10px;"><span style="font-size:18px;font-weight:800;color:#ddeeff;font-family:'DM Mono',monospace;">&#8377;${{price.toLocaleString("en-IN")}}</span><span style="font-size:14px;font-weight:700;color:${{pCol}};font-family:'DM Mono',monospace;">${{sign}}${{pctChg}}%&nbsp;(${{sign}}${{(price-underlying).toLocaleString("en-IN")}})</span></div>
       <div style="height:1px;background:rgba(255,255,255,0.07);margin-bottom:10px;"></div>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;"><span style="font-size:9px;color:#6a8aaa;display:flex;align-items:center;gap:6px;"><span style="width:9px;height:9px;border-radius:50%;background:#00c896;display:inline-block;"></span>Today <span style="color:#3d5a73;margin-left:2px;">DTE:${{dte}}</span></span><span style="font-size:13px;font-weight:800;color:${{tCol}};font-family:'DM Mono',monospace;">${{tSign}}&#8377;${{Math.round(todayVal).toLocaleString("en-IN")}}<span style="font-size:9px;opacity:.8;"> (${{tSign}}${{tPct}}%)</span></span></div>
-      <div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:9px;color:#6a8aaa;display:flex;align-items:center;gap:6px;"><span style="width:9px;height:9px;border-radius:50%;background:#5ba3ff;display:inline-block;"></span>At Expiry <span style="color:#3d5a73;margin-left:2px;">T=0</span></span><span style="font-size:13px;font-weight:800;color:${{eCol}};font-family:'DM Mono',monospace;">${{eSign}}&#8377;${{Math.round(expVal).toLocaleString("en-IN")}}<span style="font-size:9px;opacity:.8;"> (${{eSign}}${{ePct}}%)</span></span></div>
-      <div style="margin-top:9px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.06);font-size:9px;color:#3d5a73;">Theta loss by expiry: <span style="color:${{(todayVal-expVal)>0?"#ff6b6b":"#00c896"}};font-weight:700;">${{(todayVal-expVal)>=0?"-":"+"}}&#8377;${{Math.abs(Math.round(todayVal-expVal)).toLocaleString("en-IN")}}</span></div>`;
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;"><span style="font-size:12px;color:#6a8aaa;display:flex;align-items:center;gap:6px;"><span style="width:9px;height:9px;border-radius:50%;background:#00c896;display:inline-block;"></span>Today <span style="color:#3d5a73;margin-left:2px;">DTE:${{dte}}</span></span><span style="font-size:16px;font-weight:800;color:${{tCol}};font-family:'DM Mono',monospace;">${{tSign}}&#8377;${{Math.round(todayVal).toLocaleString("en-IN")}}<span style="font-size:12px;opacity:.8;"> (${{tSign}}${{tPct}}%)</span></span></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:12px;color:#6a8aaa;display:flex;align-items:center;gap:6px;"><span style="width:9px;height:9px;border-radius:50%;background:#5ba3ff;display:inline-block;"></span>At Expiry <span style="color:#3d5a73;margin-left:2px;">T=0</span></span><span style="font-size:16px;font-weight:800;color:${{eCol}};font-family:'DM Mono',monospace;">${{eSign}}&#8377;${{Math.round(expVal).toLocaleString("en-IN")}}<span style="font-size:12px;opacity:.8;"> (${{eSign}}${{ePct}}%)</span></span></div>
+      <div style="margin-top:9px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.06);font-size:12px;color:#3d5a73;">Theta loss by expiry: <span style="color:${{(todayVal-expVal)>0?"#ff6b6b":"#00c896"}};font-weight:700;">${{(todayVal-expVal)>=0?"-":"+"}}&#8377;${{Math.abs(Math.round(todayVal-expVal)).toLocaleString("en-IN")}}</span></div>`;
     const ttW=268,ttH=140;
     let fixedL=clientX+18,fixedT=clientY-ttH/2;
     if(fixedL+ttW>window.innerWidth-10) fixedL=clientX-ttW-18;
