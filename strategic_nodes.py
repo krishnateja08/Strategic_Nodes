@@ -971,23 +971,23 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 /* ── INTRADAY P&L SIMULATOR ── */
 .intraday-sim{{border-top:2px solid rgba(255,209,102,.22);background:linear-gradient(135deg,rgba(245,197,24,.03),rgba(200,155,10,.015));}}
 .sim-tabs{{display:flex;border-bottom:1px solid rgba(255,255,255,.06);}}
-.sim-tab{{flex:1;padding:8px 4px;font-family:'DM Mono',monospace;font-size:8.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;text-align:center;color:#b8d4e8;border:none;background:transparent;transition:all .2s;border-bottom:2px solid transparent;margin-bottom:-1px;}}
-.sim-tab.active{{color:#ffd166;border-bottom-color:#ffd166;background:rgba(245,197,24,.06);}}
+.sim-tab{{flex:1;padding:9px 4px;font-family:'DM Mono',monospace;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;text-align:center;color:#d8eeff;border:none;background:transparent;transition:all .2s;border-bottom:2px solid transparent;margin-bottom:-1px;}}
+.sim-tab.active{{color:#ffd166;border-bottom-color:#ffd166;background:rgba(245,197,24,.10);}}
 .sim-tab:hover:not(.active){{color:rgba(255,255,255,.55);background:rgba(255,255,255,.03);}}
 .sim-hdr{{display:flex;align-items:center;justify-content:space-between;padding:8px 10px 6px;}}
 .sim-icon{{width:20px;height:20px;border-radius:5px;background:rgba(245,197,24,.15);border:1px solid rgba(245,197,24,.3);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}}
-.sim-title{{font-size:12px;font-weight:700;color:rgba(255,209,102,.9);letter-spacing:.8px;text-transform:uppercase;}}
-.sim-subtitle{{font-size:11px;color:#b8d4e8;margin-top:1px;}}
+.sim-title{{font-size:14px;font-weight:800;color:#ffd166;letter-spacing:.8px;text-transform:uppercase;}}
+.sim-subtitle{{font-size:13px;color:#d8eeff;margin-top:2px;}}
 .sim-tbl{{width:100%;border-collapse:collapse;}}
 .sim-tbl thead tr{{background:rgba(255,255,255,.03);}}
-.sim-tbl th{{padding:5px 8px;font-size:7.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#b8d4e8;text-align:center;border-bottom:1px solid rgba(255,255,255,.06);}}
+.sim-tbl th{{padding:7px 8px;font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#d8eeff;text-align:center;border-bottom:1px solid rgba(255,255,255,.12);}}
 .sim-tbl th:first-child{{text-align:left;}}
-.sim-tbl td{{padding:6px 8px;font-family:'DM Mono',monospace;font-size:13px;text-align:center;border-bottom:1px solid rgba(255,255,255,.03);transition:background .12s;}}
+.sim-tbl td{{padding:7px 8px;font-family:'DM Mono',monospace;font-size:14px;font-weight:600;text-align:center;border-bottom:1px solid rgba(255,255,255,.06);transition:background .12s;}}
 .sim-tbl td:first-child{{text-align:left;}}
 .sim-tbl tr:last-child td{{border-bottom:none;}}
 .sim-tbl tr:hover td{{background:rgba(255,255,255,.025);}}
 .sim-tbl tr.sim-flat td{{background:rgba(245,197,24,.06);border-left:2px solid rgba(245,197,24,.35);}}
-.sim-move-lbl{{font-size:12px;font-weight:700;padding:2px 6px;border-radius:5px;display:inline-block;}}
+.sim-move-lbl{{font-size:13px;font-weight:800;padding:3px 8px;border-radius:5px;display:inline-block;}}
 .sim-pnl-val{{font-weight:700;font-size:14px;}}
 .sim-live-pnl{{display:flex;align-items:center;justify-content:center;gap:8px;padding:10px;flex-wrap:wrap;border-bottom:1px solid rgba(255,255,255,.05);}}
 .slpb{{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 12px;border-radius:9px;min-width:90px;}}
@@ -999,11 +999,11 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 .cbar-track{{flex:1;height:4px;background:rgba(255,255,255,.07);border-radius:2px;overflow:hidden;}}
 .cbar-fill{{height:100%;border-radius:2px;transition:width .4s;}}
 .cbar-val{{font-family:'DM Mono',monospace;font-size:12px;font-weight:700;min-width:58px;text-align:right;}}
-.sim-note{{margin:0 10px 10px;padding:7px 10px;background:rgba(255,107,107,.05);border:1px solid rgba(255,107,107,.13);border-radius:7px;font-size:12px;color:rgba(255,150,150,.65);display:flex;align-items:flex-start;gap:6px;line-height:1.5;}}
+.sim-note{{margin:0 10px 10px;padding:8px 10px;background:rgba(255,107,107,.08);border:1px solid rgba(255,107,107,.25);border-radius:7px;font-size:13px;color:rgba(255,180,180,.95);display:flex;align-items:flex-start;gap:6px;line-height:1.6;}}
 .sim-slide-wrap{{padding:0 10px 10px;}}
 .sim-slide-labels{{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;}}
 .sim-slide-cur{{font-family:'DM Mono',monospace;font-size:13px;font-weight:700;color:#ffd166;background:rgba(245,197,24,.1);border:1px solid rgba(245,197,24,.28);border-radius:5px;padding:2px 8px;}}
-.sim-slide-edge{{font-size:11px;color:rgba(255,255,255,.55);}}
+.sim-slide-edge{{font-size:13px;font-weight:600;color:#d8eeff;}}
 input.sim-range{{width:100%;height:4px;border-radius:2px;outline:none;border:none;-webkit-appearance:none;cursor:pointer;background:linear-gradient(90deg,#ffd166 var(--pct,50%),rgba(255,255,255,.09) var(--pct,50%));}}
 input.sim-range::-webkit-slider-thumb{{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#ffd166;border:2px solid var(--bg);box-shadow:0 0 6px rgba(245,197,24,.45);cursor:pointer;}}
 
@@ -2520,7 +2520,7 @@ function buildIntradaySim(s, uid) {{
       const col=l.action==="buy"?"#00c8e0":"#ff9090";
       return `<td style="color:${{col}};font-size:12px;">₹${{est}}</td>`;
     }}).join("");
-    return `<tr ${{isFlat}}><td><span class="sim-move-lbl" style="background:${{mBg}};color:${{mTxt}};">${{m.label}}</span></td><td style="color:rgba(255,255,255,.4);font-size:12px;">₹${{spot.toLocaleString("en-IN")}}</td>${{legCols}}<td><span class="sim-pnl-val" style="color:${{pCol}};">${{total>=0?"+":""}}₹${{Math.abs(Math.round(total)).toLocaleString("en-IN")}}</span><span style="font-size:11px;opacity:.55;margin-left:3px;">${{total>=0?"+":""}}${{pct}}%</span></td></tr>`;
+    return `<tr ${{isFlat}}><td><span class="sim-move-lbl" style="background:${{mBg}};color:${{mTxt}};">${{m.label}}</span></td><td style="color:#d8eeff;font-size:14px;font-weight:600;">₹${{spot.toLocaleString("en-IN")}}</td>${{legCols}}<td><span class="sim-pnl-val" style="color:${{pCol}};">${{total>=0?"+":""}}₹${{Math.abs(Math.round(total)).toLocaleString("en-IN")}}</span><span style="font-size:12px;color:#c8dff0;font-weight:600;margin-left:3px;">${{total>=0?"+":""}}${{pct}}%</span></td></tr>`;
   }}).join("");
   const legHeaders=s.legs.map(l=>`<th style="color:${{l.action==="buy"?"rgba(0,200,220,.7)":"rgba(255,144,144,.7)"}};font-size:7.5px;">${{l.action.toUpperCase()}} ${{l.strike}}</th>`).join("");
   const absMax=Math.max(Math.abs(thetaDay),Math.abs(Math.round(deltaPerPt*100)),Math.abs(Math.round(vegaPerIV)),1);
@@ -2535,8 +2535,8 @@ function buildIntradaySim(s, uid) {{
       <button class="sim-tab"        onclick="simTab('${{uid}}','sl',this)">🎚 Slider</button>
     </div>
     <div id="sim-sc-${{uid}}">
-      <div class="sim-hdr"><div style="display:flex;align-items:center;gap:7px;"><div class="sim-icon">📅</div><div><div class="sim-title">TODAY'S P&L SCENARIOS</div><div class="sim-subtitle">Exit before market close — Delta + Theta estimate</div></div></div><div style="font-family:'DM Mono',monospace;font-size:11px;color:#b8d4e8;">DTE: ${{dte}}</div></div>
-      <div style="overflow-x:auto;padding:0 10px 10px;"><table class="sim-tbl"><thead><tr><th>Nifty Move</th><th>Spot</th>${{legHeaders}}<th style="color:rgba(255,255,255,.55);">Today P&L</th></tr></thead><tbody>${{scenarioRows}}</tbody></table></div>
+      <div class="sim-hdr"><div style="display:flex;align-items:center;gap:7px;"><div class="sim-icon">📅</div><div><div class="sim-title">TODAY'S P&L SCENARIOS</div><div class="sim-subtitle">Exit before market close — Delta + Theta estimate</div></div></div><div style="font-family:'DM Mono',monospace;font-size:14px;font-weight:700;color:#d8eeff;">DTE: ${{dte}}</div></div>
+      <div style="overflow-x:auto;padding:0 10px 10px;"><table class="sim-tbl"><thead><tr><th>Nifty Move</th><th>Spot</th>${{legHeaders}}<th style="color:#d8eeff;">Today P&L</th></tr></thead><tbody>${{scenarioRows}}</tbody></table></div>
       <div class="sim-note"><span style="flex-shrink:0;">⏱</span><span>Formula: <strong style="color:#ffd166;">Delta × move + Theta/day</strong>. Actual P&L may vary with IV. Max profit of ₹${{maxP.toLocaleString("en-IN")}} is only achievable <strong>at expiry</strong>.</span></div>
     </div>
     <div id="sim-gr-${{uid}}" style="display:none;">
@@ -2565,9 +2565,9 @@ function buildIntradaySim(s, uid) {{
         <div style="font-family:'DM Mono',monospace;font-size:30px;font-weight:700;" id="sim-bigpnl-${{uid}}">${{thetaStr}}</div>
         <div style="font-size:12px;color:#b8d4e8;margin-top:4px;" id="sim-note-${{uid}}">Theta drag only (flat market)</div>
         <div style="display:flex;gap:12px;justify-content:center;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.05);">
-          <div style="text-align:center;"><div style="font-size:7.5px;color:#b8d4e8;letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;">Delta P&L</div><div style="font-family:'DM Mono',monospace;font-size:15px;font-weight:700;color:#00c896;" id="sim-slide-d-${{uid}}">₹0</div></div>
+          <div style="text-align:center;"><div style="font-size:12px;font-weight:700;color:#d8eeff;letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;">Delta P&L</div><div style="font-family:'DM Mono',monospace;font-size:15px;font-weight:700;color:#00c896;" id="sim-slide-d-${{uid}}">₹0</div></div>
           <div style="text-align:center;"><div style="font-size:7.5px;color:#b8d4e8;letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;">Theta Cost</div><div style="font-family:'DM Mono',monospace;font-size:15px;font-weight:700;color:#ff9090;">${{thetaStr}}</div></div>
-          <div style="text-align:center;"><div style="font-size:7.5px;color:#b8d4e8;letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;">% of Max</div><div style="font-family:'DM Mono',monospace;font-size:15px;font-weight:700;color:#ffd166;" id="sim-slide-pct-${{uid}}">—</div></div>
+          <div style="text-align:center;"><div style="font-size:12px;font-weight:700;color:#d8eeff;letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;">% of Max</div><div style="font-family:'DM Mono',monospace;font-size:15px;font-weight:700;color:#ffd166;" id="sim-slide-pct-${{uid}}">—</div></div>
         </div>
       </div></div>
     </div>
