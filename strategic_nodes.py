@@ -1618,15 +1618,15 @@ function renderChain() {{
     </div>`;
   }}).join("");
 
-  // ── Scroll ATM row into view — show 6 strikes above ATM ──
+  // ── Scroll ATM row to vertical center of the visible chain ──
   requestAnimationFrame(() => {{
     const wrap   = document.querySelector(".chain-wrap");
     const atmRow = wrap && wrap.querySelector(".atm-row");
     if (wrap && atmRow) {{
-      const rowH     = atmRow.offsetHeight || 36;
+      const visibleH = wrap.clientHeight;
       const atmTop   = atmRow.offsetTop;
-      const scrollTo = atmTop - (rowH * 6);   // 6 strikes above ATM
-      wrap.scrollTop = Math.max(0, scrollTo);
+      const rowH     = atmRow.offsetHeight || 36;
+      wrap.scrollTop = atmTop - (visibleH / 2) + (rowH / 2);
     }}
   }});
 }}
