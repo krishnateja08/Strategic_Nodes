@@ -1567,6 +1567,18 @@ function renderChain() {{
       </div>
     </div>`;
   }}).join("");
+
+  // ── Scroll ATM row into view (centered, 10 rows above) ──
+  requestAnimationFrame(() => {{
+    const wrap   = document.querySelector(".chain-wrap");
+    const atmRow = wrap && wrap.querySelector(".atm-row");
+    if (wrap && atmRow) {{
+      const rowH        = atmRow.offsetHeight || 36;
+      const atmTop      = atmRow.offsetTop;
+      const scrollTo    = atmTop - (rowH * 10);          // position ATM ~10 rows from top
+      wrap.scrollTop    = Math.max(0, scrollTo);
+    }}
+  }});
 }}
 
 function nearestStrike(allStrikes, val) {{
