@@ -858,15 +858,15 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 /* ── OPTION CHAIN ── */
 .chain-wrap{{overflow:auto;max-height:600px;font-family:'JetBrains Mono',monospace;}}
 .chain-side-hdr{{display:grid;grid-template-columns:1fr 72px 50px 1fr;padding:6px 0;border-bottom:1px solid var(--border);background:linear-gradient(90deg,#0d1a26,#0d1117);position:sticky;top:0;z-index:3;}}
-.chain-side-hdr .ce-hdr{{text-align:center;font-size:12px;font-weight:800;color:var(--red);letter-spacing:2px;text-transform:uppercase;padding:2px 0;}}
-.chain-side-hdr .st-hdr{{text-align:center;font-size:11px;font-weight:800;color:#d8eeff;letter-spacing:1px;text-transform:uppercase;}}
-.chain-side-hdr .iv-hdr{{text-align:center;font-size:11px;font-weight:800;color:#9dbdd8;letter-spacing:1px;text-transform:uppercase;}}
-.chain-side-hdr .pe-hdr{{text-align:center;font-size:12px;font-weight:800;color:var(--green);letter-spacing:2px;text-transform:uppercase;padding:2px 0;}}
-.chain-col-hdr{{display:grid;grid-template-columns:1fr 72px 50px 1fr;padding:4px 0;border-bottom:1px solid var(--border2);background:#0a1218;position:sticky;top:30px;z-index:2;}}
+.chain-side-hdr .ce-hdr{{text-align:center;font-size:13px;font-weight:800;color:var(--red);letter-spacing:2px;text-transform:uppercase;padding:2px 0;}}
+.chain-side-hdr .st-hdr{{text-align:center;font-size:12px;font-weight:800;color:#d8eeff;letter-spacing:1px;text-transform:uppercase;}}
+.chain-side-hdr .iv-hdr{{text-align:center;font-size:12px;font-weight:800;color:#9dbdd8;letter-spacing:1px;text-transform:uppercase;}}
+.chain-side-hdr .pe-hdr{{text-align:center;font-size:13px;font-weight:800;color:var(--green);letter-spacing:2px;text-transform:uppercase;padding:2px 0;}}
+.chain-col-hdr{{display:grid;grid-template-columns:1fr 72px 50px 1fr;padding:5px 0;border-bottom:1px solid var(--border2);background:#0a1218;position:sticky;top:30px;z-index:2;}}
 .chain-col-hdr .ce-cols{{display:grid;grid-template-columns:58px 62px 72px 72px;justify-content:end;padding-right:4px;gap:0;}}
-.chain-col-hdr .iv-col{{display:flex;align-items:center;justify-content:center;font-size:10px;color:#9dbdd8;text-transform:uppercase;letter-spacing:.6px;}}
+.chain-col-hdr .iv-col{{display:flex;align-items:center;justify-content:center;font-size:11px;color:#9dbdd8;text-transform:uppercase;letter-spacing:.6px;}}
 .chain-col-hdr .pe-cols{{display:grid;grid-template-columns:72px 72px 62px 58px;justify-content:start;padding-left:4px;gap:0;}}
-.chain-col-hdr span{{font-size:10px;color:#9dbdd8;text-transform:uppercase;letter-spacing:.6px;text-align:right;padding:0 4px;}}
+.chain-col-hdr span{{font-size:11px;color:#9dbdd8;text-transform:uppercase;letter-spacing:.6px;text-align:right;padding:0 4px;}}
 .chain-col-hdr .pe-cols span{{text-align:left;}}
 .chain-row{{display:grid;grid-template-columns:1fr 72px 50px 1fr;border-bottom:1px solid #0e1e2a;transition:background .1s;}}
 .chain-row:hover{{background:#ffffff05;}}
@@ -879,18 +879,18 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 
 /* CE side: OI Chg% | OI-lakh | OI bar | LTP */
 .ce-side{{display:grid;grid-template-columns:58px 62px 72px 72px;align-items:center;justify-content:end;padding:0 4px 0 0;}}
-.iv-cell{{display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;color:#b0cce0;border-left:1px solid #0e1e2a;border-right:1px solid #0e1e2a;background:#080e18;min-height:30px;}}
+.iv-cell{{display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;color:#b0cce0;border-left:1px solid #0e1e2a;border-right:1px solid #0e1e2a;background:#080e18;min-height:36px;}}
 .chain-row.atm-row .iv-cell{{color:var(--cyan);background:#00d4ff08;font-weight:800;}}
 .pe-side{{display:grid;grid-template-columns:72px 72px 62px 58px;align-items:center;justify-content:start;padding:0 0 0 4px;}}
 
-.stk-cell{{display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;border-left:1px solid var(--border);border-right:1px solid var(--border);background:#090f18;min-height:30px;position:relative;flex-direction:column;gap:1px;color:#d8eeff;}}
-.atm-tag{{background:var(--cyan);color:#000;font-size:8px;font-weight:800;padding:1px 5px;border-radius:0 0 3px 3px;position:absolute;top:0;letter-spacing:.5px;}}
+.stk-cell{{display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;border-left:1px solid var(--border);border-right:1px solid var(--border);background:#090f18;min-height:36px;position:relative;flex-direction:column;gap:1px;color:#d8eeff;}}
+.atm-tag{{background:var(--cyan);color:#000;font-size:9px;font-weight:800;padding:1px 5px;border-radius:0 0 3px 3px;position:absolute;top:0;letter-spacing:.5px;}}
 
 /* Cell content classes */
-.cc{{display:flex;align-items:center;height:30px;padding:0 4px;font-size:12px;font-family:'JetBrains Mono',monospace;}}
-.cc-ltp{{font-weight:700;font-size:12px;justify-content:flex-end;}}
-.cc-oi-lakh{{color:#c8dff0;justify-content:flex-end;font-size:11px;}}
-.cc-chg{{font-weight:700;font-size:11px;justify-content:flex-end;}}
+.cc{{display:flex;align-items:center;height:36px;padding:0 5px;font-size:13.5px;font-family:'JetBrains Mono',monospace;}}
+.cc-ltp{{font-weight:700;font-size:14px;justify-content:flex-end;}}
+.cc-oi-lakh{{color:#c8dff0;justify-content:flex-end;font-size:13px;}}
+.cc-chg{{font-weight:700;font-size:13px;justify-content:flex-end;}}
 .cc-chg.up{{color:#00c896;}}
 .cc-chg.down{{color:#ff6b6b;}}
 .ce-ltp-v{{color:#ff8080;}}
