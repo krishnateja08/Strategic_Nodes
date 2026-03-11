@@ -1007,11 +1007,11 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 
 /* ── MINI PAYOFF CANVAS ── */
 .sc-payoff-section{{padding:10px 14px 12px;border-top:1px solid var(--border);}}
-.sc-payoff-title{{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:7px;display:flex;justify-content:space-between;align-items:center;}}
-.sc-payoff-title span:last-child{{font-size:11px;text-transform:none;letter-spacing:0;color:var(--cc,var(--cyan));}}
-.sc-payoff-canvas-wrap{{position:relative;height:72px;background:#07101a;border-radius:6px;overflow:hidden;}}
-.sc-payoff-canvas-wrap canvas{{width:100%;height:72px;display:block;}}
-.sc-be-labels{{display:flex;justify-content:space-between;margin-top:4px;font-size:9px;color:var(--text3);font-family:'DM Mono',monospace;}}
+.sc-payoff-title{{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:7px;display:flex;justify-content:space-between;align-items:center;}}
+.sc-payoff-title span:last-child{{font-size:13px;text-transform:none;letter-spacing:0;color:var(--cc,var(--cyan));font-weight:700;}}
+.sc-payoff-canvas-wrap{{position:relative;height:44px;background:#07101a;border-radius:6px;overflow:hidden;}}
+.sc-payoff-canvas-wrap canvas{{display:block;width:100%;height:44px;}}
+.sc-be-labels{{display:flex;justify-content:space-between;margin-top:4px;font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;}}
 
 /* ── FIT BAR ── */
 .fit-bar-wrap{{padding:8px 14px;border-top:1px solid var(--border);}}
@@ -2637,7 +2637,7 @@ function renderStrategies() {{
       </div>
       <div class="sc-payoff-section">
         <div class="sc-payoff-title"><span>Payoff at Expiry</span><span>${{payoffZoneLabel}}</span></div>
-        <div class="sc-payoff-canvas-wrap"><canvas id="${{canvasId}}" width="600" height="72"></canvas></div>
+        <div class="sc-payoff-canvas-wrap"><canvas id="${{canvasId}}" height="44"></canvas></div>
         <div class="sc-be-labels">${{payoffXLabels}}</div>
       </div>
       ${{fitBar}}
@@ -2691,8 +2691,12 @@ function drawPayoffMinis() {{
     try {{ data = JSON.parse(decodeURIComponent(card.dataset.payoff)); }} catch(e) {{ return; }}
     const {{ vals, range, bes, cc }} = data;
     if (!vals || !vals.length) return;
+    // Match canvas pixel size to its CSS rendered size to avoid blank space
+    const W = canvas.offsetWidth || canvas.parentElement.offsetWidth || 400;
+    const H = 44;
+    canvas.width  = W;
+    canvas.height = H;
     const ctx = canvas.getContext("2d");
-    const W = canvas.width, H = canvas.height;
     ctx.clearRect(0, 0, W, H);
     const minV = Math.min(...vals), maxV = Math.max(...vals);
     const span = maxV - minV || 1;
