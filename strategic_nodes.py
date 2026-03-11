@@ -856,7 +856,7 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 .be-chip-val{{font-size:16px;font-weight:800;font-family:'DM Mono',monospace;}}
 
 /* ── OPTION CHAIN ── */
-.chain-wrap{{overflow:auto;max-height:600px;font-family:'JetBrains Mono',monospace;}}
+.chain-wrap{{overflow:auto;max-height:calc(100vh - 220px);min-height:400px;font-family:'JetBrains Mono',monospace;}}
 .chain-side-hdr{{display:grid;grid-template-columns:1fr 72px 50px 1fr;padding:6px 0;border-bottom:1px solid var(--border);background:linear-gradient(90deg,#0d1a26,#0d1117);position:sticky;top:0;z-index:3;}}
 .chain-side-hdr .ce-hdr{{text-align:center;font-size:13px;font-weight:800;color:var(--red);letter-spacing:2px;text-transform:uppercase;padding:2px 0;}}
 .chain-side-hdr .st-hdr{{text-align:center;font-size:12px;font-weight:800;color:#d8eeff;letter-spacing:1px;text-transform:uppercase;}}
@@ -905,7 +905,7 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 .up{{color:var(--green)!important;}} .down{{color:var(--red)!important;}}
 
 /* ── GREEKS SIDEBAR ── */
-.greeks-panel{{padding:0;}}
+.greeks-panel{{padding:0;overflow-y:auto;max-height:calc(100vh - 220px);}}
 .greeks-title{{padding:13px 14px 10px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#d8eeff;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}}
 .g-exp-tag{{font-size:12px;color:var(--cyan);background:#00d4ff12;border:1px solid #00d4ff22;padding:2px 8px;border-radius:10px;font-family:'DM Mono',monospace;}}
 .g-sel-wrap{{padding:10px 12px 8px;border-bottom:1px solid var(--border);}}
@@ -1618,15 +1618,15 @@ function renderChain() {{
     </div>`;
   }}).join("");
 
-  // ── Scroll ATM row into view (centered, 10 rows above) ──
+  // ── Scroll ATM row into view — show 6 strikes above ATM ──
   requestAnimationFrame(() => {{
     const wrap   = document.querySelector(".chain-wrap");
     const atmRow = wrap && wrap.querySelector(".atm-row");
     if (wrap && atmRow) {{
-      const rowH        = atmRow.offsetHeight || 36;
-      const atmTop      = atmRow.offsetTop;
-      const scrollTo    = atmTop - (rowH * 10);          // position ATM ~10 rows from top
-      wrap.scrollTop    = Math.max(0, scrollTo);
+      const rowH     = atmRow.offsetHeight || 36;
+      const atmTop   = atmRow.offsetTop;
+      const scrollTo = atmTop - (rowH * 6);   // 6 strikes above ATM
+      wrap.scrollTop = Math.max(0, scrollTo);
     }}
   }});
 }}
