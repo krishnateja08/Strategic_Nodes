@@ -941,49 +941,110 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 .sec-hdr{{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}}
 .sec-title{{font-size:17px;font-weight:800;display:flex;align-items:center;gap:9px;}}
 .sec-tag{{font-size:12px;font-weight:700;background:#00d4ff12;border:1px solid #00d4ff28;color:var(--cyan);padding:2px 9px;border-radius:14px;font-family:'DM Mono',monospace;letter-spacing:1px;}}
-.strat-grid{{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}}
+.strat-grid{{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;}}
 
-/* ── ACCORDION CARD ── */
-.strat-card{{background:var(--bg3);border:1px solid var(--border);border-radius:11px;overflow:hidden;transition:border-color .25s,box-shadow .25s;cursor:pointer;}}
-.strat-card:hover{{box-shadow:0 4px 20px rgba(0,0,0,.35);border-color:var(--cc,var(--cyan));}}
-.strat-card.sc-open{{border-color:var(--cc,var(--cyan));box-shadow:0 0 0 1px var(--cc,var(--cyan))22,0 8px 28px rgba(0,0,0,.4);}}
+/* ── RICH CARD BASE ── */
+.strat-card{{background:var(--bg3);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:box-shadow .25s,border-color .25s,transform .2s;cursor:pointer;position:relative;}}
+.strat-card::before{{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--cc,var(--cyan)),transparent 80%);z-index:1;}}
+.strat-card:hover{{transform:translateY(-2px);box-shadow:0 12px 40px rgba(0,0,0,.5);border-color:var(--cc,var(--cyan));}}
+.strat-card.sc-open{{border-color:var(--cc,var(--cyan));box-shadow:0 0 0 1px color-mix(in srgb,var(--cc,var(--cyan)) 20%,transparent),0 8px 28px rgba(0,0,0,.4);}}
 
-/* Collapsed header row */
-.sc-header{{display:flex;align-items:center;gap:8px;padding:10px 12px;user-select:none;flex-wrap:wrap;}}
-.sc-chevron{{font-size:11px;color:#6a90b8;transition:transform .25s;flex-shrink:0;margin-right:2px;}}
-.strat-card.sc-open .sc-chevron{{transform:rotate(90deg);color:var(--cc,var(--cyan));}}
-.sc-pill-bias{{font-size:11px;font-weight:800;font-family:'DM Mono',monospace;padding:3px 8px;border-radius:4px;letter-spacing:.8px;flex-shrink:0;}}
+/* ── CARD HEADER ── */
+.sc-header{{padding:14px 16px 0;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;user-select:none;}}
+.sc-header-left{{display:flex;flex-direction:column;gap:7px;flex:1;min-width:0;}}
+.sc-title-row{{display:flex;align-items:center;gap:8px;}}
+.sc-pill-bias{{font-size:10px;font-weight:800;font-family:'DM Mono',monospace;padding:3px 9px;border-radius:4px;letter-spacing:1px;text-transform:uppercase;flex-shrink:0;}}
 .sc-pill-bull{{background:rgba(0,200,150,.15);color:#00c896;border:1px solid rgba(0,200,150,.3);}}
 .sc-pill-bear{{background:rgba(255,107,107,.15);color:#ff6b6b;border:1px solid rgba(255,107,107,.3);}}
 .sc-pill-neut{{background:rgba(0,212,255,.12);color:#00d4ff;border:1px solid rgba(0,212,255,.25);}}
 .sc-pill-volt{{background:rgba(168,130,255,.15);color:#a882ff;border:1px solid rgba(168,130,255,.3);}}
-.sc-name{{font-size:15px;font-weight:800;color:#ffffff;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}}
-.sc-header-right{{display:flex;align-items:center;gap:6px;flex-shrink:0;flex-wrap:wrap;}}
-.sc-legs-mini{{display:flex;flex-wrap:wrap;gap:4px;max-width:100%;}}
-.sc-leg-chip{{font-size:12px;font-weight:700;font-family:'DM Mono',monospace;padding:3px 8px;border-radius:4px;white-space:nowrap;}}
-.sc-leg-chip.sell{{background:rgba(255,107,107,.15);color:#ff8080;border:1px solid rgba(255,107,107,.25);}}
-.sc-leg-chip.buy{{background:rgba(0,200,150,.12);color:#00c896;border:1px solid rgba(0,200,150,.22);}}
-.pop-pill{{padding:4px 10px;border-radius:14px;font-size:15px;font-weight:800;font-family:'DM Mono',monospace;white-space:nowrap;flex-shrink:0;}}
-.sc-fit-badge{{font-size:12px;font-weight:800;font-family:'DM Mono',monospace;padding:3px 8px;border-radius:4px;letter-spacing:.5px;flex-shrink:0;background:rgba(255,209,102,.12);color:#ffd166;border:1px solid rgba(255,209,102,.25);}}
+.sc-type-lbl{{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;}}
+.sc-name{{font-size:18px;font-weight:800;color:#fff;letter-spacing:-.3px;line-height:1.1;}}
+.sc-subtitle{{font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:12px;}}
 
-/* Expandable body */
+/* ── POP RING ── */
+.pop-ring-wrap{{display:flex;flex-direction:column;align-items:center;gap:3px;flex-shrink:0;}}
+.pop-ring{{width:64px;height:64px;position:relative;}}
+.pop-ring svg{{width:64px;height:64px;transform:rotate(-90deg);}}
+.pop-ring .pr-track{{fill:none;stroke:var(--border);stroke-width:5;}}
+.pop-ring .pr-fill{{fill:none;stroke:var(--cc,var(--cyan));stroke-width:5;stroke-linecap:round;filter:drop-shadow(0 0 4px var(--cc,var(--cyan)));transition:stroke-dashoffset 1.1s cubic-bezier(.4,0,.2,1);}}
+.pop-ring-val{{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--cc,var(--cyan));line-height:1;}}
+.pop-ring-val small{{font-size:9px;color:var(--text3);font-weight:400;margin-top:1px;}}
+.pop-ring-lbl{{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);font-family:'DM Mono',monospace;}}
+
+/* ── STAT STRIP ── */
+.sc-stat-strip{{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin-top:0;}}
+.sc-stat{{padding:9px 12px;border-right:1px solid var(--border);display:flex;flex-direction:column;gap:3px;}}
+.sc-stat:last-child{{border-right:none;}}
+.sc-stat-lbl{{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);font-family:'DM Mono',monospace;}}
+.sc-stat-val{{font-size:14px;font-weight:700;font-family:'JetBrains Mono',monospace;}}
+.sc-stat-val.up{{color:var(--green);}} .sc-stat-val.down{{color:var(--red);}}
+.sc-stat-val.gold{{color:var(--gold);}} .sc-stat-val.cyan{{color:var(--cyan);}}
+
+/* ── BE BADGE ROW ── */
+.sc-be-row{{display:flex;gap:6px;padding:8px 14px;border-bottom:1px solid var(--border);flex-wrap:wrap;align-items:center;}}
+.sc-be-badge{{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:12px;font-family:'JetBrains Mono',monospace;font-weight:700;}}
+.sc-be-badge.lo{{background:rgba(255,107,107,.12);border:1px solid rgba(255,107,107,.3);color:var(--red);}}
+.sc-be-badge.hi{{background:rgba(0,200,150,.10);border:1px solid rgba(0,200,150,.3);color:var(--green);}}
+.sc-be-badge .dot{{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0;}}
+.sc-be-buf{{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;margin-left:auto;}}
+
+/* ── LEGS SECTION ── */
+.sc-legs-section{{padding:10px 14px;}}
+.sc-legs-title{{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:7px;}}
+.sc-leg-row{{display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:7px;margin-bottom:4px;border:1px solid transparent;}}
+.sc-leg-row:last-child{{margin-bottom:0;}}
+.sc-leg-row.buy{{background:rgba(0,200,150,.06);border-color:rgba(0,200,150,.18);}}
+.sc-leg-row.sell{{background:rgba(255,107,107,.06);border-color:rgba(255,107,107,.18);}}
+.sc-leg-badge{{font-size:11px;font-weight:800;font-family:'DM Mono',monospace;padding:2px 8px;border-radius:4px;min-width:38px;text-align:center;}}
+.sc-leg-badge.buy{{background:rgba(0,200,150,.2);color:var(--green);}}
+.sc-leg-badge.sell{{background:rgba(255,107,107,.2);color:var(--red);}}
+.sc-leg-ce{{color:var(--red);font-weight:700;font-family:'JetBrains Mono',monospace;font-size:13px;}}
+.sc-leg-pe{{color:var(--green);font-weight:700;font-family:'JetBrains Mono',monospace;font-size:13px;}}
+.sc-leg-strike{{color:var(--cyan);font-weight:700;font-family:'JetBrains Mono',monospace;font-size:14px;flex:1;}}
+.sc-leg-prem{{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--text2);}}
+.sc-leg-iv{{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;margin-left:auto;}}
+
+/* ── MINI PAYOFF CANVAS ── */
+.sc-payoff-section{{padding:10px 14px 12px;border-top:1px solid var(--border);}}
+.sc-payoff-title{{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:7px;display:flex;justify-content:space-between;align-items:center;}}
+.sc-payoff-title span:last-child{{font-size:11px;text-transform:none;letter-spacing:0;color:var(--cc,var(--cyan));}}
+.sc-payoff-canvas-wrap{{position:relative;height:72px;background:#07101a;border-radius:6px;overflow:hidden;}}
+.sc-payoff-canvas-wrap canvas{{width:100%;height:72px;display:block;}}
+.sc-be-labels{{display:flex;justify-content:space-between;margin-top:4px;font-size:9px;color:var(--text3);font-family:'DM Mono',monospace;}}
+
+/* ── FIT BAR ── */
+.fit-bar-wrap{{padding:8px 14px;border-top:1px solid var(--border);}}
+.fit-bar-hdr{{display:flex;justify-content:space-between;font-size:11px;font-weight:700;font-family:'DM Mono',monospace;color:#d8eeff;text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px;}}
+.fit-bar-track{{height:5px;background:var(--border);border-radius:3px;overflow:hidden;}}
+.fit-bar-fill{{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--gold),var(--orange));transition:width .9s ease;box-shadow:0 0 6px rgba(255,209,102,.4);}}
+
+/* ── SCORE BAR ── */
+.sc-score{{padding:9px 14px 11px;display:flex;align-items:center;gap:10px;border-top:1px solid var(--border);}}
+.score-lbl{{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;white-space:nowrap;}}
+.score-bar-track{{flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden;}}
+.score-bar-fill{{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--cc,var(--cyan)),color-mix(in srgb,var(--cc,var(--cyan)) 60%,white));transition:width 1.2s cubic-bezier(.4,0,.2,1);box-shadow:0 0 6px var(--cc,var(--cyan));}}
+.score-num{{font-size:14px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--cc,var(--cyan));}}
+
+/* ── EXPANDABLE BODY ── */
 .sc-body{{display:none;border-top:1px solid var(--border);}}
 .strat-card.sc-open .sc-body{{display:block;}}
-
-.sc-top{{padding:13px 15px 10px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;}}
-.sc-sub{{font-size:13px;color:#d8eeff;margin-top:2px;font-family:'DM Mono',monospace;}}
-.sc-fields{{padding:10px 15px;display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;border-bottom:1px solid var(--border);}}
+.sc-chevron{{font-size:11px;color:#6a90b8;transition:transform .25s;flex-shrink:0;}}
+.strat-card.sc-open .sc-chevron{{transform:rotate(90deg);color:var(--cc,var(--cyan));}}
+.sc-top{{padding:12px 14px 10px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;}}
+.sc-sub{{font-size:12px;color:#d8eeff;margin-top:2px;font-family:'DM Mono',monospace;}}
+.sc-fields{{padding:10px 14px;display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;border-bottom:1px solid var(--border);}}
 .sc-field{{display:flex;flex-direction:column;}}
-.sc-field-lbl{{font-size:12px;font-weight:700;color:#c8dff0;text-transform:uppercase;letter-spacing:.7px;font-family:'DM Mono',monospace;}}
-.sc-field-val{{font-size:15px;font-weight:700;font-family:'DM Mono',monospace;margin-top:2px;}}
-.sc-legs{{padding:9px 15px;background:#0d111766;display:flex;flex-wrap:wrap;gap:5px;border-bottom:1px solid var(--border);}}
+.sc-field-lbl{{font-size:11px;font-weight:700;color:#c8dff0;text-transform:uppercase;letter-spacing:.7px;font-family:'DM Mono',monospace;}}
+.sc-field-val{{font-size:14px;font-weight:700;font-family:'DM Mono',monospace;margin-top:2px;}}
+.sc-legs{{padding:9px 14px;background:#0d111766;display:flex;flex-wrap:wrap;gap:5px;border-bottom:1px solid var(--border);}}
 .leg-tag{{border-radius:5px;padding:3px 8px;font-size:9.5px;font-weight:700;font-family:'DM Mono',monospace;}}
 .leg-buy{{border:1px solid var(--green);color:var(--green);background:#00c89608;}}
 .leg-sell{{border:1px solid var(--red);color:var(--red);background:#ff6b6b08;}}
 
 /* ── BE STRATEGY CARD EXTRAS ── */
 .be-mode-bar{{background:linear-gradient(90deg,rgba(255,209,102,.18),transparent);border-bottom:1px solid rgba(255,209,102,.30);padding:5px 14px;font-size:13px;font-weight:800;color:#ffd166;font-family:'DM Mono',monospace;letter-spacing:1px;display:flex;align-items:center;gap:6px;}}
-.sc-legs-detail{{padding:9px 15px;background:#0d111766;border-bottom:1px solid var(--border);}}
+.sc-legs-detail{{padding:9px 14px;background:#0d111766;border-bottom:1px solid var(--border);}}
 .sc-legs-detail-title{{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;color:#d8eeff;font-family:'DM Mono',monospace;margin-bottom:7px;}}
 .leg-detail-row{{display:flex;align-items:flex-start;gap:8px;padding:6px 9px;border-radius:7px;border:1px solid transparent;margin-bottom:5px;}}
 .leg-detail-row:last-child{{margin-bottom:0;}}
@@ -997,17 +1058,6 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 .leg-ce{{color:var(--green);}} .leg-pe{{color:var(--red);}}
 .leg-stk{{color:var(--cyan);}} .leg-prem{{color:#d8eeff;font-size:14px;font-weight:600;}}
 .leg-why{{font-size:13px;color:#c8dff0;font-family:'DM Mono',monospace;margin-top:2px;line-height:1.5;}}
-
-.fit-bar-wrap{{padding:8px 15px;border-bottom:1px solid var(--border);}}
-.fit-bar-hdr{{display:flex;justify-content:space-between;font-size:12px;font-weight:700;font-family:'DM Mono',monospace;color:#d8eeff;text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px;}}
-.fit-bar-track{{height:4px;background:var(--border);border-radius:2px;overflow:hidden;}}
-.fit-bar-fill{{height:100%;border-radius:2px;transition:width .8s cubic-bezier(.4,0,.2,1);}}
-
-.sc-score{{padding:8px 15px;display:flex;align-items:center;gap:8px;}}
-.score-bar-track{{flex:1;height:3px;background:var(--border);border-radius:2px;overflow:hidden;}}
-.score-bar-fill{{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--cyan),var(--purple));transition:width 1s ease;}}
-.score-lbl{{font-size:13px;font-weight:700;color:#d8eeff;font-family:'DM Mono',monospace;}}
-.score-num{{font-size:14px;font-weight:700;color:var(--cyan);font-family:'DM Mono',monospace;}}
 
 /* ── INTRADAY P&L SIMULATOR ── */
 .intraday-sim{{border-top:2px solid rgba(255,209,102,.22);background:linear-gradient(135deg,rgba(245,197,24,.03),rgba(200,155,10,.015));}}
@@ -2448,106 +2498,166 @@ function renderStrategies() {{
     const netDisp= s.isDebit?`<span class="down">-₹${{Math.abs(s.netPrem).toFixed(2)}}</span>`:`<span class="up">+₹${{s.netPrem.toFixed(2)}}</span>`;
     const uid    = (s.name+i).replace(/[^a-zA-Z0-9]/g,"_");
 
-    const legChips = s.legs.map(l=>
-      `<span class="sc-leg-chip ${{l.action}}">${{l.action==="sell"?"SELL":"BUY"}} ${{l.opt_type||l.type}} ${{l.strike.toLocaleString("en-IN")}} @${{(+l.premium).toFixed(1)}}</span>`
-    ).join("");
+    // ── PoP ring: circumference = 2π×27 ≈ 169.6
+    const CIRC = 169.6;
+    const popOffset = Math.round(CIRC * (1 - s.pop / 100));
 
+    // ── BE badges
+    const beLo = s.breakevens.length >= 1 ? s.breakevens[0] : null;
+    const beHi = s.breakevens.length >= 2 ? s.breakevens[s.breakevens.length-1] : null;
+    const d_now = ALL_DATA[currentExpiry];
+    const spot_now = d_now ? d_now.underlying : 0;
+    const beBadges = [
+      beLo ? `<div class="sc-be-badge lo"><div class="dot"></div> Lower BE ₹${{beLo.toLocaleString("en-IN")}}</div>` : "",
+      beHi ? `<div class="sc-be-badge hi"><div class="dot"></div> Upper BE ₹${{beHi.toLocaleString("en-IN")}}</div>` : "",
+      (!beLo && !beHi) ? `<span style="font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;">No breakeven computed</span>` : "",
+      (beLo && !beHi && spot_now) ? `<div class="sc-be-buf">Buffer: ${{Math.round(spot_now-beLo).toLocaleString("en-IN")}} pts below spot</div>` : "",
+      (beHi && !beLo && spot_now) ? `<div class="sc-be-buf">Buffer: ${{Math.round(beHi-spot_now).toLocaleString("en-IN")}} pts above spot</div>` : "",
+    ].join("");
+
+    // ── Leg rows (collapsed + expanded share same rich leg view)
+    const legRows = s.legs.map(l => {{
+      const lt = (l.opt_type||l.type);
+      return `<div class="sc-leg-row ${{l.action}}">
+        <span class="sc-leg-badge ${{l.action}}">${{l.action==="sell"?"SELL":"BUY"}}</span>
+        <span class="sc-leg-${{lt.toLowerCase()}}">${{lt}}</span>
+        <span class="sc-leg-strike">₹${{l.strike.toLocaleString("en-IN")}}</span>
+        <span class="sc-leg-prem">@ ₹${{(+l.premium).toFixed(1)}}</span>
+        <span class="sc-leg-iv">IV ${{(l.iv||0).toFixed(1)}}%</span>
+      </div>`;
+    }}).join("");
+
+    // ── Leg rows with WHY (BE mode expanded)
+    const legRowsWhy = s.isBEMode ? s.legs.map(l => {{
+      const lt = (l.opt_type||l.type);
+      return `<div class="leg-detail-row ${{l.action.toLowerCase()}}">
+        <span class="leg-detail-badge ${{l.action.toLowerCase()}}">${{l.action.toUpperCase()}}</span>
+        <div class="leg-detail-body">
+          <div class="leg-detail-main">
+            <span class="leg-${{lt.toLowerCase()}}">${{lt}}</span>
+            <span class="leg-stk">₹${{l.strike.toLocaleString("en-IN")}}</span>
+            <span class="leg-prem">@ ₹${{l.premium}}</span>
+          </div>
+          ${{l.why ? `<div class="leg-why">↳ ${{l.why}}</div>` : ""}}
+        </div>
+      </div>`;
+    }}).join("") : "";
+
+    // ── Payoff mini canvas id
+    const canvasId = "pc_"+uid;
+
+    // ── Fit bar (BE mode)
+    const fitBar = s.isBEMode ? `
+      <div class="fit-bar-wrap">
+        <div class="fit-bar-hdr"><span>Breakeven Fit</span><span style="color:${{s.fit>=80?"var(--green)":s.fit>=60?"var(--gold)":"var(--red)"}};">${{s.fit}}%</span></div>
+        <div class="fit-bar-track"><div class="fit-bar-fill" style="width:${{s.fit}}%"></div></div>
+      </div>` : "";
+
+    // ── Warning badges
     const poorValueBadge = (s.isBEMode && s.poorValue)
-      ? `<div style="padding:6px 14px;background:rgba(255,107,107,.15);border-bottom:1px solid rgba(255,107,107,.40);font-size:12px;font-weight:800;color:#ff8080;font-family:'DM Mono',monospace;letter-spacing:.8px;">⚠️ POOR VALUE — Yield-to-Risk ${{s.yieldToRisk.toFixed(2)}}x (below 1:5 threshold). Consider a wider spread.</div>`
-      : "";
+      ? `<div style="padding:6px 14px;background:rgba(255,107,107,.15);border-bottom:1px solid rgba(255,107,107,.40);font-size:12px;font-weight:800;color:#ff8080;font-family:'DM Mono',monospace;letter-spacing:.8px;">⚠️ POOR VALUE — Yield-to-Risk ${{s.yieldToRisk.toFixed(2)}}x (below 1:5 threshold). Consider a wider spread.</div>` : "";
     const lowLiquidityBadge = (s.isBEMode && s.lowLiquidity)
-      ? `<div style="padding:6px 14px;background:rgba(255,209,102,.14);border-bottom:1px solid rgba(255,209,102,.40);font-size:12px;font-weight:800;color:#ffd166;font-family:'DM Mono',monospace;letter-spacing:.8px;">⚠️ LOW LIQUIDITY — One or more sell legs have zero OI. Verify fills before trading.</div>`
-      : "";
+      ? `<div style="padding:6px 14px;background:rgba(255,209,102,.14);border-bottom:1px solid rgba(255,209,102,.40);font-size:12px;font-weight:800;color:#ffd166;font-family:'DM Mono',monospace;letter-spacing:.8px;">⚠️ LOW LIQUIDITY — One or more sell legs have zero OI. Verify fills before trading.</div>` : "";
 
+    // ── BE accuracy panel
     const beAccuracyPanel = (s.isBEMode && s.beAccuracy && s.beAccuracy.length) ? `
       <div style="padding:8px 14px;background:rgba(6,10,18,.6);border-bottom:1px solid var(--border);">
-        <div style="font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;color:#d8eeff;font-family:'DM Mono',monospace;margin-bottom:6px;">🎯 YOUR INPUT vs ACTUAL BREAKEVENS</div>
+        <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;color:#d8eeff;font-family:'DM Mono',monospace;margin-bottom:6px;">🎯 YOUR INPUT vs ACTUAL BREAKEVENS</div>
         <div style="display:grid;grid-template-columns:${{s.beAccuracy.length>1?"1fr 1fr":"1fr"}};gap:8px;">
           ${{s.beAccuracy.map(a=>{{
             const sign=a.diff>=0?"+":"";
             const col=Math.abs(a.diff)<=30?"var(--green)":Math.abs(a.diff)<=80?"var(--gold)":"var(--red)";
             const icon=Math.abs(a.diff)<=30?"✅":Math.abs(a.diff)<=80?"⚠️":"❌";
             return `<div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:7px;padding:7px 10px;">
-              <div style="font-size:13px;color:#b8d4e8;font-family:'DM Mono',monospace;margin-bottom:4px;">${{icon}} ${{a.side.toUpperCase()}} BE</div>
+              <div style="font-size:11px;color:#b8d4e8;font-family:'DM Mono',monospace;margin-bottom:4px;">${{icon}} ${{a.side.toUpperCase()}} BE</div>
               <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
-                <div style="text-align:center;"><div style="font-size:13px;font-weight:700;color:#c8dff0;font-family:'DM Mono',monospace;">YOUR INPUT</div><div style="font-size:15px;font-weight:800;font-family:'DM Mono',monospace;color:var(--gold);">₹${{a.target.toLocaleString("en-IN")}}</div></div>
+                <div style="text-align:center;"><div style="font-size:11px;font-weight:700;color:#c8dff0;font-family:'DM Mono',monospace;">YOUR INPUT</div><div style="font-size:14px;font-weight:800;font-family:'DM Mono',monospace;color:var(--gold);">₹${{a.target.toLocaleString("en-IN")}}</div></div>
                 <div style="color:#d8eeff;font-size:16px;font-weight:700;">→</div>
-                <div style="text-align:center;"><div style="font-size:13px;font-weight:700;color:#c8dff0;font-family:'DM Mono',monospace;">ACTUAL BE</div><div style="font-size:15px;font-weight:800;font-family:'DM Mono',monospace;color:${{col}};">₹${{a.actual.toLocaleString("en-IN")}}</div></div>
-                <div style="text-align:center;"><div style="font-size:13px;font-weight:700;color:#c8dff0;font-family:'DM Mono',monospace;">DIFF</div><div style="font-size:14px;font-weight:700;font-family:'DM Mono',monospace;color:${{col}};">${{sign}}${{a.diff}}</div></div>
-              </div>
-            </div>`;
+                <div style="text-align:center;"><div style="font-size:11px;font-weight:700;color:#c8dff0;font-family:'DM Mono',monospace;">ACTUAL BE</div><div style="font-size:14px;font-weight:800;font-family:'DM Mono',monospace;color:${{col}};">₹${{a.actual.toLocaleString("en-IN")}}</div></div>
+                <div style="text-align:center;"><div style="font-size:11px;font-weight:700;color:#c8dff0;font-family:'DM Mono',monospace;">DIFF</div><div style="font-size:13px;font-weight:700;font-family:'DM Mono',monospace;color:${{col}};">${{sign}}${{a.diff}}</div></div>
+              </div></div>`;
           }}).join("")}}
         </div>
-        <div style="margin-top:6px;font-size:13px;color:#b8d4e8;font-family:'DM Mono',monospace;line-height:1.6;">
-          ℹ️ Diff = (Sell Strike ± actual premium collected) vs your input. Small diff = sell strikes were well-chosen.
-        </div>
+        <div style="margin-top:6px;font-size:11px;color:#b8d4e8;font-family:'DM Mono',monospace;line-height:1.6;">ℹ️ Diff = (Sell Strike ± actual premium collected) vs your input.</div>
       </div>` : "";
 
-    const fitBar = s.isBEMode ? `
-      <div class="fit-bar-wrap">
-        <div class="fit-bar-hdr"><span>Breakeven Fit Score</span><span style="color:${{s.fit>=80?"var(--green)":s.fit>=60?"var(--gold)":"var(--red)"}};">${{s.fit}}%</span></div>
-        <div class="fit-bar-track"><div class="fit-bar-fill" style="width:${{s.fit}}%;background:${{s.fit>=80?"var(--green)":s.fit>=60?"var(--gold)":"var(--red)"}};box-shadow:0 0 6px ${{s.fit>=80?"var(--green)":s.fit>=60?"var(--gold)":"var(--red)"}}55;"></div></div>
-      </div>` : "";
+    // ── Payoff zone label
+    const payoffZoneLabel = (() => {{
+      if (beLo && beHi) return `Profit zone: ₹${{beLo.toLocaleString("en-IN")}} – ₹${{beHi.toLocaleString("en-IN")}}`;
+      if (beLo) return `Profit zone: above ₹${{beLo.toLocaleString("en-IN")}}`;
+      if (beHi) return `Profit zone: below ₹${{beHi.toLocaleString("en-IN")}}`;
+      return "";
+    }})();
 
-    const legsSection = s.isBEMode
-      ? `<div class="sc-legs-detail">
-          <div class="sc-legs-detail-title">📋 LEGS TO TRADE — HOW & WHY</div>
-          ${{s.legs.map(l=>`
-          <div class="leg-detail-row ${{l.action.toLowerCase()}}">
-            <span class="leg-detail-badge ${{l.action.toLowerCase()}}">${{l.action.toUpperCase()}}</span>
-            <div class="leg-detail-body">
-              <div class="leg-detail-main">
-                <span class="leg-${{(l.opt_type||l.type).toLowerCase()}}">${{l.opt_type||l.type}}</span>
-                <span class="leg-stk">₹${{l.strike.toLocaleString("en-IN")}}</span>
-                <span class="leg-prem">@ ₹${{l.premium}}</span>
-              </div>
-              <div class="leg-why">↳ ${{l.why}}</div>
-            </div>
-          </div>`).join("")}}
-          ${{s.beInsight?`<div style="margin-top:8px;padding:7px 10px;background:rgba(255,209,102,.06);border:1px solid rgba(255,209,102,.15);border-radius:7px;font-size:12px;font-family:'DM Mono',monospace;color:rgba(255,209,102,.8);line-height:1.6;">💡 ${{s.beInsight}}</div>`:""}}
-        </div>`
-      : `<div class="sc-legs">
-          ${{s.legs.map(l=>`<span class="leg-tag leg-${{l.action}}">${{l.action.toUpperCase()}} ${{l.strike}} ${{l.opt_type||l.type}} @${{l.premium.toFixed(2)}}</span>`).join("")}}
-        </div>`;
+    // ── Payoff x-axis labels
+    const pr = s.priceRange;
+    const payoffXLabels = pr && pr.length ? (() => {{
+      const n = pr.length; const step = Math.floor(n/5);
+      return [0,1,2,3,4,5].map(k => {{
+        const idx = Math.min(k*step, n-1);
+        return `<span>₹${{(pr[idx]/1000).toFixed(1)}}k</span>`;
+      }}).join("");
+    }})() : "";
 
+    // ── Collapsed header (rich)
     const headerRow = `
       <div class="sc-header" onclick="toggleCard('${{uid}}')">
-        <span class="sc-chevron">▶</span>
-        <span class="sc-pill-bias ${{pillCls[s.biasTag]||"sc-pill-neut"}}">${{(s.biasTag||"NEUTRAL").toUpperCase()}}</span>
-        <span class="sc-name">${{emojis[s.biasTag]||"📊"}} ${{s.name}}</span>
-        <div class="sc-header-right">
-          ${{s.isBEMode?`<span class="sc-fit-badge">FIT ${{s.fit||"—"}}%</span>`:""}}
-          <div class="sc-legs-mini">${{legChips}}</div>
-          <div class="pop-pill" style="background:${{popBg}};color:${{popCol}};border:1px solid ${{popCol}}33;">${{s.pop}}%<br><span style="font-size:11px;font-weight:700;">PoP</span></div>
+        <div class="sc-header-left">
+          <div class="sc-title-row">
+            <span class="sc-chevron">▶</span>
+            <span class="sc-pill-bias ${{pillCls[s.biasTag]||"sc-pill-neut"}}">${{emojis[s.biasTag]||"📊"}} ${{(s.biasTag||"NEUTRAL").toUpperCase()}}</span>
+            <span class="sc-type-lbl">${{s.isDebit?"Debit":"Credit"}} · DTE ${{d_now?.dte||"—"}}</span>
+          </div>
+          <div class="sc-name">${{s.name}}</div>
+          <div class="sc-subtitle">${{s.legs.map(l=>(l.action==="sell"?"Sell ":"Buy ")+(l.opt_type||l.type)+" "+l.strike.toLocaleString("en-IN")+" @₹"+(+l.premium).toFixed(0)).join(" · ")}}</div>
         </div>
+        <div class="pop-ring-wrap">
+          <div class="pop-ring">
+            <svg viewBox="0 0 64 64">
+              <circle class="pr-track" cx="32" cy="32" r="27"/>
+              <circle class="pr-fill" cx="32" cy="32" r="27"
+                stroke-dasharray="${{CIRC}}"
+                stroke-dashoffset="${{popOffset}}"/>
+            </svg>
+            <div class="pop-ring-val">${{s.pop}}<small>%</small></div>
+          </div>
+          <div class="pop-ring-lbl">PoP</div>
+        </div>
+      </div>
+      <div class="sc-stat-strip">
+        <div class="sc-stat"><span class="sc-stat-lbl">Max Profit</span><span class="sc-stat-val up">₹${{s.maxProfit.toLocaleString("en-IN")}}</span></div>
+        <div class="sc-stat"><span class="sc-stat-lbl">Max Loss</span><span class="sc-stat-val down">${{s.maxLoss===Infinity||s.rr===0?"Unlimited":"−₹"+s.maxLoss.toLocaleString("en-IN")}}</span></div>
+        <div class="sc-stat"><span class="sc-stat-lbl">Risk/Reward</span><span class="sc-stat-val gold">${{s.rr===0?"—":"1:"+s.rr.toFixed(1)}}</span></div>
+        <div class="sc-stat"><span class="sc-stat-lbl">Margin Est.</span><span class="sc-stat-val cyan">₹${{s.margin.toLocaleString("en-IN")}}</span></div>
+      </div>
+      <div class="sc-be-row">${{beBadges}}</div>
+      <div class="sc-legs-section">
+        <div class="sc-legs-title">Strategy Legs</div>
+        ${{legRows}}
+      </div>
+      <div class="sc-payoff-section">
+        <div class="sc-payoff-title"><span>Payoff at Expiry</span><span>${{payoffZoneLabel}}</span></div>
+        <div class="sc-payoff-canvas-wrap"><canvas id="${{canvasId}}" width="600" height="72"></canvas></div>
+        <div class="sc-be-labels">${{payoffXLabels}}</div>
+      </div>
+      ${{fitBar}}
+      <div class="sc-score">
+        <span class="score-lbl">Score</span>
+        <div class="score-bar-track"><div class="score-bar-fill" style="width:${{sw}}%"></div></div>
+        <span class="score-num">${{s.score}}</span>
       </div>`;
 
+    // ── Expanded body: warnings + BE accuracy + detailed why legs + sim
     const bodyContent = `
       <div class="sc-body">
         ${{poorValueBadge}}${{lowLiquidityBadge}}
-        <div class="sc-top">
-          <div>
-            <div class="sc-name" style="font-size:16px;">${{emojis[s.biasTag]||"📊"}} ${{s.name}}</div>
-            <div class="sc-sub">${{s.biasTag.toUpperCase()}} · ${{s.isDebit?"DEBIT":"CREDIT"}} SPREAD · DTE:${{ALL_DATA[currentExpiry]?.dte||"—"}}</div>
-          </div>
-          <div class="pop-pill" style="background:${{popBg}};color:${{popCol}};border:1px solid ${{popCol}}33;">${{s.pop}}%<br><span style="font-size:12px;font-weight:700;">PoP</span></div>
-        </div>
-        ${{fitBar}}
         ${{beAccuracyPanel}}
+        ${{s.isBEMode ? `<div class="sc-legs-detail"><div class="sc-legs-detail-title">📋 LEGS — HOW & WHY</div>${{legRowsWhy}}${{s.beInsight?`<div style="margin-top:8px;padding:7px 10px;background:rgba(255,209,102,.06);border:1px solid rgba(255,209,102,.15);border-radius:7px;font-size:12px;font-family:'DM Mono',monospace;color:rgba(255,209,102,.8);line-height:1.6;">💡 ${{s.beInsight}}</div>`:""}}</div>` : ""}}
         <div class="sc-fields">
-          <div class="sc-field"><span class="sc-field-lbl">Strike Price</span><span class="sc-field-val" style="color:var(--cyan);">ATM ₹${{ALL_DATA[currentExpiry]?.atm_strike?.toLocaleString("en-IN")||"—"}}</span></div>
-          <div class="sc-field"><span class="sc-field-lbl">Max Profit</span><span class="sc-field-val up">₹${{s.maxProfit.toLocaleString("en-IN")}}</span></div>
-          <div class="sc-field"><span class="sc-field-lbl">Max Loss</span><span class="sc-field-val down">₹${{s.maxLoss.toLocaleString("en-IN")}}</span></div>
-          <div class="sc-field"><span class="sc-field-lbl">Max RR Ratio</span><span class="sc-field-val" style="color:var(--gold);">1:${{rrDisp}}</span></div>
-          <div class="sc-field"><span class="sc-field-lbl">Breakevens</span><span class="sc-field-val" style="font-size:14px;font-weight:700;color:#d8eeff;">${{beStr}}</span></div>
-          <div class="sc-field"><span class="sc-field-lbl">Net Credit/Debit</span><span class="sc-field-val">${{netDisp}}</span></div>
-          <div class="sc-field" style="grid-column:1/-1"><span class="sc-field-lbl">Est. Margin / Premium</span><span class="sc-field-val" style="color:var(--purple);">₹${{s.margin.toLocaleString("en-IN")}}</span></div>
-        </div>
-        ${{legsSection}}
-        <div class="sc-score">
-          <span class="score-lbl">SCORE</span>
-          <div class="score-bar-track"><div class="score-bar-fill" style="width:${{sw}}%"></div></div>
-          <span class="score-num">${{s.score}}</span>
+          <div class="sc-field"><span class="sc-field-lbl">ATM Strike</span><span class="sc-field-val" style="color:var(--cyan);">₹${{d_now?.atm_strike?.toLocaleString("en-IN")||"—"}}</span></div>
+          <div class="sc-field"><span class="sc-field-lbl">Net ${{s.isDebit?"Debit":"Credit"}}</span><span class="sc-field-val ${{s.isDebit?"down":"up"}}">${{s.isDebit?"-":"++"}}₹${{Math.abs(s.netPrem).toFixed(2)}}</span></div>
+          <div class="sc-field"><span class="sc-field-lbl">Breakevens</span><span class="sc-field-val" style="font-size:13px;color:#d8eeff;">${{beStr}}</span></div>
+          <div class="sc-field"><span class="sc-field-lbl">RR Ratio</span><span class="sc-field-val gold">1:${{rrDisp}}</span></div>
         </div>
         <div style="padding:8px 12px;border-top:1px solid rgba(255,255,255,.05);" onclick="event.stopPropagation()">
           <button data-simuid="${{uid}}" onclick="toggleSim('${{uid}}',this)"
@@ -2555,20 +2665,75 @@ function renderStrategies() {{
                    padding:7px 12px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;
                    font-family:'DM Mono',monospace;font-size:12px;font-weight:700;color:rgba(255,209,102,.8);
                    letter-spacing:.8px;text-transform:uppercase;transition:all .2s;">
-            <span style="display:flex;align-items:center;gap:7px;"><span style="font-size:15px;">📊</span> Intraday P&L Simulator</span>
+            <span style="display:flex;align-items:center;gap:7px;"><span style="font-size:15px;">📊</span> Intraday P&amp;L Simulator</span>
             <span id="sim-arrow-${{uid}}" style="font-size:14px;transition:transform .25s;">▼</span>
           </button>
         </div>
         <div id="sim-wrap-${{uid}}" style="display:none;overflow:hidden;">${{buildIntradaySim(s, uid)}}</div>
       </div>`;
 
-    return `<div class="strat-card" id="sc-card-${{uid}}" style="--cc:${{cc}};animation-delay:${{i*0.05}}s" data-stratname="${{s.name}}">
+    return `<div class="strat-card" id="sc-card-${{uid}}" style="--cc:${{cc}};animation-delay:${{i*0.05}}s" data-stratname="${{s.name}}" data-payoff="${{encodeURIComponent(JSON.stringify({{vals:s.payoffs,range:s.priceRange,bes:s.breakevens,cc:cc}}))}}" data-canvasid="${{canvasId}}">
       ${{headerRow}}
       ${{bodyContent}}
     </div>`;
   }}).join("");
 
-  // Cards start collapsed — user clicks to open
+  // Draw mini payoff charts on each card
+  requestAnimationFrame(() => drawPayoffMinis());
+}}
+
+function drawPayoffMinis() {{
+  document.querySelectorAll(".strat-card[data-payoff]").forEach(card => {{
+    const canvasId = card.dataset.canvasid;
+    const canvas   = document.getElementById(canvasId);
+    if (!canvas) return;
+    let data;
+    try {{ data = JSON.parse(decodeURIComponent(card.dataset.payoff)); }} catch(e) {{ return; }}
+    const {{ vals, range, bes, cc }} = data;
+    if (!vals || !vals.length) return;
+    const ctx = canvas.getContext("2d");
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+    const minV = Math.min(...vals), maxV = Math.max(...vals);
+    const span = maxV - minV || 1;
+    const toY  = v => H - ((v - minV) / span) * H;
+    const toX  = i => (i / (vals.length - 1)) * W;
+    // zero line
+    const zy = toY(0);
+    ctx.strokeStyle = "rgba(255,255,255,0.08)"; ctx.lineWidth = 1; ctx.setLineDash([4,4]);
+    ctx.beginPath(); ctx.moveTo(0, zy); ctx.lineTo(W, zy); ctx.stroke(); ctx.setLineDash([]);
+    // gradient fill
+    const grad = ctx.createLinearGradient(0, 0, 0, H);
+    grad.addColorStop(0, (cc||"#00d4ff") + "44"); grad.addColorStop(1, (cc||"#00d4ff") + "05");
+    ctx.beginPath();
+    vals.forEach((v, i) => {{ i===0 ? ctx.moveTo(toX(i), toY(v)) : ctx.lineTo(toX(i), toY(v)); }});
+    ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath();
+    ctx.fillStyle = grad; ctx.fill();
+    // payoff line
+    ctx.beginPath(); ctx.strokeStyle = cc||"#00d4ff"; ctx.lineWidth = 2.5; ctx.setLineDash([]);
+    vals.forEach((v, i) => {{ i===0 ? ctx.moveTo(toX(i), toY(v)) : ctx.lineTo(toX(i), toY(v)); }});
+    ctx.stroke();
+    // spot marker
+    const underlying = ALL_DATA[currentExpiry]?.underlying;
+    if (underlying && range && range.length) {{
+      const spotFrac = (underlying - range[0]) / (range[range.length-1] - range[0]);
+      if (spotFrac >= 0 && spotFrac <= 1) {{
+        const sx = spotFrac * W;
+        ctx.strokeStyle = "rgba(0,212,255,0.55)"; ctx.lineWidth = 1.5; ctx.setLineDash([3,3]);
+        ctx.beginPath(); ctx.moveTo(sx, 0); ctx.lineTo(sx, H); ctx.stroke(); ctx.setLineDash([]);
+      }}
+    }}
+    // BE markers
+    if (bes && range && range.length) {{
+      bes.forEach(be => {{
+        const beFrac = (be - range[0]) / (range[range.length-1] - range[0]);
+        if (beFrac < 0 || beFrac > 1) return;
+        const bx = beFrac * W;
+        ctx.strokeStyle = "rgba(255,209,102,0.65)"; ctx.lineWidth = 1; ctx.setLineDash([2,3]);
+        ctx.beginPath(); ctx.moveTo(bx, 0); ctx.lineTo(bx, H); ctx.stroke(); ctx.setLineDash([]);
+      }});
+    }}
+  }});
 }}
 
 // ── Intraday Simulator ────────────────────────────────────────
