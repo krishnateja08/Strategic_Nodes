@@ -856,35 +856,49 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 .be-chip-val{{font-size:16px;font-weight:800;font-family:'DM Mono',monospace;}}
 
 /* ── OPTION CHAIN ── */
-.chain-wrap{{overflow:auto;max-height:540px;}}
-.chain-side-hdr{{display:grid;grid-template-columns:1fr 92px 1fr;padding:6px 0;border-bottom:1px solid var(--border);background:linear-gradient(90deg,#0d1a26,#0d1117);position:sticky;top:0;z-index:3;}}
-.chain-side-hdr .ce-hdr{{text-align:right;padding-right:10px;font-size:12px;font-weight:800;color:var(--green);letter-spacing:1.4px;text-transform:uppercase;}}
+.chain-wrap{{overflow:auto;max-height:600px;font-family:'JetBrains Mono',monospace;}}
+.chain-side-hdr{{display:grid;grid-template-columns:1fr 80px 1fr;padding:6px 0;border-bottom:1px solid var(--border);background:linear-gradient(90deg,#0d1a26,#0d1117);position:sticky;top:0;z-index:3;}}
+.chain-side-hdr .ce-hdr{{text-align:center;font-size:12px;font-weight:800;color:var(--red);letter-spacing:2px;text-transform:uppercase;padding:2px 0;}}
 .chain-side-hdr .st-hdr{{text-align:center;font-size:12px;font-weight:800;color:#d8eeff;letter-spacing:1px;text-transform:uppercase;}}
-.chain-side-hdr .pe-hdr{{text-align:left;padding-left:10px;font-size:12px;font-weight:800;color:var(--red);letter-spacing:1.4px;text-transform:uppercase;}}
-.chain-col-hdr{{display:grid;grid-template-columns:1fr 92px 1fr;padding:5px 0 4px;border-bottom:1px solid var(--border2);background:#0a1218;position:sticky;top:30px;z-index:2;}}
-.chain-col-hdr .ce-cols{{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;padding:0 8px 0 5px;}}
-.chain-col-hdr .pe-cols{{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;padding:0 5px 0 8px;}}
-.chain-col-hdr span{{font-size:10px;color:#9dbdd8;text-transform:uppercase;letter-spacing:.8px;font-family:'JetBrains Mono',monospace;text-align:right;}}
+.chain-side-hdr .pe-hdr{{text-align:center;font-size:12px;font-weight:800;color:var(--green);letter-spacing:2px;text-transform:uppercase;padding:2px 0;}}
+.chain-col-hdr{{display:grid;grid-template-columns:1fr 80px 1fr;padding:4px 0;border-bottom:1px solid var(--border2);background:#0a1218;position:sticky;top:30px;z-index:2;}}
+.chain-col-hdr .ce-cols{{display:grid;grid-template-columns:55px 60px 70px 70px;justify-content:end;padding-right:6px;gap:0;}}
+.chain-col-hdr .pe-cols{{display:grid;grid-template-columns:70px 70px 60px 55px;justify-content:start;padding-left:6px;gap:0;}}
+.chain-col-hdr span{{font-size:10px;color:#9dbdd8;text-transform:uppercase;letter-spacing:.6px;text-align:right;padding:0 4px;}}
 .chain-col-hdr .pe-cols span{{text-align:left;}}
-.chain-row{{display:grid;grid-template-columns:1fr 92px 1fr;border-bottom:1px solid var(--border2);transition:background .12s;position:relative;}}
-.chain-row:hover{{background:#ffffff04;}}
-.chain-row.atm-row{{background:#00d4ff07;border-left:2px solid var(--cyan);}}
+.chain-row{{display:grid;grid-template-columns:1fr 80px 1fr;border-bottom:1px solid #0e1e2a;transition:background .1s;}}
+.chain-row:hover{{background:#ffffff05;}}
+.chain-row.atm-row{{background:#00d4ff0d;}}
+.chain-row.atm-row .stk-cell{{background:#00d4ff18;border-left:2px solid var(--cyan);border-right:2px solid var(--cyan);color:var(--cyan);}}
 .chain-row.sup-row .stk-cell{{border-left:2px solid var(--green)!important;}}
 .chain-row.res-row .stk-cell{{border-left:2px solid var(--red)!important;}}
 .chain-row.be-lo-row .stk-cell{{border-left:2px solid var(--red)!important;border-right:2px solid var(--red)!important;}}
 .chain-row.be-hi-row .stk-cell{{border-left:2px solid var(--green)!important;border-right:2px solid var(--green)!important;}}
-.ce-side{{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;align-items:center;padding:6px 8px 6px 5px;gap:2px;position:relative;overflow:hidden;}}
-.ce-heat-bg{{position:absolute;top:0;right:0;bottom:0;background:var(--green);opacity:0.14;pointer-events:none;border-radius:2px 0 0 2px;}}
-.pe-side{{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;align-items:center;padding:6px 5px 6px 8px;gap:2px;position:relative;overflow:hidden;}}
-.pe-heat-bg{{position:absolute;top:0;left:0;bottom:0;background:var(--red);opacity:0.14;pointer-events:none;border-radius:0 2px 2px 0;}}
-.stk-cell{{display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;border-left:1px solid var(--border);border-right:1px solid var(--border);background:#0a1520;min-height:31px;position:relative;flex-direction:column;gap:1px;}}
-.atm-tag{{background:var(--cyan);color:#000;font-size:9px;font-weight:800;padding:1px 5px;border-radius:0 0 3px 3px;position:absolute;top:0;letter-spacing:.5px;}}
-.cv-ltp{{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;text-align:right;}}
-.cv-iv{{font-size:11px;color:#d8eeff;font-family:'JetBrains Mono',monospace;text-align:right;}}
-.cv-oi{{font-size:11px;font-family:'JetBrains Mono',monospace;color:#d8eeff;text-align:right;}}
-.cv-doi{{font-size:11px;font-family:'JetBrains Mono',monospace;text-align:right;}}
-.pe-side .cv-ltp,.pe-side .cv-iv,.pe-side .cv-oi,.pe-side .cv-doi{{text-align:left;}}
-.ce-ltp-v{{color:var(--green);}} .pe-ltp-v{{color:var(--red);}}
+
+/* CE side: OI Chg% | OI-lakh | OI bar | LTP */
+.ce-side{{display:grid;grid-template-columns:55px 60px 70px 70px;align-items:center;justify-content:end;padding:0 6px 0 0;}}
+.pe-side{{display:grid;grid-template-columns:70px 70px 60px 55px;align-items:center;justify-content:start;padding:0 0 0 6px;}}
+
+.stk-cell{{display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;border-left:1px solid var(--border);border-right:1px solid var(--border);background:#090f18;min-height:30px;position:relative;flex-direction:column;gap:1px;color:#d8eeff;}}
+.atm-tag{{background:var(--cyan);color:#000;font-size:8px;font-weight:800;padding:1px 5px;border-radius:0 0 3px 3px;position:absolute;top:0;letter-spacing:.5px;}}
+
+/* Cell content classes */
+.cc{{display:flex;align-items:center;height:30px;padding:0 4px;font-size:12px;font-family:'JetBrains Mono',monospace;}}
+.cc-ltp{{font-weight:700;font-size:12px;justify-content:flex-end;}}
+.cc-iv{{color:#c8dff0;justify-content:center;font-size:11px;}}
+.cc-oi-lakh{{color:#c8dff0;justify-content:flex-end;font-size:11px;}}
+.cc-chg{{font-weight:700;font-size:11px;justify-content:flex-end;}}
+.cc-chg.up{{color:#00c896;}}
+.cc-chg.down{{color:#ff6b6b;}}
+.ce-ltp-v{{color:#ff8080;}}
+.pe-ltp-v{{color:#00c896;}}
+
+/* OI bar cell */
+.cc-bar{{justify-content:flex-end;padding-right:6px;}}
+.pe-side .cc-bar{{justify-content:flex-start;padding-left:6px;padding-right:0;}}
+.oi-bar-track{{width:52px;height:10px;background:#0d1a24;border-radius:2px;overflow:hidden;}}
+.oi-bar-fill-ce{{height:100%;background:#c0392b;border-radius:2px;transition:width .4s;}}
+.oi-bar-fill-pe{{height:100%;background:#27ae60;border-radius:2px;transition:width .4s;}}
 .up{{color:var(--green)!important;}} .down{{color:var(--red)!important;}}
 
 /* ── GREEKS SIDEBAR ── */
@@ -1295,14 +1309,14 @@ canvas#payoffChart{{width:100%!important;height:288px!important;}}
     </div>
     <div class="chain-wrap">
       <div class="chain-side-hdr">
-        <div class="ce-hdr">── CALLS (CE) ──</div>
+        <div class="ce-hdr">── CALLS ──</div>
         <div class="st-hdr">STRIKE</div>
-        <div class="pe-hdr">── PUTS (PE) ──</div>
+        <div class="pe-hdr">── PUTS ──</div>
       </div>
       <div class="chain-col-hdr">
-        <div class="ce-cols"><span>LTP</span><span>IV%</span><span>OI(L)</span><span>ΔOI</span></div>
+        <div class="ce-cols"><span>OI Chg%</span><span>OI-lakh</span><span style="text-align:center;">Call OI</span><span>LTP</span></div>
         <div></div>
-        <div class="pe-cols"><span>ΔOI</span><span>OI(L)</span><span>IV%</span><span>LTP</span></div>
+        <div class="pe-cols"><span>LTP</span><span style="text-align:center;">Put OI</span><span>OI-lakh</span><span>OI Chg%</span></div>
       </div>
       <div id="chainBody"><div style="text-align:center;padding:50px;color:#9dbdd8;font-family:'JetBrains Mono',monospace;font-size:14px;">Loading…</div></div>
     </div>
@@ -1492,14 +1506,13 @@ function renderChain() {{
 
   const supports    = getSupports();
   const resistances = getResistances();
-  // Also get BE levels if in BE mode
   const beLo = currentMode==="be" ? (parseFloat(document.getElementById("beLower").value)||null) : null;
   const beHi = currentMode==="be" ? (parseFloat(document.getElementById("beUpper").value)||null) : null;
   const beLo_st = beLo ? nearestStrike(d.all_strikes, beLo) : null;
   const beHi_st = beHi ? nearestStrike(d.all_strikes, beHi) : null;
 
-  const rows   = [...d.all_strikes].sort((a,b)=>b.strike-a.strike);
-  const maxOi  = Math.max(...rows.flatMap(r=>[r.ce_oi,r.pe_oi]),1);
+  const rows  = [...d.all_strikes].sort((a,b)=>b.strike-a.strike);
+  const maxOi = Math.max(...rows.flatMap(r=>[r.ce_oi,r.pe_oi]),1);
 
   document.getElementById("chainBody").innerHTML = rows.map(r => {{
     const isAtm = r.is_atm;
@@ -1507,38 +1520,45 @@ function renderChain() {{
     const isRes = resistances.includes(r.strike);
     const isBeL = beLo_st === r.strike;
     const isBeH = beHi_st === r.strike;
-    const ceOiL = (r.ce_oi/1e5).toFixed(1);
-    const peOiL = (r.pe_oi/1e5).toFixed(1);
-    const ceHeat = Math.round((r.ce_oi/maxOi)*100);
-    const peHeat = Math.round((r.pe_oi/maxOi)*100);
-    const ceChgStr = (r.ce_oi_chg>=0?"+":"")+(r.ce_oi_chg/1e5).toFixed(1)+"L";
-    const peChgStr = (r.pe_oi_chg>=0?"+":"")+(r.pe_oi_chg/1e5).toFixed(1)+"L";
-    const ceChgCls = r.ce_oi_chg>=0?"up":"down";
-    const peChgCls = r.pe_oi_chg>=0?"up":"down";
+
+    // OI values
+    const ceOiL   = (r.ce_oi/1e5).toFixed(1);
+    const peOiL   = (r.pe_oi/1e5).toFixed(1);
+    const ceBar   = Math.round((r.ce_oi/maxOi)*100);
+    const peBar   = Math.round((r.pe_oi/maxOi)*100);
+
+    // OI change %
+    const ceChgPct = r.ce_oi > 0 ? ((r.ce_oi_chg / (r.ce_oi - r.ce_oi_chg || 1)) * 100) : 0;
+    const peChgPct = r.pe_oi > 0 ? ((r.pe_oi_chg / (r.pe_oi - r.pe_oi_chg || 1)) * 100) : 0;
+    const ceChgStr = (ceChgPct>=0?"+":"")+ceChgPct.toFixed(0)+"%";
+    const peChgStr = (peChgPct>=0?"+":"")+peChgPct.toFixed(0)+"%";
+    const ceChgCls = ceChgPct>=0?"up":"down";
+    const peChgCls = peChgPct>=0?"up":"down";
+
     let rc = isAtm?"atm-row":isSup?"sup-row":isRes?"res-row":isBeL?"be-lo-row":isBeH?"be-hi-row":"";
-    const smark = isSup?'<span style="color:var(--green);font-size:9px;font-weight:700;letter-spacing:.5px;">▲ SUP</span>':"";
-    const rmark = isRes?'<span style="color:var(--red);font-size:9px;font-weight:700;letter-spacing:.5px;">▼ RES</span>':"";
-    const blomark = isBeL?'<span style="color:var(--red);font-size:9px;font-weight:700;letter-spacing:.5px;">BE ▼</span>':"";
-    const bhimark = isBeH?'<span style="color:var(--green);font-size:9px;font-weight:700;letter-spacing:.5px;">BE ▲</span>':"";
+    const smark  = isSup?'<span style="color:var(--green);font-size:8px;font-weight:700;">▲SUP</span>':"";
+    const rmark  = isRes?'<span style="color:var(--red);font-size:8px;font-weight:700;">▼RES</span>':"";
+    const blomark= isBeL?'<span style="color:var(--red);font-size:8px;font-weight:700;">BE▼</span>':"";
+    const bhimark= isBeH?'<span style="color:var(--green);font-size:8px;font-weight:700;">BE▲</span>':"";
+
     return `<div class="chain-row ${{rc}}">
       <div class="ce-side">
-        <div class="ce-heat-bg" style="width:${{ceHeat}}%"></div>
-        <span class="cv-ltp ce-ltp-v">${{r.ce_ltp.toFixed(2)}}</span>
-        <span class="cv-iv">${{r.ce_iv.toFixed(1)}}%</span>
-        <span class="cv-oi">${{ceOiL}}L</span>
-        <span class="cv-doi ${{ceChgCls}}">${{ceChgStr}}</span>
+        <span class="cc cc-chg ${{ceChgCls}}">${{ceChgStr}}</span>
+        <span class="cc cc-oi-lakh">${{ceOiL}}</span>
+        <span class="cc cc-bar"><div class="oi-bar-track"><div class="oi-bar-fill-ce" style="width:${{ceBar}}%"></div></div></span>
+        <span class="cc cc-ltp ce-ltp-v">${{r.ce_ltp.toFixed(2)}}</span>
       </div>
       <div class="stk-cell">
         ${{isAtm?'<span class="atm-tag">ATM</span>':""}}
-        <span style="color:${{isAtm?"var(--cyan)":isBeL?"var(--red)":isBeH?"var(--green)":"var(--text)"}}">${{r.strike.toLocaleString("en-IN")}}</span>
-        ${{(smark||rmark||blomark||bhimark)?`<span style="display:flex;gap:4px;">${{smark}}${{rmark}}${{blomark}}${{bhimark}}</span>`:""}}
+        <span>${{r.strike.toLocaleString("en-IN")}}</span>
+        <span style="font-size:10px;color:#7aA8c8;">${{r.ce_iv.toFixed(1)}}</span>
+        ${{(smark||rmark||blomark||bhimark)?`<span style="display:flex;gap:3px;">${{smark}}${{rmark}}${{blomark}}${{bhimark}}</span>`:""}}
       </div>
       <div class="pe-side">
-        <div class="pe-heat-bg" style="width:${{peHeat}}%"></div>
-        <span class="cv-doi ${{peChgCls}}">${{peChgStr}}</span>
-        <span class="cv-oi">${{peOiL}}L</span>
-        <span class="cv-iv">${{r.pe_iv.toFixed(1)}}%</span>
-        <span class="cv-ltp pe-ltp-v">${{r.pe_ltp.toFixed(2)}}</span>
+        <span class="cc cc-ltp pe-ltp-v">${{r.pe_ltp.toFixed(2)}}</span>
+        <span class="cc cc-bar"><div class="oi-bar-track"><div class="oi-bar-fill-pe" style="width:${{peBar}}%"></div></div></span>
+        <span class="cc cc-oi-lakh">${{peOiL}}</span>
+        <span class="cc cc-chg ${{peChgCls}}">${{peChgStr}}</span>
       </div>
     </div>`;
   }}).join("");
