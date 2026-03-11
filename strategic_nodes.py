@@ -766,7 +766,7 @@ def build_html(all_expiry_data, expiry_list, generated_at):
 *{{margin:0;padding:0;box-sizing:border-box;}}
 body{{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;overflow-x:hidden;}}
 body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:44px 44px;pointer-events:none;z-index:0;}}
-.wrap{{position:relative;z-index:1;max-width:1536px;margin:0 auto;padding:12px 60px;}}
+.wrap{{position:relative;z-index:1;max-width:1690px;margin:0 auto;padding:12px 55px;}}
 
 /* ── HEADER ── */
 .hdr{{display:flex;align-items:center;justify-content:space-between;padding:16px 22px;background:linear-gradient(135deg,#0d111799,#11182699);border:1px solid var(--border);border-top:2px solid var(--cyan);border-radius:12px;margin-bottom:18px;backdrop-filter:blur(12px);}}
@@ -787,7 +787,7 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 .tick-sub{{font-size:13px;color:#b8d4e8;font-family:'DM Mono',monospace;margin-top:1px;}}
 
 /* ── MAIN LAYOUT ── */
-.main{{display:grid;grid-template-columns:385px 1fr 310px;gap:18px;margin-bottom:18px;}}
+.main{{display:grid;grid-template-columns:420px 1fr 340px;gap:18px;margin-bottom:18px;}}
 
 /* ── PANEL ── */
 .panel{{background:var(--bg3);border:1px solid var(--border);border-radius:12px;overflow:hidden;}}
@@ -857,16 +857,18 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 
 /* ── OPTION CHAIN ── */
 .chain-wrap{{overflow:auto;max-height:600px;font-family:'JetBrains Mono',monospace;}}
-.chain-side-hdr{{display:grid;grid-template-columns:1fr 80px 1fr;padding:6px 0;border-bottom:1px solid var(--border);background:linear-gradient(90deg,#0d1a26,#0d1117);position:sticky;top:0;z-index:3;}}
+.chain-side-hdr{{display:grid;grid-template-columns:1fr 72px 50px 1fr;padding:6px 0;border-bottom:1px solid var(--border);background:linear-gradient(90deg,#0d1a26,#0d1117);position:sticky;top:0;z-index:3;}}
 .chain-side-hdr .ce-hdr{{text-align:center;font-size:12px;font-weight:800;color:var(--red);letter-spacing:2px;text-transform:uppercase;padding:2px 0;}}
-.chain-side-hdr .st-hdr{{text-align:center;font-size:12px;font-weight:800;color:#d8eeff;letter-spacing:1px;text-transform:uppercase;}}
+.chain-side-hdr .st-hdr{{text-align:center;font-size:11px;font-weight:800;color:#d8eeff;letter-spacing:1px;text-transform:uppercase;}}
+.chain-side-hdr .iv-hdr{{text-align:center;font-size:11px;font-weight:800;color:#9dbdd8;letter-spacing:1px;text-transform:uppercase;}}
 .chain-side-hdr .pe-hdr{{text-align:center;font-size:12px;font-weight:800;color:var(--green);letter-spacing:2px;text-transform:uppercase;padding:2px 0;}}
-.chain-col-hdr{{display:grid;grid-template-columns:1fr 80px 1fr;padding:4px 0;border-bottom:1px solid var(--border2);background:#0a1218;position:sticky;top:30px;z-index:2;}}
-.chain-col-hdr .ce-cols{{display:grid;grid-template-columns:55px 60px 70px 70px;justify-content:end;padding-right:6px;gap:0;}}
-.chain-col-hdr .pe-cols{{display:grid;grid-template-columns:70px 70px 60px 55px;justify-content:start;padding-left:6px;gap:0;}}
+.chain-col-hdr{{display:grid;grid-template-columns:1fr 72px 50px 1fr;padding:4px 0;border-bottom:1px solid var(--border2);background:#0a1218;position:sticky;top:30px;z-index:2;}}
+.chain-col-hdr .ce-cols{{display:grid;grid-template-columns:58px 62px 72px 72px;justify-content:end;padding-right:4px;gap:0;}}
+.chain-col-hdr .iv-col{{display:flex;align-items:center;justify-content:center;font-size:10px;color:#9dbdd8;text-transform:uppercase;letter-spacing:.6px;}}
+.chain-col-hdr .pe-cols{{display:grid;grid-template-columns:72px 72px 62px 58px;justify-content:start;padding-left:4px;gap:0;}}
 .chain-col-hdr span{{font-size:10px;color:#9dbdd8;text-transform:uppercase;letter-spacing:.6px;text-align:right;padding:0 4px;}}
 .chain-col-hdr .pe-cols span{{text-align:left;}}
-.chain-row{{display:grid;grid-template-columns:1fr 80px 1fr;border-bottom:1px solid #0e1e2a;transition:background .1s;}}
+.chain-row{{display:grid;grid-template-columns:1fr 72px 50px 1fr;border-bottom:1px solid #0e1e2a;transition:background .1s;}}
 .chain-row:hover{{background:#ffffff05;}}
 .chain-row.atm-row{{background:#00d4ff0d;}}
 .chain-row.atm-row .stk-cell{{background:#00d4ff18;border-left:2px solid var(--cyan);border-right:2px solid var(--cyan);color:var(--cyan);}}
@@ -876,8 +878,10 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 .chain-row.be-hi-row .stk-cell{{border-left:2px solid var(--green)!important;border-right:2px solid var(--green)!important;}}
 
 /* CE side: OI Chg% | OI-lakh | OI bar | LTP */
-.ce-side{{display:grid;grid-template-columns:55px 60px 70px 70px;align-items:center;justify-content:end;padding:0 6px 0 0;}}
-.pe-side{{display:grid;grid-template-columns:70px 70px 60px 55px;align-items:center;justify-content:start;padding:0 0 0 6px;}}
+.ce-side{{display:grid;grid-template-columns:58px 62px 72px 72px;align-items:center;justify-content:end;padding:0 4px 0 0;}}
+.iv-cell{{display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;color:#b0cce0;border-left:1px solid #0e1e2a;border-right:1px solid #0e1e2a;background:#080e18;min-height:30px;}}
+.chain-row.atm-row .iv-cell{{color:var(--cyan);background:#00d4ff08;font-weight:800;}}
+.pe-side{{display:grid;grid-template-columns:72px 72px 62px 58px;align-items:center;justify-content:start;padding:0 0 0 4px;}}
 
 .stk-cell{{display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;border-left:1px solid var(--border);border-right:1px solid var(--border);background:#090f18;min-height:30px;position:relative;flex-direction:column;gap:1px;color:#d8eeff;}}
 .atm-tag{{background:var(--cyan);color:#000;font-size:8px;font-weight:800;padding:1px 5px;border-radius:0 0 3px 3px;position:absolute;top:0;letter-spacing:.5px;}}
@@ -885,7 +889,6 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 /* Cell content classes */
 .cc{{display:flex;align-items:center;height:30px;padding:0 4px;font-size:12px;font-family:'JetBrains Mono',monospace;}}
 .cc-ltp{{font-weight:700;font-size:12px;justify-content:flex-end;}}
-.cc-iv{{color:#c8dff0;justify-content:center;font-size:11px;}}
 .cc-oi-lakh{{color:#c8dff0;justify-content:flex-end;font-size:11px;}}
 .cc-chg{{font-weight:700;font-size:11px;justify-content:flex-end;}}
 .cc-chg.up{{color:#00c896;}}
@@ -894,9 +897,9 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 .pe-ltp-v{{color:#00c896;}}
 
 /* OI bar cell */
-.cc-bar{{justify-content:flex-end;padding-right:6px;}}
-.pe-side .cc-bar{{justify-content:flex-start;padding-left:6px;padding-right:0;}}
-.oi-bar-track{{width:52px;height:10px;background:#0d1a24;border-radius:2px;overflow:hidden;}}
+.cc-bar{{justify-content:flex-end;padding-right:4px;}}
+.pe-side .cc-bar{{justify-content:flex-start;padding-left:4px;padding-right:0;}}
+.oi-bar-track{{width:54px;height:10px;background:#0d1a24;border-radius:2px;overflow:hidden;}}
 .oi-bar-fill-ce{{height:100%;background:#c0392b;border-radius:2px;transition:width .4s;}}
 .oi-bar-fill-pe{{height:100%;background:#27ae60;border-radius:2px;transition:width .4s;}}
 .up{{color:var(--green)!important;}} .down{{color:var(--red)!important;}}
@@ -1311,11 +1314,13 @@ canvas#payoffChart{{width:100%!important;height:288px!important;}}
       <div class="chain-side-hdr">
         <div class="ce-hdr">── CALLS ──</div>
         <div class="st-hdr">STRIKE</div>
+        <div class="iv-hdr">IV</div>
         <div class="pe-hdr">── PUTS ──</div>
       </div>
       <div class="chain-col-hdr">
         <div class="ce-cols"><span>OI Chg%</span><span>OI-lakh</span><span style="text-align:center;">Call OI</span><span>LTP</span></div>
         <div></div>
+        <div class="iv-col">%</div>
         <div class="pe-cols"><span>LTP</span><span style="text-align:center;">Put OI</span><span>OI-lakh</span><span>OI Chg%</span></div>
       </div>
       <div id="chainBody"><div style="text-align:center;padding:50px;color:#9dbdd8;font-family:'JetBrains Mono',monospace;font-size:14px;">Loading…</div></div>
@@ -1551,9 +1556,9 @@ function renderChain() {{
       <div class="stk-cell">
         ${{isAtm?'<span class="atm-tag">ATM</span>':""}}
         <span>${{r.strike.toLocaleString("en-IN")}}</span>
-        <span style="font-size:10px;color:#7aA8c8;">${{r.ce_iv.toFixed(1)}}</span>
         ${{(smark||rmark||blomark||bhimark)?`<span style="display:flex;gap:3px;">${{smark}}${{rmark}}${{blomark}}${{bhimark}}</span>`:""}}
       </div>
+      <div class="iv-cell">${{((r.ce_iv+r.pe_iv)/2).toFixed(1)}}</div>
       <div class="pe-side">
         <span class="cc cc-ltp pe-ltp-v">${{r.pe_ltp.toFixed(2)}}</span>
         <span class="cc cc-bar"><div class="oi-bar-track"><div class="oi-bar-fill-pe" style="width:${{peBar}}%"></div></div></span>
