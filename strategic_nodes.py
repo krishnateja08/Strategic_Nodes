@@ -766,7 +766,7 @@ def build_html(all_expiry_data, expiry_list, generated_at):
 *{{margin:0;padding:0;box-sizing:border-box;}}
 body{{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;overflow-x:hidden;}}
 body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:44px 44px;pointer-events:none;z-index:0;}}
-.wrap{{position:relative;z-index:1;max-width:100%;margin:0 auto;padding:12px 18px;}}
+.wrap{{position:relative;z-index:1;max-width:1280px;margin:0 auto;padding:12px 40px;}}
 
 /* ── HEADER ── */
 .hdr{{display:flex;align-items:center;justify-content:space-between;padding:16px 22px;background:linear-gradient(135deg,#0d111799,#11182699);border:1px solid var(--border);border-top:2px solid var(--cyan);border-radius:12px;margin-bottom:18px;backdrop-filter:blur(12px);}}
@@ -787,8 +787,7 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 .tick-sub{{font-size:13px;color:#b8d4e8;font-family:'DM Mono',monospace;margin-top:1px;}}
 
 /* ── MAIN LAYOUT ── */
-.main{{display:grid;grid-template-columns:320px minmax(0,520px) 270px;gap:16px;margin-bottom:18px;}}
-.panel.chain-panel{{max-width:100%;}}
+.main{{display:grid;grid-template-columns:320px 1fr 260px;gap:16px;margin-bottom:18px;}}
 
 /* ── PANEL ── */
 .panel{{background:var(--bg3);border:1px solid var(--border);border-radius:12px;overflow:hidden;}}
