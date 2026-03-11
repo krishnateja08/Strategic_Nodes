@@ -779,7 +779,7 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 .live-dot{{width:7px;height:7px;background:var(--green);border-radius:50%;animation:pulse 1.5s infinite;}}
 
 /* ── TICKER ── */
-.ticker{{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px;}}
+.ticker{{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:18px;}}
 .tick-card{{background:var(--bg3);border:1px solid var(--border);border-top:2px solid var(--tc,var(--cyan));border-radius:10px;padding:14px 18px;transition:border-color .3s;}}
 .tick-card:hover{{border-color:var(--tc,var(--cyan));}}
 .tick-lbl{{font-size:13px;color:#d8eeff;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:1px;}}
@@ -1125,7 +1125,7 @@ canvas#payoffChart{{width:100%!important;height:288px!important;}}
 ::-webkit-scrollbar-track{{background:var(--bg);}}
 ::-webkit-scrollbar-thumb{{background:var(--border);border-radius:3px;}}
 
-@media(max-width:1100px){{.main{{grid-template-columns:300px 1fr!important;}}.greeks-panel{{display:none;}}.ticker{{grid-template-columns:repeat(2,1fr);}}}}
+@media(max-width:1100px){{.main{{grid-template-columns:300px 1fr!important;}}.greeks-panel{{display:none;}}.ticker{{grid-template-columns:repeat(3,1fr);}}}}
 @media(max-width:800px){{.main{{grid-template-columns:1fr!important;}}.ticker{{grid-template-columns:repeat(2,1fr);}}.strat-grid{{grid-template-columns:1fr!important;}}.hdr{{flex-direction:column;gap:10px;align-items:flex-start;}}.hdr>div:last-child{{align-self:flex-end;}}.wrap{{padding:10px;}}}}
 @media(max-width:500px){{.ticker{{grid-template-columns:1fr 1fr;gap:8px;}}.tick-val{{font-size:19px;}}.hdr h1{{font-size:18px;}}.bias-row{{grid-template-columns:repeat(3,1fr);}}.sc-fields{{grid-template-columns:1fr 1fr;}}}}
 </style>
@@ -1180,6 +1180,16 @@ canvas#payoffChart{{width:100%!important;height:288px!important;}}
     <div class="tick-lbl">MAX PE OI</div>
     <div class="tick-val down" id="maxPeOi">—</div>
     <div class="tick-sub">Key Support</div>
+  </div>
+  <div class="tick-card" style="--tc:#ff9f43">
+    <div class="tick-lbl">MAX CE OI CHG</div>
+    <div class="tick-val" style="color:#ff9f43" id="maxCeChgStrike">—</div>
+    <div class="tick-sub" id="maxCeChgVal">Call OI Adding</div>
+  </div>
+  <div class="tick-card" style="--tc:#a882ff">
+    <div class="tick-lbl">MAX PE OI CHG</div>
+    <div class="tick-val" style="color:#a882ff" id="maxPeChgStrike">—</div>
+    <div class="tick-sub" id="maxPeChgVal">Put OI Adding</div>
   </div>
 </div>
 
@@ -1541,12 +1551,21 @@ function updateTicker() {{
     document.getElementById("atmIv").textContent = "ATM IV: "+ivAvg.toFixed(1)+"%";
   }}
   let maxCeOi=0,maxCeSt=0,maxPeOi=0,maxPeSt=0;
+  let maxCeChg=-Infinity,maxCeChgSt=0,maxPeChg=-Infinity,maxPeChgSt=0;
   d.all_strikes.forEach(s=>{{
     if(s.ce_oi>maxCeOi){{maxCeOi=s.ce_oi;maxCeSt=s.strike;}}
     if(s.pe_oi>maxPeOi){{maxPeOi=s.pe_oi;maxPeSt=s.strike;}}
+    if((s.ce_oi_chg||0)>maxCeChg){{maxCeChg=s.ce_oi_chg||0;maxCeChgSt=s.strike;}}
+    if((s.pe_oi_chg||0)>maxPeChg){{maxPeChg=s.pe_oi_chg||0;maxPeChgSt=s.strike;}}
   }});
   document.getElementById("maxCeOi").textContent = maxCeSt.toLocaleString("en-IN");
   document.getElementById("maxPeOi").textContent = maxPeSt.toLocaleString("en-IN");
+  document.getElementById("maxCeChgStrike").textContent = maxCeChgSt.toLocaleString("en-IN");
+  document.getElementById("maxPeChgStrike").textContent = maxPeChgSt.toLocaleString("en-IN");
+  const ceChgL = (maxCeChg/1e5).toFixed(1);
+  const peChgL = (maxPeChg/1e5).toFixed(1);
+  document.getElementById("maxCeChgVal").textContent  = "+"+(ceChgL)+"L added";
+  document.getElementById("maxPeChgVal").textContent  = "+"+(peChgL)+"L added";
 }}
 
 // ── Option Chain ──────────────────────────────────────────────
