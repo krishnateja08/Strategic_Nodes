@@ -2993,10 +2993,10 @@ function drawPayoff() {{
           ctx2.save(); ctx2.setLineDash([6,4]); ctx2.strokeStyle="rgba(0,200,150,0.65)"; ctx2.lineWidth=1.5;
           ctx2.beginPath(); ctx2.moveTo(xPx,yScale.top); ctx2.lineTo(xPx,yScale.bottom); ctx2.stroke();
           ctx2.setLineDash([]);
-          const spotLabel="▼ "+underlying.toLocaleString("en-IN");
+          const spotLabel="▲ "+underlying.toLocaleString("en-IN");
           ctx2.font="bold 14px 'DM Mono',monospace";
           const spotTw=ctx2.measureText(spotLabel).width+16;
-          const spotTx=xPx-spotTw/2, spotTy=yScale.top-26;
+          const spotTx=xPx-spotTw/2, spotTy=yScale.bottom+6;
           ctx2.fillStyle="rgba(0,200,150,0.18)"; ctx2.strokeStyle="rgba(0,200,150,0.75)"; ctx2.lineWidth=1.5;
           ctx2.beginPath(); ctx2.roundRect(spotTx,spotTy,spotTw,22,5); ctx2.fill(); ctx2.stroke();
           ctx2.fillStyle="rgba(0,200,150,1)"; ctx2.textAlign="center"; ctx2.textBaseline="middle";
