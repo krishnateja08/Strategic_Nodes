@@ -2992,8 +2992,15 @@ function drawPayoff() {{
           const xPx=xScale.getPixelForValue(spotIdx);
           ctx2.save(); ctx2.setLineDash([6,4]); ctx2.strokeStyle="rgba(0,200,150,0.65)"; ctx2.lineWidth=1.5;
           ctx2.beginPath(); ctx2.moveTo(xPx,yScale.top); ctx2.lineTo(xPx,yScale.bottom); ctx2.stroke();
-          ctx2.setLineDash([]); ctx2.fillStyle="rgba(0,200,150,0.9)"; ctx2.font="bold 17pxpxpx DM Mono,monospace"; ctx2.textAlign="center";
-          ctx2.fillText("▼ "+underlying.toLocaleString("en-IN"),xPx,yScale.top-4); ctx2.restore();
+          ctx2.setLineDash([]);
+          const spotLabel="▼ "+underlying.toLocaleString("en-IN");
+          ctx2.font="bold 14px 'DM Mono',monospace";
+          const spotTw=ctx2.measureText(spotLabel).width+16;
+          const spotTx=xPx-spotTw/2, spotTy=yScale.top-26;
+          ctx2.fillStyle="rgba(0,200,150,0.18)"; ctx2.strokeStyle="rgba(0,200,150,0.75)"; ctx2.lineWidth=1.5;
+          ctx2.beginPath(); ctx2.roundRect(spotTx,spotTy,spotTw,22,5); ctx2.fill(); ctx2.stroke();
+          ctx2.fillStyle="rgba(0,200,150,1)"; ctx2.textAlign="center"; ctx2.textBaseline="middle";
+          ctx2.fillText(spotLabel,xPx,spotTy+11); ctx2.restore();
         }}
         const bePoints=[];
         for(let i=0;i<expiryPnl.length-1;i++) {{
@@ -3008,14 +3015,14 @@ function drawPayoff() {{
           ctx2.save(); ctx2.setLineDash([4,3]); ctx2.strokeStyle="rgba(255,209,102,0.7)"; ctx2.lineWidth=1.5;
           ctx2.beginPath(); ctx2.moveTo(be.bePx,yScale.top); ctx2.lineTo(be.bePx,yScale.bottom); ctx2.stroke(); ctx2.setLineDash([]);
           const label="BE "+Math.round(be.bePrice).toLocaleString("en-IN");
-          ctx2.font="bold 17pxpxpx DM Mono,monospace"; const tw=ctx2.measureText(label).width+10;
+          ctx2.font="bold 14px 'DM Mono',monospace"; const tw=ctx2.measureText(label).width+16;
           const tx=be.bePx-tw/2,ty=yScale.top+6;
-          ctx2.fillStyle="rgba(255,209,102,0.15)"; ctx2.strokeStyle="rgba(255,209,102,0.6)"; ctx2.lineWidth=1;
-          ctx2.beginPath(); ctx2.roundRect(tx,ty,tw,14,3); ctx2.fill(); ctx2.stroke();
-          ctx2.fillStyle="rgba(255,209,102,1)"; ctx2.textAlign="center"; ctx2.fillText(label,be.bePx,ty+10);
+          ctx2.fillStyle="rgba(255,209,102,0.22)"; ctx2.strokeStyle="rgba(255,209,102,0.85)"; ctx2.lineWidth=1.5;
+          ctx2.beginPath(); ctx2.roundRect(tx,ty,tw,22,5); ctx2.fill(); ctx2.stroke();
+          ctx2.fillStyle="rgba(255,209,102,1)"; ctx2.textAlign="center"; ctx2.textBaseline="middle"; ctx2.fillText(label,be.bePx,ty+11);
           const zeroPx=yScale.getPixelForValue(0);
-          ctx2.fillStyle="#ffd166"; ctx2.strokeStyle="#060910"; ctx2.lineWidth=2;
-          ctx2.beginPath(); ctx2.arc(be.bePx,zeroPx,4,0,Math.PI*2); ctx2.fill(); ctx2.stroke();
+          ctx2.fillStyle="#ffd166"; ctx2.strokeStyle="#060910"; ctx2.lineWidth=2.5;
+          ctx2.beginPath(); ctx2.arc(be.bePx,zeroPx,6,0,Math.PI*2); ctx2.fill(); ctx2.stroke();
           ctx2.restore();
         }});
         if(crosshairX===null) return;
