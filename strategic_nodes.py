@@ -2974,13 +2974,13 @@ function drawPayoff() {{
       responsive:true,maintainAspectRatio:false,
       interaction:{{mode:"index",intersect:false,axis:"x"}},
       plugins:{{
-        legend:{{display:true,position:"top",labels:{{color:"#b0cce0",font:{{family:"DM Mono",size:10}},boxWidth:14,filter:item=>item.text!=="Zero"}}}},
+        legend:{{display:true,position:"top",labels:{{color:"#ddeeff",font:{{family:"DM Mono",size:12,weight:"700"}},boxWidth:14,filter:item=>item.text!=="Zero"}}}},
         tooltip:{{enabled:false,mode:"index",intersect:false}},
       }},
       scales:{{
-        x:{{ticks:{{color:"#6a90b8",font:{{family:"DM Mono",size:9}},maxTicksLimit:12,callback:(val,idx)=>{{const price=priceRange[idx]??val;return price>=1000?Math.round(price).toLocaleString("en-IN"):price;}}}},grid:{{color:"#0b1520"}},border:{{color:"#1a2535"}}}},
-        yPnl:{{position:"left",ticks:{{color:"#6a90b8",font:{{family:"DM Mono",size:9}},callback:v=>"₹"+(Math.abs(v)>=1000?(v/1000).toFixed(0)+"K":v)}},grid:{{color:"#0b1520"}},border:{{color:"#1a2535"}},title:{{display:true,text:"Profit / Loss",color:"#7aA8c8",font:{{size:9,family:"DM Mono"}}}}}},
-        yOI:{{position:"right",ticks:{{color:"#6a90b8",font:{{family:"DM Mono",size:9}},callback:v=>v>=1000?(v/1000).toFixed(0)+"L":v}},grid:{{drawOnChartArea:false}},border:{{color:"#1a2535"}},title:{{display:true,text:"Open Interest",color:"#7aA8c8",font:{{size:9,family:"DM Mono"}}}}}},
+        x:{{ticks:{{color:"#c8dff0",font:{{family:"DM Mono",size:11,weight:"600"}},maxTicksLimit:12,callback:(val,idx)=>{{const price=priceRange[idx]??val;return price>=1000?Math.round(price).toLocaleString("en-IN"):price;}}}},grid:{{color:"#0b1520"}},border:{{color:"#1a2535"}}}},
+        yPnl:{{position:"left",ticks:{{color:"#c8dff0",font:{{family:"DM Mono",size:11,weight:"600"}},callback:v=>"₹"+(Math.abs(v)>=1000?(v/1000).toFixed(0)+"K":v)}},grid:{{color:"#0b1520"}},border:{{color:"#1a2535"}},title:{{display:true,text:"Profit / Loss",color:"#d8eeff",font:{{size:11,family:"DM Mono",weight:"700"}}}}}},
+        yOI:{{position:"right",ticks:{{color:"#c8dff0",font:{{family:"DM Mono",size:11,weight:"600"}},callback:v=>v>=1000?(v/1000).toFixed(0)+"L":v}},grid:{{drawOnChartArea:false}},border:{{color:"#1a2535"}},title:{{display:true,text:"Open Interest",color:"#d8eeff",font:{{size:11,family:"DM Mono",weight:"700"}}}}}},
       }},
     }},
     plugins:[{{
