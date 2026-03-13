@@ -766,7 +766,7 @@ def build_html(all_expiry_data, expiry_list, generated_at):
 *{{margin:0;padding:0;box-sizing:border-box;}}
 body{{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;overflow-x:hidden;}}
 body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:44px 44px;pointer-events:none;z-index:0;}}
-.wrap{{position:relative;z-index:1;max-width:1690px;margin:0 auto;padding:12px 55px;}}
+.wrap{{position:relative;z-index:1;max-width:1775px;margin:0 auto;padding:12px 55px;}}
 
 /* ── HEADER ── */
 .hdr{{display:flex;align-items:center;justify-content:space-between;padding:16px 22px;background:linear-gradient(135deg,#0d111799,#11182699);border:1px solid var(--border);border-top:2px solid var(--cyan);border-radius:12px;margin-bottom:18px;backdrop-filter:blur(12px);}}
@@ -862,13 +862,13 @@ body::before{{content:'';position:fixed;inset:0;background-image:linear-gradient
 .chain-side-hdr .st-hdr{{text-align:center;font-size:12px;font-weight:800;color:#d8eeff;letter-spacing:1px;text-transform:uppercase;}}
 .chain-side-hdr .iv-hdr{{text-align:center;font-size:12px;font-weight:800;color:#9dbdd8;letter-spacing:1px;text-transform:uppercase;}}
 .chain-side-hdr .pe-hdr{{text-align:center;font-size:13px;font-weight:800;color:var(--green);letter-spacing:2px;text-transform:uppercase;padding:2px 0;}}
-.chain-col-hdr{{display:grid;grid-template-columns:1fr 72px 50px 1fr;padding:5px 0;border-bottom:1px solid var(--border2);background:#0a1218;position:sticky;top:30px;z-index:2;}}
+.chain-col-hdr{{display:grid;grid-template-columns:1fr 72px 100px 1fr;padding:5px 0;border-bottom:1px solid var(--border2);background:#0a1218;position:sticky;top:30px;z-index:2;}}
 .chain-col-hdr .ce-cols{{display:grid;grid-template-columns:58px 62px 72px 72px;justify-content:end;padding-right:4px;gap:0;}}
 .chain-col-hdr .iv-col{{display:flex;align-items:center;justify-content:center;font-size:11px;color:#9dbdd8;text-transform:uppercase;letter-spacing:.6px;}}
 .chain-col-hdr .pe-cols{{display:grid;grid-template-columns:72px 72px 62px 58px;justify-content:start;padding-left:4px;gap:0;}}
 .chain-col-hdr span{{font-size:11px;color:#9dbdd8;text-transform:uppercase;letter-spacing:.6px;text-align:right;padding:0 4px;}}
 .chain-col-hdr .pe-cols span{{text-align:left;}}
-.chain-row{{display:grid;grid-template-columns:1fr 72px 50px 1fr;border-bottom:1px solid #0e1e2a;transition:background .1s;}}
+.chain-row{{display:grid;grid-template-columns:1fr 72px 100px 1fr;border-bottom:1px solid #0e1e2a;transition:background .1s;}}
 .chain-row:hover{{background:#ffffff05;}}
 .chain-row.atm-row{{background:#00d4ff0d;}}
 .chain-row.atm-row .stk-cell{{background:#00d4ff18;border-left:2px solid var(--cyan);border-right:2px solid var(--cyan);color:var(--cyan);}}
@@ -1380,7 +1380,7 @@ canvas#payoffChart{{width:100%!important;height:288px!important;}}
       <div class="chain-col-hdr">
         <div class="ce-cols"><span>OI Chg%</span><span>OI-lakh</span><span style="text-align:center;">Call OI</span><span>LTP</span></div>
         <div></div>
-        <div class="iv-col">%</div>
+        <div class="iv-col" style="display:grid;grid-template-columns:1fr 1fr;width:100%;"><span style="text-align:center;color:#ff9999;font-size:10px;letter-spacing:.4px;">CE IV</span><span style="text-align:center;color:#66ffbb;font-size:10px;letter-spacing:.4px;">PE IV</span></div>
         <div class="pe-cols"><span>LTP</span><span style="text-align:center;">Put OI</span><span>OI-lakh</span><span>OI Chg%</span></div>
       </div>
       <div id="chainBody"><div style="text-align:center;padding:50px;color:#9dbdd8;font-family:'JetBrains Mono',monospace;font-size:14px;">Loading…</div></div>
@@ -1627,7 +1627,7 @@ function renderChain() {{
         <span>${{r.strike.toLocaleString("en-IN")}}</span>
         ${{(smark||rmark||blomark||bhimark)?`<span style="display:flex;gap:3px;">${{smark}}${{rmark}}${{blomark}}${{bhimark}}</span>`:""}}
       </div>
-      <div class="iv-cell">${{((r.ce_iv+r.pe_iv)/2).toFixed(1)}}</div>
+      <div class="iv-cell" style="display:grid;grid-template-columns:1fr 1fr;padding:0;gap:0;"><span style="display:flex;align-items:center;justify-content:center;color:#ffaaaa;border-right:1px solid #0e1e2a;font-size:12px;">${{r.ce_iv.toFixed(1)}}</span><span style="display:flex;align-items:center;justify-content:center;color:#66ffbb;font-size:12px;">${{r.pe_iv.toFixed(1)}}</span></div>
       <div class="pe-side">
         <span class="cc cc-ltp pe-ltp-v">${{r.pe_ltp.toFixed(2)}}</span>
         <span class="cc cc-bar"><div class="oi-bar-track"><div class="oi-bar-fill-pe" style="width:${{peBar}}%"></div></div></span>
