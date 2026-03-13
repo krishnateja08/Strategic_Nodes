@@ -5,7 +5,7 @@ Fetches live NSE option chain data and generates a rich HTML dashboard.
 Runs via GitHub Actions every 30 minutes → pushes index.html to gh-pages.
 
 Dependencies:
-    pip install curl_cffi pandas numpy scipy
+    pip install curl_cffi pandas numpy scipy test
 """
 
 import json
