@@ -1,0 +1,39 @@
+# Nifty Options Analyzer
+
+Live NSE option chain dashboard with strategy recommendations, Greeks panel, and payoff diagrams.
+
+## Setup
+
+### 1. Fork / Clone this repo
+
+### 2. Enable GitHub Pages
+- Go to **Settings → Pages**
+- Source: **Deploy from a branch**
+- Branch: `gh-pages` / `/ (root)`
+- Save
+
+### 3. Enable GitHub Actions
+- Go to **Actions** tab → Enable workflows
+
+### 4. First Run
+- Go to **Actions → Update Nifty Options Dashboard → Run workflow**
+- Wait ~2 minutes
+- Visit `https://YOUR_USERNAME.github.io/YOUR_REPO_NAME/`
+
+## Auto-Refresh
+- **GitHub Actions** fetches fresh NSE data every **30 minutes** on weekdays
+- **Browser** auto-reloads every **30 seconds** to pick up latest data
+
+## Files
+| File | Purpose |
+|------|---------|
+| `fetch_nse.py` | Fetches NSE data, computes Greeks, generates `index.html` |
+| `nse_holidays.py` | NSE holiday calendar — update each year |
+| `requirements.txt` | Python dependencies |
+| `.github/workflows/update.yml` | GitHub Actions cron job |
+
+## Update Holidays
+Edit `nse_holidays.py` at the start of each year with the official NSE holiday list.
+
+## Disclaimer
+For educational purposes only. Not financial advice.
